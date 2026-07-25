@@ -140,8 +140,10 @@ plates = [
      prep("bigdrum27_v9") + prep("keylock_key_v2", copies=3), "cool"),
     ("15_disk54", p012fin_j,               # диск Ø54 гладкий (прототип-фаза)
      prep("disk54_v1") + prep("keylock_key_v2", copies=3), "cool"),
-    ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ v3: стопка на 2 шурупах
+    ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ v3: стопка на 2 винтах M2
      prep("tier_disk_v3", copies=2) + prep("keylock_key_v2", copies=3), "cool"),
+    ("19_tier_disks_x4", p012fin_j,        # ПОЛНЫЙ КОМПЛЕКТ: 4 стопки на все моторы
+     prep("tier_disk_v3", copies=8) + prep("keylock_key_v2", copies=9), "cool"),
     ("17_liners", p012fin_j,               # вкладыши канавок: A и B РАЗНЫЕ (зеркальные)
      sum([prep(f"liner_f{i}_v1", FLIP) for i in range(1, 5)], []) +
      sum([prep(f"liner_b{i}_v1", FLIP) for i in range(1, 5)], []), "cool"),
