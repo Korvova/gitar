@@ -129,19 +129,25 @@ for sx, sy in DOWELS:
     L5 -= Pos(sx, sy, 15) * Cylinder(PIN_P, 2.3)
 
 # ---------------- вкладыши канавок (liner, идея юзера) ----------------
-# Планка 5.8x0.8 на дно углублённой канавки (лапа A своего этажа; для B та
-# же деталь поворотом на 180° вокруг Z центра тележки). Снизу П-паз для
-# нити продольного канала (мост 0.2 сверху) + вырез под карман ролика.
-# Печать ВВЕРХ НОГАМИ (пазом вверх). Прижимается следующим слоем.
+# Планка 5.8x0.8 на дно углублённой канавки. Снизу П-паз для нити
+# продольного канала (мост 0.2 сверху) + вырез под карман ролика.
+# ВАЖНО: A и B — РАЗНЫЕ детали (зеркальные, не поворотные): ролики обоих
+# бортов смещены к деке (+RC по x), поворот на 180° уводит вырез кармана
+# на 5 мм мимо ролика. Печать ВВЕРХ НОГАМИ (пазом вверх).
 liners = []
+liners_b = []
 for i in range(4):
     zb, chy, s = ZB[i], CH_YS[i], S[i]
-    la, _ = lanes(s)
-    (pax, pay), _b = pockets(s, chy)
+    la, lb = lanes(s)
+    (pax, pay), (pbx, pby) = pockets(s, chy)
     ln = BB(la - 2.9, la + 2.9, -24.8, 20.8, zb + 0.4, zb + 1.6)
     ln -= Pos(pax, pay, zb + 1.0) * Cylinder(3.85, 1.4)            # вырез: карман ролика
     ln -= BB(la - 3.0, la + 3.0, chy - 2.0, chy + 2.0, zb + 0.35, zb + 1.25)  # П-паз нити
     liners.append(ln)
+    lnb = BB(lb - 2.9, lb + 2.9, -20.8, 24.8, zb + 0.4, zb + 1.6)
+    lnb -= Pos(pbx, pby, zb + 1.0) * Cylinder(3.85, 1.4)           # вырез: карман ролика
+    lnb -= BB(lb - 3.0, lb + 3.0, -chy - 2.0, -chy + 2.0, zb + 0.35, zb + 1.25)  # П-паз нити
+    liners_b.append(lnb)
 # По ТЗ юзера: дно 2 мм, стенки 5 мм; плавники крепятся СБОКУ к стенкам
 # стакана (2x M2 горизонтально на каждый плавник, самонарез в стенку 2 мм).
 s0 = S[0]
@@ -431,6 +437,7 @@ parts += [("neckL5_v9", L5), ("cart_body_v9", car), ("deck_v9", deck),
           ("roller_corner_v9", corner), ("_mock_nema14_v9", mot)]
 parts += [(f"fin_f{i+1}_v9", fins[i]) for i in range(4)]
 parts += [(f"liner_f{i+1}_v1", liners[i]) for i in range(4)]
+parts += [(f"liner_b{i+1}_v1", liners_b[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
           ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v2", tier), ("key_long_v1", key_long)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]

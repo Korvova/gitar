@@ -142,8 +142,9 @@ plates = [
     ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ (скетч юзера): стопка 2 шт
      prep("tier_disk_v2", copies=2) + prep("key_long_v1", copies=2) +
      prep("keylock_key_v2", copies=2), "cool"),
-    ("17_liners", p012fin_j,               # вкладыши канавок (по 2 на этаж)
-     sum([prep(f"liner_f{i}_v1", FLIP, 2) for i in range(1, 5)], []), "cool"),
+    ("17_liners", p012fin_j,               # вкладыши канавок: A и B РАЗНЫЕ (зеркальные)
+     sum([prep(f"liner_f{i}_v1", FLIP) for i in range(1, 5)], []) +
+     sum([prep(f"liner_b{i}_v1", FLIP) for i in range(1, 5)], []), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
      prep("keylock_plate_v3") + prep("keylock_key_v2", copies=2) + prep("toggle_peg_v1", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
