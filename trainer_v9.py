@@ -231,6 +231,25 @@ bigdrum27 = Pos(0, 0, (1.8 + 9.8) / 2) * Cylinder(13.5, 8)
 bigdrum27 -= Pos(0, 0, 4.0) * Torus(13.5, 0.4)                     # ручей B
 bigdrum27 -= Pos(0, 0, 5.6) * Torus(13.5, 0.4)                     # ручей A
 
+# ЯРУС-ДИСК (скетч юзера): фланец-«крыша» Ø40 + цилиндр Ø27. Двое ставятся
+# стопкой — фланец верхнего накрывает ярус нижнего, нити разделены жёстко.
+# Гнёзда ключей СКВОЗНЫЕ: длинный ключ проходит верхний диск в нижний и
+# заодно связывает диски вращательно. Цилиндр Ø27 => реплицируется на 4 кан.
+tier = Pos(0, 0, 0.8) * Cylinder(20, 1.6)                          # крыша Ø40
+tier += Pos(0, 0, 1.6 + 2.6) * Cylinder(13.5, 5.2)                 # цилиндр Ø27
+tier -= spline_cut(6.8, -0.125)                                    # тугая звёздочка
+for sg in (-1, 1):
+    y = sg * 9
+    tier -= BB(-4.3, 4.3, y - 1.2, y + 1.2, -0.1, 6.9)             # прорезь СКВОЗЬ
+    tier -= BB(-4.9, 4.9, y - 1.8, y + 1.8, 5.6, 6.9)              # воронка входа
+    tier -= Pos(0, y, 4.2) * Rot(0, 90, 0) * Cylinder(1.05, 28)    # канал нити
+
+# длинный ключ (нижний ярус, сквозь верхний диск): дырка нити на глубине
+# канала нижнего диска = 6.8+4.2 = 11.0 от верха стопки => лопасть 11.6
+key_long = BB(-4, 4, -1, 1, 0, 11.6)
+key_long += BB(-6, 6, -1, 1, 11.6, 15.6)                           # ручка
+key_long -= Pos(0, 0, 2.2) * Rot(90, 0, 0) * Cylinder(0.95, 2.4)   # дырка нити
+
 # ДИСК Ø54 (идея юзера: «вал больше — сила не нужна»): ход 40 мм = 85°,
 # сектора нитей не пересекаются вовсе -> ГЛАДКИЙ цилиндр без канавок,
 # заправка элементарная. Намотка ~170.4 мм/об (прошивка!). ВНИМАНИЕ:
@@ -390,7 +409,7 @@ parts += [("neckL5_v9", L5), ("cart_body_v9", car), ("deck_v9", deck),
           ("roller_corner_v9", corner), ("_mock_nema14_v9", mot)]
 parts += [(f"fin_f{i+1}_v9", fins[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
-          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54)]
+          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v1", tier), ("key_long_v1", key_long)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]
 parts += [(f"guide_m{i+1}_v9", guides[i]) for i in range(4)]
 parts += [(f"bush_m{i+1}_v9", bushes[i]) for i in range(4)]

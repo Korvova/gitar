@@ -139,6 +139,9 @@ plates = [
      prep("bigdrum27_v9") + prep("keylock_key_v2", copies=3), "cool"),
     ("15_disk54", p012fin_j,               # диск Ø54 гладкий (прототип-фаза)
      prep("disk54_v1") + prep("keylock_key_v2", copies=3), "cool"),
+    ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ (скетч юзера): стопка 2 шт
+     prep("tier_disk_v1", copies=2) + prep("key_long_v1", copies=2) +
+     prep("keylock_key_v2", copies=2), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
      prep("keylock_plate_v3") + prep("keylock_key_v2", copies=2) + prep("toggle_peg_v1", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
