@@ -234,6 +234,15 @@ for sg in (-1, 1):                                                 # отв. у�
 # прижимается витками (узел не нужен, как струна на колке)
 drum_ring -= Pos(0, 3.7, 0.8) * Rot(0, 90, 0) * Cylinder(0.7, 12)
 
+# тест-НОГА (идея юзера): насадка на шестерню (свободная звёздочка, легко
+# села) + нога 20 см. На конце ДВЕ дырки Ø3.2 — прикрутить линейку до ~40 см.
+# Проверка руками: хватит ли силы двигать тележку прямым рычагом.
+test_leg = Pos(0, 0, 2.5) * Cylinder(8, 5)                         # ступица Ø16
+test_leg += BB(6, 200, -4, 4, 0, 4)                                # нога до R=200
+test_leg -= spline_cut(5, 0)                                       # звёздочка свободная
+for hx in (185, 195):                                              # крепёж линейки M3
+    test_leg -= Pos(hx, 0, 2) * Cylinder(1.6, 4.2)
+
 # тест-РЫЧАГ (идея юзера): качалка вместо барабана — планка на шестерню,
 # дырочки под тросы на R=25. Плечо больше => сила ~5 Н (у барабана ~25 Н).
 lever = Pos(0, 0, 1.25) * Cylinder(8.0, 2.5)                       # ступица
@@ -450,7 +459,7 @@ parts += [(f"fin_b{i+1}_v1", fins_b[i]) for i in range(4)]
 parts += [(f"liner_f{i+1}_v1", liners[i]) for i in range(4)]
 parts += [(f"liner_b{i+1}_v1", liners_b[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
-          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v3", tier)]
+          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v3", tier), ("test_leg_v1", test_leg)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]
 parts += [(f"guide_m{i+1}_v9", guides[i]) for i in range(4)]
 parts += [(f"bush_m{i+1}_v9", bushes[i]) for i in range(4)]
