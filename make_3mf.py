@@ -140,12 +140,16 @@ plates = [
      prep("bigdrum27_v9") + prep("keylock_key_v2", copies=3), "cool"),
     ("15_disk54", p012fin_j,               # диск Ø54 гладкий (прототип-фаза)
      prep("disk54_v1") + prep("keylock_key_v2", copies=3), "cool"),
-    ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ (скетч юзера): стопка 2 шт
-     prep("tier_disk_v2", copies=2) + prep("key_long_v1", copies=2) +
-     prep("keylock_key_v2", copies=2), "cool"),
+    ("16_tier_disks", p012fin_j,           # ЯРУС-ДИСКИ v3: стопка на 2 шурупах
+     prep("tier_disk_v3", copies=2) + prep("keylock_key_v2", copies=3), "cool"),
     ("17_liners", p012fin_j,               # вкладыши канавок: A и B РАЗНЫЕ (зеркальные)
      sum([prep(f"liner_f{i}_v1", FLIP) for i in range(1, 5)], []) +
      sum([prep(f"liner_b{i}_v1", FLIP) for i in range(1, 5)], []), "cool"),
+    ("18_etazh1_test", p012fin_j,          # ЭТАЖ 1 руками: слой + тележка + оба
+     prep("neckL1_v9") + prep("cart_body_v9") +                    # плавника (A и B),
+     prep("fin_f1_v9", LAY) + prep("fin_b1_v1", LAY) +             # оба вкладыша,
+     prep("liner_f1_v1", FLIP) + prep("liner_b1_v1", FLIP) +       # 2 угловых ролика
+     prep("roller_corner_v9", copies=2), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
      prep("keylock_plate_v3") + prep("keylock_key_v2", copies=2) + prep("toggle_peg_v1", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
