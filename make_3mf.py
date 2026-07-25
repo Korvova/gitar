@@ -123,8 +123,9 @@ plates = [
      prep("cart_body_v9", copies=4) + prep("roller_corner_v9", copies=8)),
     ("04_guides", p012_j,
      sum([prep(f"guide_m{i}_v9", copies=2) for i in range(1, 5)], [])),
-    ("05_plavniki_100pct", p012fin_j,
-     sum([prep(f"fin_f{i}_v9", LAY, 2) for i in range(1, 5)], [])),
+    ("05_plavniki_100pct", p012fin_j,      # плавники: A и B РАЗНЫЕ (палец зеркально)
+     sum([prep(f"fin_f{i}_v9", LAY) for i in range(1, 5)], []) +
+     sum([prep(f"fin_b{i}_v1", LAY) for i in range(1, 5)], [])),
     ("06_vtulki_vremennye", p012_j,
      sum([prep(f"bush_m{i}_v9", copies=3) for i in range(1, 5)], [])),
     ("07_cart_body_fix", p012_j, prep("cart_body_v9", copies=4)),
