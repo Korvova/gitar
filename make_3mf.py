@@ -121,8 +121,7 @@ plates = [
      prep("deck_v9", FLIP) + prep("rail_v9", FLIP, 2) + prep("stop_v9", FLIP)),
     ("03_telezhki_roliki", p012_j,
      prep("cart_body_v9", copies=4) + prep("roller_corner_v9", copies=8)),
-    ("04_barabany_guides", p012_j,
-     sum([prep(f"drum_m{i}_v9") for i in range(1, 5)], []) +
+    ("04_guides", p012_j,
      sum([prep(f"guide_m{i}_v9", copies=2) for i in range(1, 5)], [])),
     ("05_plavniki_100pct", p012fin_j,
      sum([prep(f"fin_f{i}_v9", LAY, 2) for i in range(1, 5)], [])),
