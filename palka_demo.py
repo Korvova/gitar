@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""ДЕМО v5 — bell crank СТРОГО по фото юзера.
+"""ДЕМО v6 — bell crank по фото, ВСЕ соединения — шарниры (без прорезей).
 Запуск: blender -b -P palka_demo.py
-- у южного КРАЯ вперёд-назад ходит ПАЛКА-спица (её гоняет кривошип мотора);
-- палка приколота к УГЛУ-1 треугольника;
-- треугольник (с полукруглым основанием) крутится вокруг ЦЕНТРАЛЬНОГО угла
-  (Pivot, неподвижная ось);
-- УГОЛ-3 (длинное плечо) толкает тележку ПЕРПЕНДИКУЛЯРНО (палец в прорези);
-- ход тележки +-20 (40 мм) при качании треугольника ~+-28°.
+- у южного края ходит палка-спица (кривошип мотора) -> шарнир в УГЛУ-1;
+- треугольник крутится вокруг ЦЕНТРАЛЬНОГО угла (ось);
+- в УГЛУ-3 шарнир, от него ПАЛКА-ТЯГА толкает тележку вбок (шарнир на пальце);
+- скольжения нет нигде: 4 оси, ход тележки ~40 мм.
 """
 import bpy, math, mathutils
 
@@ -16,11 +14,12 @@ sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 120
 
 XC = 17.0                 # дорожка тележки (запад)
-PX, PY = 55.0, 0.0        # ось треугольника (центральный угол)
+PX, PY = 127.0, -2.5      # ось треугольника (центральный угол)
 R1 = 18.0                 # плечо к углу-1 (вниз, к палке у края)
-LA = PX - XC              # плечо к тележке = 38 (запад)
-CX, CY = 95.0, -17.0      # кривошип у мотора (восток)
-RC = 8.4                  # радиус кривошипа
+R3 = 110.0                # плечо к углу-3 (ДЛИННОЕ: иначе тяга за бортом)
+LL = 2.5                  # короткая тяга-серьга к пальцу тележки
+CX, CY = 157.0, -20.5     # кривошип у мотора (восток)
+RC = 3.3                  # радиус кривошипа
 ZS = 1.8
 
 
@@ -92,9 +91,9 @@ def sector(name, r, a0_deg, a1_deg, z0, z1, m, parent):
 
 
 # ---- пол + борта ----
-box("Slab", 0, 112, -25, 25, 0, 1.0, M_BASE)
-box("WallN", 0, 112, 23.2, 25, 1.0, 4.5, M_BASE)
-box("WallS", 0, 112, -25, -23.2, 1.0, 4.5, M_BASE)
+box("Slab", 0, 178, -25, 25, 0, 1.0, M_BASE)
+box("WallN", 0, 178, 23.2, 25, 1.0, 4.5, M_BASE)
+box("WallS", 0, 178, -25, -23.2, 1.0, 4.5, M_BASE)
 
 # ---- тележка + палец ----
 cart = box("Cart", XC - 8, XC + 8, -7, 7, 5.0, 12.0, M_CART)
@@ -105,15 +104,13 @@ piv = bpy.data.objects.new("Pivot", None)
 piv.location = (PX, PY, 0)
 sc.collection.objects.link(piv)
 # полукруглое основание между плечами (юго-запад)
-sector("Base", R1, -180, -90, 1.3, 2.3, M_BLUE, piv)
+sector("Base", 14.0, -180, -90, 1.3, 2.3, M_BLUE, piv)
 # плечо к углу-1 (вниз)
 box("Arm1", PX - 1.6, PX + 1.6, PY - R1 - 1.6, PY, 1.3, 2.3, M_BLUE, parent=piv)
 cyl("Corner1", PX, PY - R1, 2.3, 3.6, 1.3, M_RED, parent=piv)      # шарнир палки
-# плечо-3 к тележке (запад) с прорезью под палец
-box("Arm3", PX - 30, PX + 2, PY - 1.6, PY + 1.6, 1.3, 2.3, M_BLUE, parent=piv)
-box("Arm3RailN", PX - 45.5, PX - 30, PY + 1.6, PY + 4.2, 1.3, 2.3, M_BLUE, parent=piv)
-box("Arm3RailS", PX - 45.5, PX - 30, PY - 4.2, PY - 1.6, 1.3, 2.3, M_BLUE, parent=piv)
-box("Arm3Cap", PX - 47, PX - 45.5, PY - 4.2, PY + 4.2, 1.3, 2.3, M_BLUE, parent=piv)
+# плечо-3 к углу-3 (запад), на конце ШАРНИР тяги
+box("Arm3", PX - R3, PX + 2, PY - 1.6, PY + 1.6, 1.3, 2.3, M_BLUE, parent=piv)
+cyl("Corner3", PX - R3, PY, 2.3, 3.6, 1.3, M_RED, parent=piv)      # шарнир тяги
 cyl("AxisPost", PX, PY, 1.0, 3.4, 1.0, M_BASE)
 
 # ---- кривошип мотора (восток) ----
@@ -128,6 +125,11 @@ bpy.ops.mesh.primitive_cube_add()
 spica = bpy.context.object
 spica.name = "Palka"
 spica.data.materials.append(M_RED)
+# ---- ПАЛКА-ТЯГА: от угла-3 к пальцу тележки (шарнир-шарнир) ----
+bpy.ops.mesh.primitive_cube_add()
+link = bpy.context.object
+link.name = "Tyaga"
+link.data.materials.append(M_BLUE)
 
 # ---- кинематика ----
 def corner1(phi):
@@ -143,7 +145,7 @@ L_SP = (crank_pin(math.pi) - corner1(0.0)).length
 
 def solve_phi(th):
     pc = crank_pin(th)
-    lo, hi = math.radians(-42), math.radians(42)
+    lo, hi = math.radians(-14), math.radians(14)
     f = lambda p: (corner1(p) - pc).length - L_SP
     flo = f(lo)
     for _ in range(60):
@@ -160,9 +162,21 @@ for fr in range(1, 121):
     phi = solve_phi(th)
     piv.rotation_euler = (0, 0, phi)
     piv.keyframe_insert("rotation_euler", frame=fr)
-    cy_ = PY - LA * math.tan(phi)               # палец в прорези плеча-3
+    # угол-3 и тяга к пальцу тележки
+    c3 = mathutils.Vector((PX - R3 * math.cos(phi), PY + R3 * -math.sin(phi)))
+    c3 = mathutils.Vector((PX - R3 * math.cos(phi), PY - R3 * math.sin(phi)))
+    dx = XC - c3.x
+    cy_ = c3.y + math.sqrt(max(LL * LL - dx * dx, 0.25))
     cart.location = (XC, cy_, 8.5)
     cart.keyframe_insert("location", frame=fr)
+    pin = mathutils.Vector((XC, cy_))
+    mid = (c3 + pin) / 2
+    link.location = (mid.x, mid.y, ZS + 1.2)
+    link.scale = ((pin - c3).length / 2 + 1.2, 0.9, 0.45)
+    link.rotation_euler = (0, 0, math.atan2(pin.y - c3.y, pin.x - c3.x))
+    link.keyframe_insert("location", frame=fr)
+    link.keyframe_insert("scale", frame=fr)
+    link.keyframe_insert("rotation_euler", frame=fr)
     crank.rotation_euler = (0, 0, th - math.pi)
     crank.keyframe_insert("rotation_euler", frame=fr)
     c1, pc = corner1(phi), crank_pin(th)
@@ -183,9 +197,9 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(35, -62, 70))
+bpy.ops.object.camera_add(location=(60, -85, 95))
 cam = bpy.context.object
-direction = mathutils.Vector((55, -2, 2)) - cam.location
+direction = mathutils.Vector((88, -2, 2)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 cam.data.lens = 42
 sc.camera = cam
