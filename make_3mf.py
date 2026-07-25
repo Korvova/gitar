@@ -145,7 +145,7 @@ plates = [
     ("19_tier_disks_x4", p012fin_j,        # ПОЛНЫЙ КОМПЛЕКТ: 4 стопки на все моторы
      prep("tier_disk_v3", copies=8) + prep("keylock_key_v2", copies=9), "cool"),
     ("20_test_noga", p020_j,               # тест-нога 20 см на шестерню (+линейка до 40)
-     prep("test_leg_v1")),
+     prep("test_leg_v1") + prep("test_leg_ext_v1")),
     ("17_liners", p012fin_j,               # вкладыши канавок: A и B РАЗНЫЕ (зеркальные)
      sum([prep(f"liner_f{i}_v1", FLIP) for i in range(1, 5)], []) +
      sum([prep(f"liner_b{i}_v1", FLIP) for i in range(1, 5)], []), "cool"),
