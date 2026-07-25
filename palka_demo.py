@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""ДЕМО v2 (схема юзера): ПАЛКА-СТРЕЛКА на неподвижной оси.
+"""ДЕМО v3 (bell crank как на фото юзера): стрелка + ДИСК-ШКИВ на оси.
 Запуск: blender -b -P palka_demo.py
-- палка (пластина ~1 мм толщиной) верхним концом входит ПРОРЕЗЬЮ в палец
-  на центре тележки; ЧУТЬ НИЖЕ ЦЕНТРА ПАЛКИ — неподвижная ось на полу;
-- нижний конец качается влево-вправо как стрелка часов, его тянут ТРОСИКИ;
-- плечи 26/19: тележка ходит +-20 (40 мм!), низ палки — только +-13,
-  поэтому нити и ролики живут в своей зоне и тележка до них не доезжает.
+- нижняя часть палки = диск r17 на неподвижной оси; НИТИ ЛОЖАТСЯ НА ЕГО
+  ДУГУ по касательной (как лента на bell crank с фото): плечо постоянное,
+  перекосов тяги нет, УГЛОВЫЕ РОЛИКИ НЕ НУЖНЫ — нить с канала сразу на диск;
+- верхнее плечо (стрелка) двигает тележку через палец-прорезь;
+- ход +-20 (40 мм), сила = F_нити * 17/26 ~ 5 Н.
 """
 import bpy, math, mathutils
 
@@ -14,12 +14,11 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 120
 
-XC = 30.0                 # дорожка тележки (x)
-XP = 56.0                 # неподвижная ось палки
-L1 = XP - XC              # верхнее плечо (к тележке) = 26
-L2 = 19.0                 # нижнее плечо (к тросикам)
-RY = 14.0                 # линия нитей у роликов
-ZS = 1.9                  # высота нитей
+XC = 30.0                 # дорожка тележки
+XP = 56.0                 # ось диска-стрелки
+L1 = XP - XC              # плечо к тележке = 26
+RD = 17.0                 # радиус диска = y каналов (нити по касательной!)
+ZS = 1.8                  # высота нитей
 
 
 def mat(name, rgba):
@@ -30,9 +29,8 @@ def mat(name, rgba):
 
 M_BASE = mat("base", (0.62, 0.62, 0.62, 1))
 M_CART = mat("cart", (0.8, 0.8, 0.82, 1))
-M_GOLD = mat("gold", (0.75, 0.6, 0.25, 1))
 M_RED = mat("red", (0.8, 0.15, 0.1, 1))
-M_BLADE = mat("blade", (0.25, 0.5, 0.85, 1))
+M_BLUE = mat("blue", (0.25, 0.5, 0.85, 1))
 
 
 def box(name, x0, x1, y0, y1, z0, z1, m, parent=None):
@@ -60,7 +58,7 @@ def cyl(name, x, y, z0, z1, r, m, parent=None):
     return ob
 
 
-def cable(name, pts):
+def cable(name, pts, parent=None):
     cu = bpy.data.curves.new(name, 'CURVE')
     cu.dimensions = '3D'
     cu.bevel_depth = 0.25
@@ -71,69 +69,56 @@ def cable(name, pts):
     ob = bpy.data.objects.new(name, cu)
     ob.data.materials.append(M_RED)
     sc.collection.objects.link(ob)
+    if parent:
+        ob.parent = parent
+        ob.matrix_parent_inverse = parent.matrix_world.inverted()
     return ob
 
 
-# ---- пол (тонкая плита, механика сверху для наглядности) + борта ----
+# ---- пол + борта ----
 box("Slab", 5, 100, -25, 25, 0, 1.0, M_BASE)
-box("WallN", 5, 100, 23, 25, 1.0, 4.5, M_BASE)
-box("WallS", 5, 100, -25, -23, 1.0, 4.5, M_BASE)
+box("WallN", 5, 100, 23.2, 25, 1.0, 4.5, M_BASE)
+box("WallS", 5, 100, -25, -23.2, 1.0, 4.5, M_BASE)
 
-# ---- тележка (ездит по y) + палец вниз ----
+# ---- тележка + палец ----
 cart = box("Cart", XC - 8, XC + 8, -7, 7, 5.0, 12.0, M_CART)
 cyl("CartPin", XC, 0, 1.4, 5.2, 1.1, M_CART, parent=cart)
 
-# ---- ПАЛКА-стрелка на неподвижной оси ----
-piv = bpy.data.objects.new("PalkaPivot", None)
+# ---- СТРЕЛКА + ДИСК на неподвижной оси ----
+piv = bpy.data.objects.new("Pivot", None)
 piv.location = (XP, 0, 0)
 sc.collection.objects.link(piv)
-# пластина: хвост к тележке С ПРОРЕЗЬЮ под палец, нос к тросикам
-box("PalkaBody", XP - 25, XP + L2, -6, 6, 1.3, 2.3, M_BLADE, parent=piv)
-box("PalkaRailN", XP - 35.5, XP - 25, 1.6, 6, 1.3, 2.3, M_BLADE, parent=piv)
-box("PalkaRailS", XP - 35.5, XP - 25, -6, -1.6, 1.3, 2.3, M_BLADE, parent=piv)
-box("PalkaCap", XP - 37, XP - 35.5, -6, 6, 1.3, 2.3, M_BLADE, parent=piv)
-cyl("PalkaBoss", XP, 0, 1.3, 3.0, 2.2, M_BLADE, parent=piv)
-box("PalkaTab", XP + L2 - 1.5, XP + L2 + 0.5, -1.5, 1.5, 1.3, 3.2, M_BLADE, parent=piv)
-cyl("AxisPost", XP, 0, 1.0, 3.4, 1.0, M_BASE)                       # сама ось
+cyl("Disk", XP, 0, 1.3, 2.3, RD, M_BLUE, parent=piv)               # диск-шкив
+# стрелка к тележке с прорезью под палец
+box("ArmBody", XP - 25, XP - 8, -3, 3, 1.3, 2.3, M_BLUE, parent=piv)
+box("ArmRailN", XP - 35.5, XP - 25, 1.6, 4.5, 1.3, 2.3, M_BLUE, parent=piv)
+box("ArmRailS", XP - 35.5, XP - 25, -4.5, -1.6, 1.3, 2.3, M_BLUE, parent=piv)
+box("ArmCap", XP - 37, XP - 35.5, -4.5, 4.5, 1.3, 2.3, M_BLUE, parent=piv)
+cyl("AxisPost", XP, 0, 1.0, 3.2, 1.0, M_BASE)
 
-# ---- ролики нитей + статичные части нитей (в свои каналы к мотору) ----
-RXR = XP + L2 + 2.55
+# ---- нити: статичные каналы + НАМОТКА НА ДУГУ (едет с диском) ----
+cable("chA", [(100, RD, ZS), (XP, RD, ZS)])                        # канал A (север)
+cable("chB", [(100, -RD, ZS), (XP, -RD, ZS)])                      # канал B (юг)
 for sg, nm in ((1, 'A'), (-1, 'B')):
-    cyl("Roll%s" % nm, RXR, sg * RY, 1.0, 3.6, 2.3, M_GOLD)
-    cable("cab%s_stat" % nm, [(100, sg * RY, ZS), (RXR, sg * RY, ZS),
-                              (RXR - 2.55, sg * (RY - 1.0), ZS)])
-
-# ---- подвижные пролёты нитей: от носа палки к роликам ----
-spans = {}
-for sg, nm in ((1, 'A'), (-1, 'B')):
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=1.0,
-                                        location=(XP + L2, sg * 5, ZS))
-    ob = bpy.context.object
-    ob.name = "span%s" % nm
-    ob.data.materials.append(M_RED)
-    spans[sg] = ob
+    pts = []
+    for i in range(23):                                            # дуга 110°
+        a = math.radians(sg * (90 + 5 * i))
+        pts.append((XP + RD * math.cos(a), RD * math.sin(a), ZS))
+    cable("wrap%s" % nm, pts, parent=piv)
+    # якорь нити на дуге
+    a = math.radians(sg * 200)
+    cyl("anch%s" % nm, XP + RD * math.cos(a), RD * math.sin(a),
+        ZS - 0.5, ZS + 0.7, 0.7, M_RED, parent=piv)
 
 # ---- анимация ----
 for fr in range(1, 121):
     t = 2 * math.pi * (fr - 1) / 120.0
-    cy = 20.0 * math.sin(t)                     # ход тележки +-20 = 40 мм
+    cy = 20.0 * math.sin(t)                     # ход 40 мм
     cart.location = (XC, cy, 8.5)
     cart.keyframe_insert("location", frame=fr)
-    phi = math.atan2(cy, -L1) - math.pi         # палка следит за пальцем
+    phi = math.atan2(cy, -L1) - math.pi
     piv.rotation_euler = (0, 0, phi)
     piv.keyframe_insert("rotation_euler", frame=fr)
-    tx = XP + L2 * math.cos(phi)                # нос палки
-    ty = L2 * math.sin(phi)
-    for sg, ob in spans.items():
-        ex, ey = RXR - 2.55, sg * (RY - 1.0)    # сход нити с ролика
-        mx, my = (tx + ex) / 2, (ty + ey) / 2
-        ln = math.hypot(ex - tx, ey - ty)
-        ob.location = (mx, my, ZS)
-        ob.scale = (1, 1, max(ln, 0.5))
-        ob.rotation_euler = (0, math.pi / 2, math.atan2(ey - ty, ex - tx))
-        ob.keyframe_insert("location", frame=fr)
-        ob.keyframe_insert("scale", frame=fr)
-        ob.keyframe_insert("rotation_euler", frame=fr)
 
 # ---- свет, камера ----
 bpy.ops.object.light_add(type='SUN', location=(40, -40, 90))
@@ -144,16 +129,16 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(50, -70, 75))
+bpy.ops.object.camera_add(location=(30, -55, 70))
 cam = bpy.context.object
-direction = mathutils.Vector((52, 0, 2)) - cam.location
+direction = mathutils.Vector((48, 0, 2)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 cam.data.lens = 42
 sc.camera = cam
 sc.frame_set(20)
 
 sc.render.resolution_x, sc.render.resolution_y = 1400, 900
-sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_demo.png"
+sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_demo3.png"
 bpy.ops.render.render(write_still=True)
 bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Палка_демо.blend")
-print("PALKA OK")
+print("PALKA3 OK")
