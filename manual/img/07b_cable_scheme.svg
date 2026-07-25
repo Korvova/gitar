@@ -1,0 +1,66 @@
+<svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif" style="background:#14161a">
+  <text x="380" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#e8e8ea">Барабан в разрезе (вид сбоку)</text>
+
+  <rect x="345" y="120" width="70" height="240" fill="#3a3f4a" stroke="#666" stroke-width="1.5"/>
+  <text x="380" y="245" text-anchor="middle" font-size="12" fill="#9aa0aa">шестерня</text>
+
+  <rect x="230" y="120" width="300" height="26" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+  <text x="212" y="138" text-anchor="end" font-size="13" fill="#e8e8ea">крышка 2.5</text>
+
+  <rect x="290" y="146" width="180" height="42" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+  <text x="212" y="172" text-anchor="end" font-size="13" fill="#e8e8ea">ручей A</text>
+
+  <rect x="230" y="188" width="300" height="22" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+  <rect x="290" y="210" width="180" height="42" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+  <text x="212" y="236" text-anchor="end" font-size="13" fill="#e8e8ea">ручей B</text>
+
+  <rect x="230" y="252" width="300" height="22" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+  <text x="212" y="268" text-anchor="end" font-size="13" fill="#e8e8ea">нижнее кольцо</text>
+
+  <circle cx="300" cy="166" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="315" cy="166" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="460" cy="166" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="445" cy="166" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+
+  <line x1="500" y1="166" x2="500" y2="100" stroke="#e03535" stroke-width="3"/>
+  <circle cx="500" cy="98" r="7" fill="#e03535"/>
+  <text x="516" y="96" font-size="13" fill="#e8e8ea">узел A — сверху крышки</text>
+  <text x="608" y="128" font-size="12" fill="#9aa0aa">конец A — вверх</text>
+  <text x="608" y="143" font-size="12" fill="#9aa0aa">через дырку крышки</text>
+
+  <line x1="60" y1="166" x2="294" y2="166" stroke="#e03535" stroke-width="3"/>
+  <text x="62" y="154" font-size="12" fill="#9aa0aa">трос A → от ролика, 2–3 витка</text>
+
+  <circle cx="300" cy="230" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="315" cy="230" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="460" cy="230" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+  <circle cx="445" cy="230" r="6" fill="none" stroke="#e03535" stroke-width="3"/>
+
+  <line x1="500" y1="230" x2="500" y2="296" stroke="#e03535" stroke-width="3"/>
+  <circle cx="500" cy="298" r="7" fill="#e03535"/>
+  <text x="516" y="316" font-size="13" fill="#e8e8ea">узел B — под кольцом: плоско затянуть и оплавить!</text>
+  <text x="608" y="272" font-size="12" fill="#9aa0aa">конец B — вниз</text>
+  <text x="608" y="287" font-size="12" fill="#9aa0aa">через дырку кольца</text>
+
+  <line x1="60" y1="230" x2="294" y2="230" stroke="#e03535" stroke-width="3"/>
+  <text x="62" y="220" font-size="12" fill="#9aa0aa">трос B → от ролика, 2–3 витка</text>
+
+  <text x="380" y="392" text-anchor="middle" font-size="16" font-weight="700" fill="#e8e8ea">Вид сверху: мотать в РАЗНЫЕ стороны</text>
+  <g transform="translate(255,470)">
+    <circle r="52" fill="none" stroke="#c9962e" stroke-width="2"/>
+    <circle r="26" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+    <path d="M 40 -28 A 49 49 0 1 0 48 12" fill="none" stroke="#e03535" stroke-width="3" marker-end="url(#arr)"/>
+    <text y="6" text-anchor="middle" font-size="13" fill="#e8e8ea">A</text>
+  </g>
+  <g transform="translate(505,470)">
+    <circle r="52" fill="none" stroke="#c9962e" stroke-width="2"/>
+    <circle r="26" fill="#4a4335" stroke="#c9962e" stroke-width="2"/>
+    <path d="M -40 -28 A 49 49 0 1 1 -48 12" fill="none" stroke="#e03535" stroke-width="3" marker-end="url(#arr)"/>
+    <text y="6" text-anchor="middle" font-size="13" fill="#e8e8ea">B</text>
+  </g>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e03535"/>
+    </marker>
+  </defs>
+</svg>

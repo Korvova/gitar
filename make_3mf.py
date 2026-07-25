@@ -1,0 +1,165 @@
+# -*- coding: utf-8 -*-
+"""
+Сборка готовых 3mf-проектов для Bambu Studio из STL + наших настроек печати.
+Результат: Print3mf\01..05*.3mf — открыть, нарезать, печатать.
+
+Запуск: .venv-b123d\Scripts\python make_3mf.py
+"""
+import json, os, shutil, subprocess, sys, math
+import numpy as np
+import trimesh
+
+BS = r"C:\Program Files\Bambu Studio"
+EXE = BS + r"\bambu-studio.exe"
+PROF = BS + r"\resources\profiles\BBL"
+SRC = r"C:\App\gitar\2-0\Print\Print"
+OUT = r"C:\App\gitar\2-0\Print3mf"
+TMP = OUT + r"\_tmp"
+os.makedirs(TMP, exist_ok=True)
+
+# ---------- разрешение наследования профилей ----------
+def resolve(folder, name, seen=None):
+    seen = seen or set()
+    path = os.path.join(PROF, folder, name + ".json")
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    parent_name = data.pop("inherits", None)
+    if parent_name and parent_name not in seen:
+        seen.add(parent_name)
+        parent = resolve(folder, parent_name, seen)
+        parent.update(data)
+        data = parent
+    return data
+
+def tweak(profile, deltas):
+    ref_len = 1
+    for v in profile.values():
+        if isinstance(v, list) and len(v) > 1:
+            ref_len = len(v)
+            break
+    for k, val in deltas.items():
+        cur = profile.get(k)
+        if isinstance(cur, list):
+            profile[k] = [str(val)] * len(cur)
+        elif cur is not None:
+            profile[k] = str(val)          # скалярный ключ — оставить скаляром
+        else:
+            profile[k] = str(val)          # нет в базе — писать скаляром,
+    return profile                          # список CLI молча отвергает
+
+def write_json(profile, fname):
+    p = os.path.join(TMP, fname)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(profile, f, ensure_ascii=False, indent=1)
+    return p
+
+# ---------- профили ----------
+machine = resolve("machine", "Bambu Lab P2S 0.4 nozzle")
+machine_j = write_json(machine, "machine.json")
+
+fila = resolve("filament", "Bambu PETG HF @BBL P2S 0.4 nozzle")
+tweak(fila, {"fan_min_speed": 40, "fan_max_speed": 80})
+fila_j = write_json(fila, "filament.json")
+
+# усиленное охлаждение для столов с 1-2 мелкими деталями
+fila_cool = resolve("filament", "Bambu PETG HF @BBL P2S 0.4 nozzle")
+tweak(fila_cool, {"fan_min_speed": 60, "fan_max_speed": 100,
+                  "slow_down_layer_time": 15})
+fila_cool_j = write_json(fila_cool, "filament_cool.json")
+
+COMMON = {  # для всех столов
+    "outer_wall_speed": 45,
+    "small_perimeter_speed": "50%",
+    "small_perimeter_threshold": 20,
+    "reduce_crossing_wall": 1,
+}
+SMALL = dict(COMMON, **{  # мелочь: колёсики, тележки, плавники
+    "brim_type": "outer_only",
+    "brim_width": 3,
+    "brim_object_gap": 0.1,
+    "wall_loops": 4,
+})
+
+p020 = tweak(resolve("process", "0.20mm Standard @BBL P2S"), COMMON)
+p020_j = write_json(p020, "p020.json")
+
+p012 = tweak(resolve("process", "0.12mm High Quality @BBL P2S"), SMALL)
+p012_j = write_json(p012, "p012.json")
+
+p012fin = tweak(resolve("process", "0.12mm High Quality @BBL P2S"),
+                dict(SMALL, sparse_infill_density="99%",   # CLI падает ровно на 100%
+                     sparse_infill_pattern="zig-zag", wall_loops=6))
+p012fin_j = write_json(p012fin, "p012fin.json")
+
+# барабаны вверх ногами: поддержка ТОЛЬКО от стола (кольцо под юбкой)
+p012drum = tweak(resolve("process", "0.12mm High Quality @BBL P2S"),
+                 dict(SMALL, sparse_infill_density="99%",
+                      sparse_infill_pattern="zig-zag", wall_loops=6,
+                      enable_support=1, support_on_build_plate_only=1,
+                      support_type="normal(auto)", support_top_z_distance=0.2))
+p012drum_j = write_json(p012drum, "p012drum.json")
+
+# ---------- ориентация STL ----------
+def prep(name, transform=None, copies=1, tag=""):
+    """Вернуть список путей к STL, при необходимости повернув деталь."""
+    src = os.path.join(SRC, name + ".stl")
+    if transform is None:
+        return [src] * copies
+    m = trimesh.load(src)
+    m.apply_transform(transform)
+    m.apply_translation([0, 0, -m.bounds[0][2]])   # на стол
+    p = os.path.join(TMP, name + tag + "_orient.stl")
+    m.export(p)
+    return [p] * copies
+
+FLIP = trimesh.transformations.rotation_matrix(math.pi, [1, 0, 0])      # вверх ногами
+LAY = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])  # лёжа (Y->Z)
+
+plates = [
+    ("01_grif_L1-L5", p020_j, sum([prep(f"neckL{i}_v9") for i in range(1, 6)], [])),
+    ("02_deka_rail_stop", p020_j,
+     prep("deck_v9", FLIP) + prep("rail_v9", FLIP, 2) + prep("stop_v9", FLIP)),
+    ("03_telezhki_roliki", p012_j,
+     prep("cart_body_v9", copies=4) + prep("roller_corner_v9", copies=8)),
+    ("04_barabany_guides", p012_j,
+     sum([prep(f"drum_m{i}_v9") for i in range(1, 5)], []) +
+     sum([prep(f"guide_m{i}_v9", copies=2) for i in range(1, 5)], [])),
+    ("05_plavniki_100pct", p012fin_j,
+     sum([prep(f"fin_f{i}_v9", LAY, 2) for i in range(1, 5)], [])),
+    ("06_vtulki_vremennye", p012_j,
+     sum([prep(f"bush_m{i}_v9", copies=3) for i in range(1, 5)], [])),
+    ("07_cart_body_fix", p012_j, prep("cart_body_v9", copies=4)),
+    # v9.7 СБОРНЫЙ барабан (все 4 одинаковые: 2 кольца + крышка) + подъёмные
+    # столбики под уши моторов m2/m3/m4 (по 2 шт + запас); всё плоское
+    ("08_barabany_fix", p012fin_j,
+     prep("drum_ring_v9", copies=9) + prep("drum_top_v9", copies=5) +
+     sum([prep(f"riser_m{i}_v9", copies=3) for i in (2, 3, 4)], []), "cool"),
+    ("09_drum_test", p012fin_j,
+     prep("drum_ring_v9", copies=2) + prep("drum_top_v9"), "cool"),
+    ("11_fix_test", p012fin_j,                    # кольца + рычаг + секторы + твист-лок
+     prep("drum_ring_v9", copies=2) + prep("drum_top_v9") + prep("lever_v9") +
+     prep("bigdrum_v9") + prep("bigdrum27_v9") + prep("bigdrum_cap27_v9"), "cool"),
+    ("12_ratchet", p012fin_j,                     # RATCHET-шайба: ступица + кольцо
+     prep("ratchet_hub_v9") + prep("ratchet_ring_v9"), "cool"),
+    ("10_kalibr_kupony", p012fin_j,
+     sum([prep(f"coupon_spline_{i}") for i in range(1, 5)], []) +
+     sum([prep(f"coupon_pilot_{i}") for i in range(1, 4)], []), "cool"),
+]
+
+# ---------- сборка 3mf ----------
+for plate in plates:
+    name, proc_j, stls = plate[0], plate[1], plate[2]
+    fj = fila_cool_j if (len(plate) > 3 and plate[3] == "cool") else fila_j
+    out = os.path.join(OUT, name + ".3mf")
+    if os.path.exists(out):
+        os.remove(out)
+    cmd = [EXE,
+           "--load-settings", f"{machine_j};{proc_j}",
+           "--load-filaments", fj,
+           "--arrange", "1",
+           "--export-3mf", out] + stls
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    ok = os.path.exists(out)
+    print(f"{name}: exit={r.returncode} file={'OK' if ok else 'НЕТ!'} ({len(stls)} дет.)")
+
+print("done")
