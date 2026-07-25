@@ -14,18 +14,25 @@ def BB(x0, x1, y0, y1, z0, z1):
     return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(
         abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
 
-# ---------- плашка: одна прорезь + канал нити ----------
-plate = BB(0, 22, 0, 14, 0, 5)
+# ---------- плашка v3: прорезь ключа + ТОГГЛ-гнездо, на ножках ----------
+plate = BB(0, 30, 0, 14, 0, 5)
 plate -= BB(11 - 4.3, 11 + 4.3, 7 - 1.2, 7 + 1.2, -0.1, 5.1)       # прорезь 2.4x8.6
 plate -= BB(11 - 4.9, 11 + 4.9, 7 - 1.8, 7 + 1.8, 3.9, 5.1)        # воронка входа
 plate -= Pos(11, 7, 2.3) * Rot(0, 90, 0) * Cylinder(1.05, 24)      # канал нити Ø2.1
+plate -= Pos(25, 7, 2.5) * Cylinder(1.35, 5.2)                     # ТОГГЛ: отв. Ø2.7
+for cx in (2, 28):                                                 # ножки (низ свободен
+    plate += BB(cx - 2, cx + 2, 0, 14, -6, 0)                      # для колышка тоггла)
+
+# колышек тоггла: стерженёк с шляпкой (или просто кусочек филамента ~8 мм)
+peg = Pos(0, 0, 4) * Cylinder(0.8, 8)
+peg += Pos(0, 0, 8.75) * Cylinder(1.6, 1.5)
 
 # ---------- ключ: пластинка 2 мм с дыркой (печать плашмя) ----------
 key = BB(-4, 4, -1, 1, 0, 5)                                       # лопасть в прорезь
 key += BB(-6, 6, -1, 1, 5, 9)                                      # ручка с плечиками
 key -= Pos(0, 0, 2.3) * Rot(90, 0, 0) * Cylinder(0.95, 2.4)        # дырка нити Ø1.9
 
-for name, part in (("keylock_plate_v2", plate), ("keylock_key_v2", key)):
+for name, part in (("keylock_plate_v3", plate), ("keylock_key_v2", key), ("toggle_peg_v1", peg)):
     p = part if isinstance(part, Part) else Part() + part
     export_stl(p, rf"{OUT}\{name}.stl")
     print(f"{name}: volume={p.volume:.0f} mm3, solids={len(p.solids())}")
