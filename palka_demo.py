@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""ДЕМО (схема юзера): одна тележка, центральная ПАЛКА, трос тянет её конец.
+"""ДЕМО v2 (схема юзера): ПАЛКА-СТРЕЛКА на неподвижной оси.
 Запуск: blender -b -P palka_demo.py
-- палка привинчена к центру тележки (ось), нижний конец уходит в центральную
-  канавку; к нему привязаны обе нити петли (A с борта +Y, B с борта -Y);
-- ролики заворачивают нити из каналов в ОДНУ центральную дорожку x=35;
-- ход +-18 в демо; ничего не выходит за борта.
+- палка (пластина ~1 мм толщиной) верхним концом входит ПРОРЕЗЬЮ в палец
+  на центре тележки; ЧУТЬ НИЖЕ ЦЕНТРА ПАЛКИ — неподвижная ось на полу;
+- нижний конец качается влево-вправо как стрелка часов, его тянут ТРОСИКИ;
+- плечи 26/19: тележка ходит +-20 (40 мм!), низ палки — только +-13,
+  поэтому нити и ролики живут в своей зоне и тележка до них не доезжает.
 """
 import bpy, math, mathutils
 
@@ -13,10 +14,12 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 120
 
-S = 35.0
-CHY = 17.0
-RX = S + 2.55            # ролики: западная касательная = дорожка x=35
-ZA, ZB = 2.2, 3.0        # высоты нитей A и B на дорожке (друг над другом)
+XC = 30.0                 # дорожка тележки (x)
+XP = 56.0                 # неподвижная ось палки
+L1 = XP - XC              # верхнее плечо (к тележке) = 26
+L2 = 19.0                 # нижнее плечо (к тросикам)
+RY = 14.0                 # линия нитей у роликов
+ZS = 1.9                  # высота нитей
 
 
 def mat(name, rgba):
@@ -26,7 +29,6 @@ def mat(name, rgba):
     return m
 
 M_BASE = mat("base", (0.62, 0.62, 0.62, 1))
-M_DARK = mat("dark", (0.35, 0.35, 0.35, 1))
 M_CART = mat("cart", (0.8, 0.8, 0.82, 1))
 M_GOLD = mat("gold", (0.75, 0.6, 0.25, 1))
 M_RED = mat("red", (0.8, 0.15, 0.1, 1))
@@ -72,63 +74,63 @@ def cable(name, pts):
     return ob
 
 
-# ---- пол с РЕАЛЬНО прорезанной канавкой и каналами ----
-box("FloorW", 5, 32.2, -25, 25, 0, 3.5, M_BASE)                    # запад
-box("FloorE1", 37.8, 70, -25, -18.75, 0, 3.5, M_BASE)              # восток: юг
-box("FloorE2", 37.8, 70, -15.25, 15.25, 0, 3.5, M_BASE)            # восток: центр
-box("FloorE3", 37.8, 70, 18.75, 25, 0, 3.5, M_BASE)                # восток: север
-box("ChAfloor", 37.8, 70, 15.25, 18.75, 0, 0.5, M_DARK)            # дно канала A
-box("ChBfloor", 37.8, 70, -18.75, -15.25, 0, 0.5, M_DARK)          # дно канала B
-box("GrooveFloor", 32.2, 37.8, -21, 21, 0, 0.4, M_DARK)            # дно дорожки
-box("GrooveCapN", 32.2, 37.8, 21, 25, 0, 3.5, M_BASE)
-box("GrooveCapS", 32.2, 37.8, -25, -21, 0, 3.5, M_BASE)
-# ролики (шейки-капстаны)
-cyl("RollA", RX, CHY - 2.5, 0.4, 3.3, 2.3, M_GOLD)
-cyl("RollB", RX, -(CHY - 2.5), 0.4, 3.3, 2.3, M_GOLD)
+# ---- пол (тонкая плита, механика сверху для наглядности) + борта ----
+box("Slab", 5, 100, -25, 25, 0, 1.0, M_BASE)
+box("WallN", 5, 100, 23, 25, 1.0, 4.5, M_BASE)
+box("WallS", 5, 100, -25, -23, 1.0, 4.5, M_BASE)
 
-# ---- тележка + ПАЛКА к центру (ось видна как бобышка) ----
-cart = box("Cart", S - 7.1, S + 7.1, -7, 7, 6.5, 13.5, M_CART)
-cyl("Axis", S - 1.0, 0, 5.6, 6.6, 1.4, M_BLADE, parent=cart)        # ось-«винт»
-box("Blade", S - 2.6, S - 0.2, -1.1, 1.1, 1.0, 6.4, M_BLADE, parent=cart)
-box("BladeTab", S - 0.2, S + 0.15, -1.1, 1.1, 1.6, 3.4, M_BLADE, parent=cart)
+# ---- тележка (ездит по y) + палец вниз ----
+cart = box("Cart", XC - 8, XC + 8, -7, 7, 5.0, 12.0, M_CART)
+cyl("CartPin", XC, 0, 1.4, 5.2, 1.1, M_CART, parent=cart)
 
-# ---- нити: статичная часть (канал + обход ролика) ----
-ptsA = [(70, CHY, 0.75), (RX, CHY, 0.75)]
-for i in range(11):
-    a = math.radians(90 + 9 * i)
-    ptsA.append((RX + 2.55 * math.cos(a), CHY - 2.5 + 2.55 * math.sin(a),
-                 0.75 + (ZA - 0.75) * i / 10.0))
-cable("cabA_stat", ptsA)
-ptsB = [(70, -CHY, 0.75), (RX, -CHY, 0.75)]
-for i in range(11):
-    a = math.radians(270 - 9 * i)
-    ptsB.append((RX + 2.55 * math.cos(a), -(CHY - 2.5) + 2.55 * math.sin(a),
-                 0.75 + (ZB - 0.75) * i / 10.0))
-cable("cabB_stat", ptsB)
+# ---- ПАЛКА-стрелка на неподвижной оси ----
+piv = bpy.data.objects.new("PalkaPivot", None)
+piv.location = (XP, 0, 0)
+sc.collection.objects.link(piv)
+# пластина: хвост к тележке С ПРОРЕЗЬЮ под палец, нос к тросикам
+box("PalkaBody", XP - 25, XP + L2, -6, 6, 1.3, 2.3, M_BLADE, parent=piv)
+box("PalkaRailN", XP - 35.5, XP - 25, 1.6, 6, 1.3, 2.3, M_BLADE, parent=piv)
+box("PalkaRailS", XP - 35.5, XP - 25, -6, -1.6, 1.3, 2.3, M_BLADE, parent=piv)
+box("PalkaCap", XP - 37, XP - 35.5, -6, 6, 1.3, 2.3, M_BLADE, parent=piv)
+cyl("PalkaBoss", XP, 0, 1.3, 3.0, 2.2, M_BLADE, parent=piv)
+box("PalkaTab", XP + L2 - 1.5, XP + L2 + 0.5, -1.5, 1.5, 1.3, 3.2, M_BLADE, parent=piv)
+cyl("AxisPost", XP, 0, 1.0, 3.4, 1.0, M_BASE)                       # сама ось
 
-# ---- подвижные пролёты нитей (цилиндры до палки) ----
-def span(name, z):
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=1.0, location=(S, 0, z))
+# ---- ролики нитей + статичные части нитей (в свои каналы к мотору) ----
+RXR = XP + L2 + 2.55
+for sg, nm in ((1, 'A'), (-1, 'B')):
+    cyl("Roll%s" % nm, RXR, sg * RY, 1.0, 3.6, 2.3, M_GOLD)
+    cable("cab%s_stat" % nm, [(100, sg * RY, ZS), (RXR, sg * RY, ZS),
+                              (RXR - 2.55, sg * (RY - 1.0), ZS)])
+
+# ---- подвижные пролёты нитей: от носа палки к роликам ----
+spans = {}
+for sg, nm in ((1, 'A'), (-1, 'B')):
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=1.0,
+                                        location=(XP + L2, sg * 5, ZS))
     ob = bpy.context.object
-    ob.name = name
+    ob.name = "span%s" % nm
     ob.data.materials.append(M_RED)
-    return ob
+    spans[sg] = ob
 
-spanA = span("spanA", ZA)
-spanB = span("spanB", ZB)
-
-# ---- анимация: тележка ездит, пролёты следят за палкой ----
-YA0, YB0 = CHY - 2.5, -(CHY - 2.5)          # точки схода нитей с роликов
+# ---- анимация ----
 for fr in range(1, 121):
     t = 2 * math.pi * (fr - 1) / 120.0
-    cy = 18.0 * math.sin(t)
-    cart.location = (S, cy, 10.0)
+    cy = 20.0 * math.sin(t)                     # ход тележки +-20 = 40 мм
+    cart.location = (XC, cy, 8.5)
     cart.keyframe_insert("location", frame=fr)
-    for ob, z, y0, tab in ((spanA, ZA, YA0, 1.1), (spanB, ZB, YB0, -1.1)):
-        y1 = cy + tab
-        ob.location = (S, (y0 + y1) / 2, z)
-        ob.scale = (1, 1, max(abs(y1 - y0), 0.5))
-        ob.rotation_euler = (math.pi / 2, 0, 0)
+    phi = math.atan2(cy, -L1) - math.pi         # палка следит за пальцем
+    piv.rotation_euler = (0, 0, phi)
+    piv.keyframe_insert("rotation_euler", frame=fr)
+    tx = XP + L2 * math.cos(phi)                # нос палки
+    ty = L2 * math.sin(phi)
+    for sg, ob in spans.items():
+        ex, ey = RXR - 2.55, sg * (RY - 1.0)    # сход нити с ролика
+        mx, my = (tx + ex) / 2, (ty + ey) / 2
+        ln = math.hypot(ex - tx, ey - ty)
+        ob.location = (mx, my, ZS)
+        ob.scale = (1, 1, max(ln, 0.5))
+        ob.rotation_euler = (0, math.pi / 2, math.atan2(ey - ty, ex - tx))
         ob.keyframe_insert("location", frame=fr)
         ob.keyframe_insert("scale", frame=fr)
         ob.keyframe_insert("rotation_euler", frame=fr)
@@ -142,13 +144,13 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(80, -48, 42))
+bpy.ops.object.camera_add(location=(50, -70, 75))
 cam = bpy.context.object
-direction = mathutils.Vector((36, 2, 3)) - cam.location
+direction = mathutils.Vector((52, 0, 2)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 cam.data.lens = 42
 sc.camera = cam
-sc.frame_set(15)
+sc.frame_set(20)
 
 sc.render.resolution_x, sc.render.resolution_y = 1400, 900
 sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_demo.png"
