@@ -142,7 +142,7 @@ plates = [
     ("12_ratchet", p012fin_j,                     # RATCHET-шайба: ступица + кольцо
      prep("ratchet_hub_v9") + prep("ratchet_ring_v9"), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
-     prep("keylock_plate_v1") + prep("keylock_key_v1", copies=2), "cool"),
+     prep("keylock_plate_v2") + prep("keylock_key_v2", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
      sum([prep(f"coupon_spline_{i}") for i in range(1, 5)], []) +
      sum([prep(f"coupon_pilot_{i}") for i in range(1, 4)], []), "cool"),
