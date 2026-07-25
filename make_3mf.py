@@ -135,11 +135,8 @@ plates = [
      sum([prep(f"riser_m{i}_v9", copies=3) for i in (2, 3, 4)], []), "cool"),
     ("09_drum_test", p012fin_j,
      prep("drum_ring_v9", copies=2) + prep("drum_top_v9"), "cool"),
-    ("11_fix_test", p012fin_j,                    # кольца + рычаг + секторы + твист-лок
-     prep("drum_ring_v9", copies=2) + prep("drum_top_v9") + prep("lever_v9") +
-     prep("bigdrum_v9") + prep("bigdrum27_v9") + prep("bigdrum_cap27_v9"), "cool"),
-    ("12_ratchet", p012fin_j,                     # RATCHET-шайба: ступица + кольцо
-     prep("ratchet_hub_v9") + prep("ratchet_ring_v9"), "cool"),
+    ("14_disk_final", p012fin_j,             # ФИНАЛ: диск Ø27 с гнёздами ключей
+     prep("bigdrum27_v9") + prep("keylock_key_v2", copies=3), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
      prep("keylock_plate_v3") + prep("keylock_key_v2", copies=2) + prep("toggle_peg_v1", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
