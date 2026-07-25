@@ -15,14 +15,14 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 120
 
-RA = 28.0                 # плечо
-R1 = 10.0                 # плечо к спице
-DY = 2.8                  # смещение осей пары от центра (полузазор окна)
-P1 = mathutils.Vector((46.0, +DY))     # ось толкателя, давящего на СЕВЕР
-P2 = mathutils.Vector((46.0, -DY))     # ось толкателя, давящего на ЮГ
-XT = 46.0 + RA            # линия наконечников (окно тележки)
-CX, CY = 100.0, -10.0     # кривошип на валу
-RC = 4.4
+RA = 45.0                 # плечо (УВЕЛИЧЕННЫЙ треугольник -> ход +-19)
+R1 = 15.0                 # плечо к спице
+DY = 2.8                  # полузазор окна
+P1 = mathutils.Vector((96.0, +DY))     # оси ЗА тележкой (как на скрине юзера)
+P2 = mathutils.Vector((96.0, -DY))
+XT = 96.0 - RA            # линия наконечников (окно тележки) = 51
+CX, CY = 10.0, -15.0      # кривошип с другой стороны
+RC = 6.3
 ZS = 1.8
 
 
@@ -105,13 +105,13 @@ for idx, (P, mcol) in enumerate(((P1, M_BLUE), (P2, M_CYAN))):
     piv = bpy.data.objects.new("Pivot%d" % (idx + 1), None)
     piv.location = (P.x, P.y, 0)
     sc.collection.objects.link(piv)
-    sector("Base%d" % (idx + 1), 8.0, -90, 0, zlo, zhi, mcol, piv)
+    sector("Base%d" % (idx + 1), 10.0, -270, -180, zlo, zhi, mcol, piv)
     box("Arm1_%d" % (idx + 1), P.x - 1.5, P.x + 1.5, P.y - R1 - 1.5, P.y,
         zlo, zhi, mcol, parent=piv)
     cyl("C1_%d" % (idx + 1), P.x, P.y - R1, zhi, zhi + 1.1, 1.1, M_RED, parent=piv)
-    box("ArmUp%d" % (idx + 1), P.x, P.x + RA + 1.2, P.y - 1.5, P.y + 1.5,
+    box("ArmUp%d" % (idx + 1), P.x - RA - 1.2, P.x, P.y - 1.5, P.y + 1.5,
         zlo, zhi, mcol, parent=piv)
-    cyl("Tip%d" % (idx + 1), P.x + RA, P.y, zhi, 5.0, 1.2, M_RED, parent=piv)
+    cyl("Tip%d" % (idx + 1), P.x - RA, P.y, zhi, 5.0, 1.2, M_RED, parent=piv)
     cyl("Post%d" % (idx + 1), P.x, P.y, 1.0, zhi + 0.9, 0.9, M_BASE)
     pivots.append(piv)
 
@@ -170,7 +170,7 @@ for fr in range(1, 121):
         piv.rotation_euler = (0, 0, phi)
         piv.keyframe_insert("rotation_euler", frame=fr)
     # наконечник 1 давит в северную стенку окна: тележка следует
-    tip1y = P1.y + RA * math.sin(phi)
+    tip1y = P1.y - RA * math.sin(phi)
     cy_ = tip1y + 1.2 - 4.0                      # стенка окна на +4 от центра
     cart.location = (XT, 6.0 + cy_, 3.7)         # центр CartN при смещении cy_
     cart.keyframe_insert("location", frame=fr)
@@ -196,9 +196,9 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(50, -55, 65))
+bpy.ops.object.camera_add(location=(45, -70, 85))
 cam = bpy.context.object
-direction = mathutils.Vector((60, 0, 2)) - cam.location
+direction = mathutils.Vector((55, 0, 2)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 cam.data.lens = 45
 sc.camera = cam
