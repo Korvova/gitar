@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-"""ДЕМО v8 — компоновка юзера (скрин): спица снизу -> треугольник ->
-длинное плечо вверх вдоль грифа -> шарнир+серьга вбок -> тележка.
+"""ДЕМО v9 — ДВА толкателя от одного вала (хитрость юзера).
 Запуск: blender -b -P palka_demo.py
-Все соединения — шарниры. Размеры условные (демо принципа).
+- два одинаковых механизма (спица -> треугольник -> плечо) рядом,
+  их наконечники сидят в ОКНЕ тележки и давят в противоположные стенки:
+  один толкает вбок туда, другой — обратно;
+- ходят в унисон (фазы согласованы на валу), тележка зажата без зазора,
+  наружу за тележку ничего не торчит;
+- обе спицы — к одному кривошипу на валу мотора.
 """
 import bpy, math, mathutils
 
@@ -11,12 +15,14 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 120
 
-PX, PY = 46.0, -2.0       # ось треугольника
-R1 = 10.0                 # плечо вниз к спице (корнер-1 под осью)
-RA = 28.0                 # длинное плечо вверх (вдоль грифа)
-LL = 8.0                  # серьга от конца плеча к пальцу тележки (вбок)
-CX, CY = 12.0, -12.0      # кривошип (снизу)
-RC = 3.7                  # радиус кривошипа (кач ~+-22°)
+RA = 28.0                 # плечо
+R1 = 10.0                 # плечо к спице
+DY = 2.8                  # смещение осей пары от центра (полузазор окна)
+P1 = mathutils.Vector((46.0, +DY))     # ось толкателя, давящего на СЕВЕР
+P2 = mathutils.Vector((46.0, -DY))     # ось толкателя, давящего на ЮГ
+XT = 46.0 + RA            # линия наконечников (окно тележки)
+CX, CY = 100.0, -10.0     # кривошип на валу
+RC = 4.4
 ZS = 1.8
 
 
@@ -30,8 +36,8 @@ M_BASE = mat("base", (0.62, 0.62, 0.62, 1))
 M_CART = mat("cart", (0.8, 0.8, 0.82, 1))
 M_RED = mat("red", (0.8, 0.15, 0.1, 1))
 M_BLUE = mat("blue", (0.2, 0.3, 0.75, 1))
+M_CYAN = mat("cyan", (0.2, 0.6, 0.8, 1))
 M_GOLD = mat("gold", (0.75, 0.6, 0.25, 1))
-M_GREEN = mat("green", (0.2, 0.65, 0.3, 1))
 
 
 def box(name, x0, x1, y0, y1, z0, z1, m, parent=None):
@@ -60,7 +66,7 @@ def cyl(name, x, y, z0, z1, r, m, parent=None):
 
 
 def sector(name, r, a0_deg, a1_deg, z0, z1, m, parent):
-    verts, n = [], 30
+    verts, n = [], 24
     pts2 = [(0.0, 0.0)]
     for i in range(n + 1):
         a = math.radians(a0_deg + (a1_deg - a0_deg) * i / n)
@@ -89,60 +95,64 @@ def sector(name, r, a0_deg, a1_deg, z0, z1, m, parent):
 
 
 # ---- основание ----
-box("Slab", 0, 100, -26, 26, 0, 1.0, M_BASE)
+box("Slab", 0, 116, -26, 26, 0, 1.0, M_BASE)
 
-# ---- ТРЕУГОЛЬНИК на оси ----
-piv = bpy.data.objects.new("Pivot", None)
-piv.location = (PX, PY, 0)
-sc.collection.objects.link(piv)
-sector("Base", 9.0, -90, 0, 1.3, 2.3, M_BLUE, piv)                 # дуга-основание
-box("Arm1", PX - 1.6, PX + 1.6, PY - R1 - 1.6, PY, 1.3, 2.3, M_BLUE, parent=piv)
-cyl("Corner1", PX, PY - R1, 2.3, 3.6, 1.2, M_RED, parent=piv)      # шарнир спицы
-box("ArmUp", PX, PX + RA + 1.6, PY - 1.6, PY + 1.6, 1.3, 2.3, M_BLUE, parent=piv)
-cyl("TipJoint", PX + RA, PY, 2.3, 3.6, 1.2, M_RED, parent=piv)     # шарнир серьги
-cyl("AxisPost", PX, PY, 1.0, 3.4, 1.0, M_BASE)
+# ---- два толкателя (одинаковые, рядом) ----
+pivots = []
+for idx, (P, mcol) in enumerate(((P1, M_BLUE), (P2, M_CYAN))):
+    zlo = 2.45 - 1.15 * idx                    # пара стопкой: синий выше, голубой ниже
+    zhi = zlo + 1.0
+    piv = bpy.data.objects.new("Pivot%d" % (idx + 1), None)
+    piv.location = (P.x, P.y, 0)
+    sc.collection.objects.link(piv)
+    sector("Base%d" % (idx + 1), 8.0, -90, 0, zlo, zhi, mcol, piv)
+    box("Arm1_%d" % (idx + 1), P.x - 1.5, P.x + 1.5, P.y - R1 - 1.5, P.y,
+        zlo, zhi, mcol, parent=piv)
+    cyl("C1_%d" % (idx + 1), P.x, P.y - R1, zhi, zhi + 1.1, 1.1, M_RED, parent=piv)
+    box("ArmUp%d" % (idx + 1), P.x, P.x + RA + 1.2, P.y - 1.5, P.y + 1.5,
+        zlo, zhi, mcol, parent=piv)
+    cyl("Tip%d" % (idx + 1), P.x + RA, P.y, zhi, 5.0, 1.2, M_RED, parent=piv)
+    cyl("Post%d" % (idx + 1), P.x, P.y, 1.0, zhi + 0.9, 0.9, M_BASE)
+    pivots.append(piv)
 
-# ---- тележка (ездит вбок) + палец ----
-cart = box("Cart", PX + RA - 7, PX + RA + 7, 5.0, 15.0, 5.0, 11.0, M_CART)
-cyl("CartPin", PX + RA, 6.0, 2.4, 5.2, 1.0, M_RED, parent=cart)
+# ---- тележка с ОКНОМ: стенки, в которые давят наконечники ----
+cart = box("CartN", XT - 8, XT + 8, 4.0, 8.0, 2.4, 5.0, M_CART)     # северная стенка
+box("CartS", XT - 8, XT + 8, -8.0, -4.0, 2.4, 5.0, M_CART, parent=cart)
+box("CartTop", XT - 8, XT + 8, -8.0, 8.0, 5.0, 9.5, M_CART, parent=cart)
 
-# ---- кривошип (снизу) ----
+# ---- кривошип на валу ----
 crank = bpy.data.objects.new("Crank", None)
 crank.location = (CX, CY, 0)
 sc.collection.objects.link(crank)
-cyl("CrankDisc", CX, CY, 1.3, 2.5, 7.0, M_GOLD, parent=crank)
+cyl("CrankDisc", CX, CY, 1.3, 2.5, 7.5, M_GOLD, parent=crank)
 cyl("CrankPin", CX, CY - RC, 2.5, 3.8, 1.0, M_RED, parent=crank)
 
-# ---- спица и серьга (динамические) ----
-bpy.ops.mesh.primitive_cube_add()
-spica = bpy.context.object
-spica.name = "Palka"
-spica.data.materials.append(M_RED)
-bpy.ops.mesh.primitive_cube_add()
-link = bpy.context.object
-link.name = "Serga"
-link.data.materials.append(M_GREEN)
+# ---- спицы (динамические) ----
+spicas = []
+for idx in (1, 2):
+    bpy.ops.mesh.primitive_cube_add()
+    sp_ = bpy.context.object
+    sp_.name = "Palka%d" % idx
+    sp_.data.materials.append(M_RED)
+    spicas.append(sp_)
 
 # ---- кинематика ----
-def corner1(phi):
-    return mathutils.Vector((PX + R1 * math.sin(phi), PY - R1 * math.cos(phi)))
-
-
-def tip(phi):
-    return mathutils.Vector((PX + RA * math.cos(phi), PY + RA * math.sin(phi)))
+def corner1(P, phi):
+    return mathutils.Vector((P.x + R1 * math.sin(phi), P.y - R1 * math.cos(phi)))
 
 
 def crank_pin(th):
     return mathutils.Vector((CX + RC * math.sin(th), CY - RC * math.cos(th)))
 
 
-L_SP = (crank_pin(0.0) - corner1(0.0)).length
+L1_SP = (crank_pin(0.0) - corner1(P1, 0.0)).length
+L2_SP = (crank_pin(0.0) - corner1(P2, 0.0)).length
 
 
 def solve_phi(th):
     pc = crank_pin(th)
     lo, hi = math.radians(-28), math.radians(28)
-    f = lambda p: (corner1(p) - pc).length - L_SP
+    f = lambda p: (corner1(P1, p) - pc).length - L1_SP
     flo = f(lo)
     for _ in range(60):
         mid = (lo + hi) / 2
@@ -153,35 +163,29 @@ def solve_phi(th):
     return (lo + hi) / 2
 
 
-PY_NEUT = 6.0
 for fr in range(1, 121):
     th = 2 * math.pi * (fr - 1) / 120.0
     phi = solve_phi(th)
-    piv.rotation_euler = (0, 0, phi)
-    piv.keyframe_insert("rotation_euler", frame=fr)
-    tp = tip(phi)
-    dxx = (PX + RA) - tp.x
-    py = tp.y + math.sqrt(max(LL * LL - dxx * dxx, 0.25))
-    cart.location = (PX + RA, 10.0 + (py - PY_NEUT), 8.0)
+    for piv in pivots:
+        piv.rotation_euler = (0, 0, phi)
+        piv.keyframe_insert("rotation_euler", frame=fr)
+    # наконечник 1 давит в северную стенку окна: тележка следует
+    tip1y = P1.y + RA * math.sin(phi)
+    cy_ = tip1y + 1.2 - 4.0                      # стенка окна на +4 от центра
+    cart.location = (XT, 6.0 + cy_, 3.7)         # центр CartN при смещении cy_
     cart.keyframe_insert("location", frame=fr)
-    pin = mathutils.Vector((PX + RA, py))
-    mid = (tp + pin) / 2
-    link.location = (mid.x, mid.y, ZS + 1.4)
-    link.scale = ((pin - tp).length / 2 + 1.1, 0.8, 0.4)
-    link.rotation_euler = (0, 0, math.atan2(pin.y - tp.y, pin.x - tp.x))
-    link.keyframe_insert("location", frame=fr)
-    link.keyframe_insert("scale", frame=fr)
-    link.keyframe_insert("rotation_euler", frame=fr)
     crank.rotation_euler = (0, 0, th)
     crank.keyframe_insert("rotation_euler", frame=fr)
-    c1, pc = corner1(phi), crank_pin(th)
-    mid = (c1 + pc) / 2
-    spica.location = (mid.x, mid.y, ZS + 1.2)
-    spica.scale = ((pc - c1).length / 2 + 1.4, 1.0, 0.5)
-    spica.rotation_euler = (0, 0, math.atan2(pc.y - c1.y, pc.x - c1.x))
-    spica.keyframe_insert("location", frame=fr)
-    spica.keyframe_insert("scale", frame=fr)
-    spica.keyframe_insert("rotation_euler", frame=fr)
+    pc = crank_pin(th)
+    for idx, (P, sp_) in enumerate(zip((P1, P2), spicas)):
+        c1 = corner1(P, phi)
+        mid = (c1 + pc) / 2
+        sp_.location = (mid.x, mid.y, 4.0 - 1.15 * idx)
+        sp_.scale = ((pc - c1).length / 2 + 1.2, 0.8, 0.35)
+        sp_.rotation_euler = (0, 0, math.atan2(pc.y - c1.y, pc.x - c1.x))
+        sp_.keyframe_insert("location", frame=fr)
+        sp_.keyframe_insert("scale", frame=fr)
+        sp_.keyframe_insert("rotation_euler", frame=fr)
 
 # ---- свет, камера ----
 bpy.ops.object.light_add(type='SUN', location=(40, -40, 90))
@@ -192,16 +196,16 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(42, -45, 60))
+bpy.ops.object.camera_add(location=(50, -55, 65))
 cam = bpy.context.object
-direction = mathutils.Vector((48, 0, 2)) - cam.location
+direction = mathutils.Vector((60, 0, 2)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 cam.data.lens = 45
 sc.camera = cam
 sc.frame_set(16)
 
 sc.render.resolution_x, sc.render.resolution_y = 1400, 900
-sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_demo8.png"
+sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_demo9.png"
 bpy.ops.render.render(write_still=True)
 bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Палка_демо.blend")
-print("PALKA8 OK")
+print("PALKA9 OK")
