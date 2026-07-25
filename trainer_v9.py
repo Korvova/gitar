@@ -230,6 +230,18 @@ bigdrum27 = Pos(0, 0, (1.8 + 9.8) / 2) * Cylinder(13.5, 8)
 # выступов, тор-вырезы печатаются идеально.
 bigdrum27 -= Pos(0, 0, 4.0) * Torus(13.5, 0.4)                     # ручей B
 bigdrum27 -= Pos(0, 0, 5.6) * Torus(13.5, 0.4)                     # ручей A
+
+# ДИСК Ø54 (идея юзера: «вал больше — сила не нужна»): ход 40 мм = 85°,
+# сектора нитей не пересекаются вовсе -> ГЛАДКИЙ цилиндр без канавок,
+# заправка элементарная. Намотка ~170.4 мм/об (прошивка!). ВНИМАНИЕ:
+# для 4-канальной компоновки велик (режет чужие коридоры) — вопрос открыт.
+disk54 = Pos(0, 0, (1.8 + 9.8) / 2) * Cylinder(27, 8)
+disk54 -= Pos(0, 0, 1.8) * spline_cut(8.2, -0.125)
+for sg in (-1, 1):
+    y = sg * 18
+    disk54 -= BB(-4.3, 4.3, y - 1.2, y + 1.2, 4.7, 9.9)            # прорезь ключа
+    disk54 -= BB(-4.9, 4.9, y - 1.8, y + 1.8, 8.7, 9.9)            # воронка входа
+    disk54 -= Pos(0, y, 7.0) * Rot(0, 90, 0) * Cylinder(1.05, 42)  # канал нити
 bigdrum27 -= Pos(0, 0, 1.8) * spline_cut(8.2, -0.125)
 for sg in (-1, 1):
     y = sg * 9
@@ -378,7 +390,7 @@ parts += [("neckL5_v9", L5), ("cart_body_v9", car), ("deck_v9", deck),
           ("roller_corner_v9", corner), ("_mock_nema14_v9", mot)]
 parts += [(f"fin_f{i+1}_v9", fins[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
-          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring)]
+          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]
 parts += [(f"guide_m{i+1}_v9", guides[i]) for i in range(4)]
 parts += [(f"bush_m{i+1}_v9", bushes[i]) for i in range(4)]

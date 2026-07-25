@@ -137,6 +137,8 @@ plates = [
      prep("drum_ring_v9", copies=2) + prep("drum_top_v9"), "cool"),
     ("14_disk_final", p012fin_j,             # ФИНАЛ: диск Ø27 с гнёздами ключей
      prep("bigdrum27_v9") + prep("keylock_key_v2", copies=3), "cool"),
+    ("15_disk54", p012fin_j,               # диск Ø54 гладкий (прототип-фаза)
+     prep("disk54_v1") + prep("keylock_key_v2", copies=3), "cool"),
     ("13_keylock", p012fin_j,                     # тест поворотного ключа (идея юзера)
      prep("keylock_plate_v3") + prep("keylock_key_v2", copies=2) + prep("toggle_peg_v1", copies=2), "cool"),
     ("10_kalibr_kupony", p012fin_j,
