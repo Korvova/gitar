@@ -80,8 +80,11 @@ for i in range(4):
     # продлена внутрь до ±21 — зигзаг-палец плавника может ехать дальше,
     # упор хода не механика, а прошивка. Пол под канавкой сохранён, трос
     # каналов ниже дна канавки — не пересекаются.
-    L -= BB(la - 3, la + 3, -25.1, 21, zb + 1.2, zt + 0.1)
-    L -= BB(lb - 3, lb + 3, -21, 25.1, zb + 1.2, zt + 0.1)
+    # v12 (идея юзера): канавка углублена на 0.8 под ВКЛАДЫШ-планку (liner):
+    # пятка едет по гладкому верху вкладыша, нить — в П-пазу под ним.
+    # Вкладыш прижимается краями следующего слоя, крепёж не нужен.
+    L -= BB(la - 3, la + 3, -25.1, 21, zb + 0.4, zt + 0.1)
+    L -= BB(lb - 3, lb + 3, -21, 25.1, zb + 0.4, zt + 0.1)
     # каналы к деке ПО ДНУ (пол 0.5)
     L -= BB(pax, NECK_L + 0.1, chy - 1.75, chy + 1.75, zb + 0.5, zt + 0.1)
     L -= BB(pbx, NECK_L + 0.1, -chy - 1.75, -chy + 1.75, zb + 0.5, zt + 0.1)
@@ -125,7 +128,20 @@ for sx, sy in STACK_SCREWS + DECK_SCREWS:
 for sx, sy in DOWELS:
     L5 -= Pos(sx, sy, 15) * Cylinder(PIN_P, 2.3)
 
-# ---------------- корпус тележки v10 (одинаковый x4) ----------------
+# ---------------- вкладыши канавок (liner, идея юзера) ----------------
+# Планка 5.8x0.8 на дно углублённой канавки (лапа A своего этажа; для B та
+# же деталь поворотом на 180° вокруг Z центра тележки). Снизу П-паз для
+# нити продольного канала (мост 0.2 сверху) + вырез под карман ролика.
+# Печать ВВЕРХ НОГАМИ (пазом вверх). Прижимается следующим слоем.
+liners = []
+for i in range(4):
+    zb, chy, s = ZB[i], CH_YS[i], S[i]
+    la, _ = lanes(s)
+    (pax, pay), _b = pockets(s, chy)
+    ln = BB(la - 2.9, la + 2.9, -24.8, 20.8, zb + 0.4, zb + 1.2)
+    ln -= Pos(pax, pay, zb + 0.8) * Cylinder(3.85, 1.0)            # вырез: карман ролика
+    ln -= BB(la - 3.0, la + 3.0, chy - 2.0, chy + 2.0, zb + 0.35, zb + 1.0)  # П-паз нити
+    liners.append(ln)
 # По ТЗ юзера: дно 2 мм, стенки 5 мм; плавники крепятся СБОКУ к стенкам
 # стакана (2x M2 горизонтально на каждый плавник, самонарез в стенку 2 мм).
 s0 = S[0]
@@ -408,6 +424,7 @@ parts += [("neckL5_v9", L5), ("cart_body_v9", car), ("deck_v9", deck),
           ("rail_v9", rail), ("stop_v9", stop),
           ("roller_corner_v9", corner), ("_mock_nema14_v9", mot)]
 parts += [(f"fin_f{i+1}_v9", fins[i]) for i in range(4)]
+parts += [(f"liner_f{i+1}_v1", liners[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
           ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v1", tier), ("key_long_v1", key_long)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]
