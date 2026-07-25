@@ -259,6 +259,13 @@ for sg in (-1, 1):
     tier -= BB(-4.3, 4.3, y - 1.2, y + 1.2, -0.1, 6.9)             # прорезь СКВОЗЬ
     tier -= BB(-4.9, 4.9, y - 1.8, y + 1.8, 5.6, 6.9)              # воронка входа
     tier -= Pos(0, y, 4.2) * Rot(0, 90, 0) * Cylinder(1.05, 28)    # канал нити
+    # v2: вертикальный проход — нить из канала НИЖНЕГО диска уходит вверх
+    # в канал верхнего (при сборке проходы совмещаются звёздочкой)
+    tier -= Pos(sg * 6, y, 3.4) * Cylinder(1.0, 7.0)
+# v2: третья СКВОЗНАЯ прорезь связки дисков (90° от рабочих) — длинный
+# ключ сквозь оба диска скрепляет их (шестерни на 2 шляпы не хватает)
+tier -= BB(7.8, 10.2, -4.3, 4.3, -0.1, 6.9)
+tier -= BB(7.2, 10.8, -4.9, 4.9, 5.6, 6.9)                         # воронка
 
 # длинный ключ (нижний ярус, сквозь верхний диск): дырка нити на глубине
 # канала нижнего диска = 6.8+4.2 = 11.0 от верха стопки => лопасть 11.6
@@ -426,7 +433,7 @@ parts += [("neckL5_v9", L5), ("cart_body_v9", car), ("deck_v9", deck),
 parts += [(f"fin_f{i+1}_v9", fins[i]) for i in range(4)]
 parts += [(f"liner_f{i+1}_v1", liners[i]) for i in range(4)]
 parts += [("drum_ring_v9", drum_ring), ("drum_top_v9", drum_top),
-          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v1", tier), ("key_long_v1", key_long)]
+          ("lever_v9", lever), ("bigdrum_v9", bigdrum), ("bigdrum27_v9", bigdrum27), ("ratchet_hub_v9", rt_hub), ("ratchet_ring_v9", rt_ring), ("disk54_v1", disk54), ("tier_disk_v2", tier), ("key_long_v1", key_long)]
 parts += [(f"riser_m{i+2}_v9", motor_risers[i]) for i in range(3)]
 parts += [(f"guide_m{i+1}_v9", guides[i]) for i in range(4)]
 parts += [(f"bush_m{i+1}_v9", bushes[i]) for i in range(4)]
