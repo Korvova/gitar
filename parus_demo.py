@@ -80,7 +80,7 @@ box("WallS", 5, 80, -25, -23.2, 1.0, 4.5, M_BASE)
 
 # ---- тележка + ПАРУС (жёсткая пластина, без осей и прорезей) ----
 cart = box("Cart", XL - 8, XL + 8, -7, 7, 5.0, 12.0, M_CART)
-box("Sail", XL - 1.0, XL + 1.0, -HP, HP, 1.2, 5.2, M_SAIL, parent=cart)
+box("Sail", XL - 1.9, XL - 0.5, -HP, HP, 1.2, 5.2, M_SAIL, parent=cart)  # западнее дорожки, мимо роликов
 
 # ---- ролики у бортов + статичные части нитей (каналы к мотору) ----
 for sg, nm in ((1, 'A'), (-1, 'B')):
@@ -109,7 +109,7 @@ for fr in range(1, 121):
         z = ZA if sg > 0 else ZB
         y_roll = sg * RY                        # сход нити со своего ролика
         y_tie = cy - sg * HP                    # КРЕСТ: A к югу паруса, B к северу
-        ob.location = (XL, (y_roll + y_tie) / 2, z)
+        ob.location = (XL - 0.35, (y_roll + y_tie) / 2, z)
         ob.scale = (1, 1, max(abs(y_roll - y_tie), 0.5))
         ob.rotation_euler = (math.pi / 2, 0, 0)
         ob.keyframe_insert("location", frame=fr)
