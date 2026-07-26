@@ -149,7 +149,7 @@ plates = [
     ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД «палка» v2: БЕЗ штифтов,
      prep("ptest_plate_v2") + prep("ptest_triangle_v2") +      # спица-шатун:
      prep("ptest_spica_v2") +                                  # 4-звенник без
-     prep("ptest_serga_v2") + prep("ptest_cart_v2") +          # губок; 3 кривошипа
+     prep("ptest_cart_v2") +                                   # кулиса; 3 кривошипа
      prep("ptest_crank_r60_v2") + prep("ptest_crank_r65_v2") +
      prep("ptest_crank_r70_v2") + prep("ptest_leg_v1", copies=4) +
      prep("ptest_bridge_v1", copies=2) + prep("ptest_bridge_low_v1") +
