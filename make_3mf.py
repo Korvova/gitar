@@ -146,6 +146,10 @@ plates = [
      prep("tier_disk_v3", copies=8) + prep("keylock_key_v2", copies=9), "cool"),
     ("20_test_noga", p020_j,               # тест-нога 20 см на шестерню (+линейка до 40)
      prep("test_leg_v1") + prep("test_leg_ext_v1")),
+    ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД механизма «палка» (1 станция)
+     prep("ptest_plate_v1") + prep("ptest_triangle_v1") + prep("ptest_spica_v1") +
+     prep("ptest_shatun_v1") + prep("ptest_serga_v1") + prep("ptest_crank_v1") +
+     prep("ptest_cart_v1")),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
