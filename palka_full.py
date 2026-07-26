@@ -13,11 +13,11 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 240
 
-S = [35.0, 51.0, 67.0, 83.0]          # тележки
-MOT = [160.0, 206.0, 252.0, 298.0]    # моторы
-RA, R1, LL, RC = 85.0, 20.0, 3.0, 4.7
-PY = -1.8
-YSP = -21.8                            # коридор спиц у борта
+S = [35.0, 51.0, 67.0, 83.0]          # тележки у ГОЛОВЫ грифа
+MOT = [640.0, 690.0, 740.0, 790.0]    # кривошипы моторов в ДЕКЕ
+RA, R1, LL, RC = 65.0, 21.2, 4.0, 6.5  # классика 52: серьга 4, плечо 65
+PY = -1.6
+YSP = -22.8                            # коридор спиц у борта (гриф +-26)
 
 
 def mat(name, rgba):
@@ -88,11 +88,12 @@ def sector(name, r, a0_deg, a1_deg, z0, z1, m, parent):
     return ob
 
 
-# ---- гриф + дека ----
-box("Neck", 0, 125, -25, 25, 0, 1.0, M_BASE)
-box("BortN", 0, 125, 23.5, 25, 1.0, 10.0, M_BASE)
-box("BortS", 0, 125, -25, -23.5, 1.0, 10.0, M_BASE)
-box("Deck", 125, 320, -30, 30, 0, 1.0, M_BASE)
+# ---- ГИТАРА-КЛАССИКА: гриф 600x52 + дека ----
+box("Head", -70, 0, -30, 30, 0, 1.0, M_BASE)                       # головка
+box("Neck", 0, 600, -26, 26, 0, 1.0, M_BASE)
+box("BortN", 0, 600, 24.5, 26, 1.0, 10.0, M_BASE)
+box("BortS", 0, 600, -26, -24.5, 1.0, 10.0, M_BASE)
+box("Deck", 600, 1050, -185, 185, 0, 1.0, M_BASE)                  # корпус
 
 stations = []
 for k in range(4):
@@ -201,16 +202,16 @@ w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.9, 0.9, 0.9, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.7
 sc.world = w
-bpy.ops.object.camera_add(location=(90, -150, 150))
+bpy.ops.object.camera_add(location=(350, -560, 520))
 cam = bpy.context.object
-direction = mathutils.Vector((150, 0, 3)) - cam.location
+direction = mathutils.Vector((430, 0, 3)) - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
-cam.data.lens = 40
+cam.data.lens = 28
 sc.camera = cam
 sc.frame_set(30)
 
 sc.render.resolution_x, sc.render.resolution_y = 1400, 900
-sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_full.png"
+sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_guitar.png"
 bpy.ops.render.render(write_still=True)
-bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Палка_4станции.blend")
+bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Гитара_палка.blend")
 print("FULL OK")
