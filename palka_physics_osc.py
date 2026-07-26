@@ -189,7 +189,7 @@ c_ring(tr, 0, 0, 0, 1.6, 3.0, 5.5)
 c_ring(tr, 0, 0, 0, 1.6, 5.5, 11.0)
 c_box(tr, -66.6, -3, -2.5, 2.5, 0, 1.6)
 c_cyl(tr, -65, 0, 0, 1.6, 5.5)
-c_cyl(tr, -65, 0, 1.6, 8.0, 2.5)              # штырь tip в щель палубы
+c_cyl(tr, -65, 0, 1.6, 7.0, 2.5)              # штырь tip: верх 12, мосты не задевает
 c_box(tr, -2.5, 2.5, -22.8, -3, 0, 1.6)
 c_cyl(tr, 0, -21.2, 0, 1.6, 5.5)
 c_cyl(tr, 0, -21.2, 1.6, 6.0, 2.5)            # штырёк угла-1 длинный
@@ -245,19 +245,18 @@ slop("j_axis", 95, -2, 5.8, OBJ["ptest_plate_v2"], OBJ["ptest_triangle_v2"], -0.
 cs = slop("j_slot", 30, -2, 11, OBJ["ptest_triangle_v2"], OBJ["ptest_cart_v2"], -0.5, 3.2)
 cs.limit_lin_x_lower = -6.2                   # вилка: штырь гуляет по дуге на запад
 cs.limit_lin_x_upper = 0.6
-# КАНАЛ как люфтовая связка (зазоры реальные): солвер не проколет рельсу
-ch = slop("j_channel", 30, 6, 9, OBJ["ptest_plate_v2"], OBJ["ptest_cart_v2"], -0.2, 0.5)
-ch.limit_lin_x_lower = -0.35
-ch.limit_lin_x_upper = 0.35
-ch.use_limit_lin_y = True
-ch.limit_lin_y_lower = -22
-ch.limit_lin_y_upper = 28
-for _ax in ('x', 'y'):
-    setattr(ch, 'limit_ang_' + _ax + '_lower', -math.radians(3))
-    setattr(ch, 'limit_ang_' + _ax + '_upper', math.radians(3))
-ch.use_limit_ang_z = True
-ch.limit_ang_z_lower = -math.radians(2.5)
-ch.limit_ang_z_upper = math.radians(2.5)
+# КАНАЛ как ДВЕ люфтовые связки у носа и кормы (база 28): пара линейных
+# лимитов ±0.35 держит разворот жёстко (yaw < 1.5 гарантированно)
+for chname, chy in (("j_channel_s", -8), ("j_channel_n", 20)):
+    ch = slop(chname, 30, chy, 9, OBJ["ptest_plate_v2"], OBJ["ptest_cart_v2"], -0.2, 0.5)
+    ch.limit_lin_x_lower = -0.35
+    ch.limit_lin_x_upper = 0.35
+    ch.use_limit_lin_y = True
+    ch.limit_lin_y_lower = -22
+    ch.limit_lin_y_upper = 28
+    for _ax in ('x', 'y'):
+        setattr(ch, 'limit_ang_' + _ax + '_lower', -math.radians(3))
+        setattr(ch, 'limit_ang_' + _ax + '_upper', math.radians(3))
 
 # КРИВОШИП КАЧАЕТСЯ (идея юзера: мотор туда-сюда, не полный оборот):
 # сектор ±80° вокруг нижней точки, период 200 кадров — 2 полных качания
