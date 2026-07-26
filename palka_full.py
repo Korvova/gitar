@@ -16,6 +16,7 @@ sc.frame_start, sc.frame_end = 1, 240
 S = [35.0, 51.0, 67.0, 83.0]          # тележки у ГОЛОВЫ грифа
 MOT = [640.0, 690.0, 740.0, 790.0]    # кривошипы моторов в ДЕКЕ
 RA, R1, LL, RC = 65.0, 21.2, 4.0, 6.5  # классика 52: серьга 4, плечо 65
+LSH = 45.0                             # ШАТУН у кривошипа (гасит поперечное гуляние)
 PY = -1.6
 YSP = -22.8                            # коридор спиц у борта (гриф +-26)
 
@@ -129,7 +130,11 @@ for k in range(4):
     lk = bpy.context.object
     lk.name = "Lk%d" % (k + 1)
     lk.data.materials.append(col)
-    stations.append(dict(piv=piv, cart=cart, crank=crank, sp=sp_, lk=lk,
+    bpy.ops.mesh.primitive_cube_add()
+    sh = bpy.context.object
+    sh.name = "Shatun%d" % (k + 1)
+    sh.data.materials.append(M_GOLD)
+    stations.append(dict(piv=piv, cart=cart, crank=crank, sp=sp_, lk=lk, sh=sh,
                          px=px, xc=xc, mot=MOT[k], z=(zlo + zhi) / 2, zhi=zhi))
 
 
@@ -145,10 +150,16 @@ def crank_pin(mx, th):
     return mathutils.Vector((mx - RC * math.cos(th), YSP + RC * math.sin(th)))
 
 
-def solve_phi(px, mx, Lsp, th):
+def tail_x(mx, th):
+    """Хвост спицы: шатун гасит Y-гуляние пина, спица строго на YSP."""
     pc = crank_pin(mx, th)
+    return pc.x - math.sqrt(max(LSH * LSH - (pc.y - YSP) ** 2, 1.0)), pc
+
+
+def solve_phi(px, tx, Lsp):
+    tail = mathutils.Vector((tx, YSP))
     lo, hi = math.radians(-16), math.radians(16)
-    f = lambda p: (corner1(px, p) - pc).length - Lsp
+    f = lambda p: (corner1(px, p) - tail).length - Lsp
     flo = f(lo)
     for _ in range(50):
         mid = (lo + hi) / 2
@@ -160,12 +171,14 @@ def solve_phi(px, mx, Lsp, th):
 
 
 for st in stations:
-    st['L'] = (crank_pin(st['mot'], math.pi / 2) - corner1(st['px'], 0.0)).length
+    tx0, _ = tail_x(st['mot'], math.pi / 2)
+    st['L'] = (mathutils.Vector((tx0, YSP)) - corner1(st['px'], 0.0)).length
 
 for fr in range(1, 241):
     for k, st in enumerate(stations):
         th = 2 * math.pi * (fr - 1) / 240.0 * (2 + 0.5 * k) + k * 1.3
-        phi = solve_phi(st['px'], st['mot'], st['L'], th)
+        tx, pc = tail_x(st['mot'], th)
+        phi = solve_phi(st['px'], tx, st['L'])
         st['piv'].rotation_euler = (0, 0, phi)
         st['piv'].keyframe_insert("rotation_euler", frame=fr)
         tp = tipf(st['px'], phi)
@@ -184,14 +197,21 @@ for fr in range(1, 241):
         st['crank'].rotation_euler = (0, 0, th)
         st['crank'].keyframe_insert("rotation_euler", frame=fr)
         c1 = corner1(st['px'], phi)
-        pc = crank_pin(st['mot'], th)
-        mid = (c1 + pc) / 2
+        tail = mathutils.Vector((tx, YSP))
+        mid = (c1 + tail) / 2
         st['sp'].location = (mid.x, mid.y, st['zhi'] + 0.45)
-        st['sp'].scale = ((pc - c1).length / 2 + 1.2, 0.8, 0.35)
-        st['sp'].rotation_euler = (0, 0, math.atan2(pc.y - c1.y, pc.x - c1.x))
+        st['sp'].scale = ((tail - c1).length / 2 + 1.2, 0.8, 0.35)
+        st['sp'].rotation_euler = (0, 0, math.atan2(tail.y - c1.y, tail.x - c1.x))
         st['sp'].keyframe_insert("location", frame=fr)
         st['sp'].keyframe_insert("scale", frame=fr)
         st['sp'].keyframe_insert("rotation_euler", frame=fr)
+        mid = (tail + pc) / 2
+        st['sh'].location = (mid.x, mid.y, st['zhi'] + 0.45)
+        st['sh'].scale = ((pc - tail).length / 2 + 0.9, 0.7, 0.3)
+        st['sh'].rotation_euler = (0, 0, math.atan2(pc.y - tail.y, pc.x - tail.x))
+        st['sh'].keyframe_insert("location", frame=fr)
+        st['sh'].keyframe_insert("scale", frame=fr)
+        st['sh'].keyframe_insert("rotation_euler", frame=fr)
 
 # ---- свет, камера ----
 bpy.ops.object.light_add(type='SUN', location=(80, -60, 130))
