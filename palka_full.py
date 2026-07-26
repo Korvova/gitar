@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-"""ПОЛНЫЙ МАКЕТ: 4 станции на механизме юзера (палка-треугольник), слоями.
+"""ГИТАРА-КЛАССИКА, ЗЕРКАЛЬНАЯ раскладка (идея юзера): станции 1,3 — южный
+борт, 2,4 — северный. По 2 слоя на борт (пирог 3 мм вместо 6).
 Запуск: blender -b -P palka_full.py
-- 4 ОДИНАКОВЫХ механизма (плечо 85, серьга 3, кривошип R4.7), оси на деке;
-- слои снизу вверх: станция 1..4 (веера не пересекают чужие пальцы);
-- спицы у борта друг над другом, кривошипы на моторах на высоте слоя;
-- ход каждой тележки ~40 мм, фазы кривошипов разные (едут независимо).
+Механизм станции: кривошип (дека) -> шатун -> спица в канале борта ->
+угол-1 треугольника -> ось -> плечо 65 -> серьга 4 по центру -> тележка.
 """
 import bpy, math, mathutils
 
@@ -13,12 +12,13 @@ sc = bpy.context.scene
 sc.render.fps = 24
 sc.frame_start, sc.frame_end = 1, 240
 
-S = [35.0, 51.0, 67.0, 83.0]          # тележки у ГОЛОВЫ грифа
-MOT = [640.0, 690.0, 740.0, 790.0]    # кривошипы моторов в ДЕКЕ
-RA, R1, LL, RC = 65.0, 21.2, 4.0, 6.5  # классика 52: серьга 4, плечо 65
-LSH = 45.0                             # ШАТУН у кривошипа (гасит поперечное гуляние)
-PY = -1.6
-YSP = -22.8                            # коридор спиц у борта (гриф +-26)
+S = [35.0, 51.0, 67.0, 83.0]          # тележки у головы
+MOT = [640.0, 690.0, 740.0, 790.0]    # кривошипы моторов в деке
+SIDE = [1, -1, 1, -1]                 # 1,3 — юг; 2,4 — север (зеркало)
+RA, R1, LL, RC = 65.0, 21.2, 4.0, 6.5
+LSH = 45.0                            # шатун
+PYA = -1.6                            # ось (юг; север зеркально)
+YSPA = -22.8                          # коридор спицы (юг; север зеркально)
 
 
 def mat(name, rgba):
@@ -39,7 +39,7 @@ def box(name, x0, x1, y0, y1, z0, z1, m, parent=None):
     bpy.ops.mesh.primitive_cube_add()
     ob = bpy.context.object
     ob.name = name
-    ob.scale = ((x1 - x0) / 2, (y1 - y0) / 2, (z1 - z0) / 2)
+    ob.scale = ((x1 - x0) / 2, abs(y1 - y0) / 2, (z1 - z0) / 2)
     ob.location = ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2)
     ob.data.materials.append(m)
     if parent:
@@ -89,39 +89,46 @@ def sector(name, r, a0_deg, a1_deg, z0, z1, m, parent):
     return ob
 
 
-# ---- ГИТАРА-КЛАССИКА: гриф 600x52 + дека ----
-box("Head", -70, 0, -30, 30, 0, 1.0, M_BASE)                       # головка
+# ---- гитара ----
+box("Head", -70, 0, -30, 30, 0, 1.0, M_BASE)
 box("Neck", 0, 600, -26, 26, 0, 1.0, M_BASE)
 box("BortN", 0, 600, 24.5, 26, 1.0, 10.0, M_BASE)
 box("BortS", 0, 600, -26, -24.5, 1.0, 10.0, M_BASE)
-box("Deck", 600, 1050, -185, 185, 0, 1.0, M_BASE)                  # корпус
+box("Deck", 600, 1050, -185, 185, 0, 1.0, M_BASE)
 
 stations = []
+zidx = {1: 0, -1: 0}
 for k in range(4):
-    zlo = 1.3 + 1.5 * k                      # слой станции (снизу вверх)
+    sg = SIDE[k]
+    zlo = 1.3 + 1.5 * zidx[sg]                 # по 2 слоя на борт
+    zidx[sg] += 1
     zhi = zlo + 1.0
     xc = S[k]
-    px = xc + RA                             # ось на деке/стыке
+    px = xc + RA
+    py = sg * PYA
+    ysp = sg * YSPA
     col = COLS[k]
     piv = bpy.data.objects.new("Pivot%d" % (k + 1), None)
-    piv.location = (px, PY, 0)
+    piv.location = (px, py, 0)
     sc.collection.objects.link(piv)
-    sector("Sec%d" % (k + 1), 11.0, 180, 270, zlo, zhi, col, piv)
-    box("A1_%d" % (k + 1), px - 1.6, px + 1.6, PY - R1 - 1.6, PY, zlo, zhi, col, parent=piv)
-    cyl("C1_%d" % (k + 1), px, PY - R1, zhi, zhi + 0.9, 1.1, M_RED, parent=piv)
-    box("Arm%d" % (k + 1), px - RA - 1.2, px, PY - 1.6, PY + 1.6, zlo, zhi, col, parent=piv)
-    cyl("Tip%d" % (k + 1), px - RA, PY, zhi, zhi + 0.9, 1.1, M_RED, parent=piv)
-    cyl("Post%d" % (k + 1), px, PY, 1.0, zhi + 0.8, 0.9, M_BASE)
-    # тележка: стакан вверху, палец вниз до своего слоя
+    if sg > 0:
+        sector("Sec%d" % (k + 1), 11.0, 180, 270, zlo, zhi, col, piv)
+    else:
+        sector("Sec%d" % (k + 1), 11.0, 90, 180, zlo, zhi, col, piv)
+    y0a, y1a = py, py - sg * (R1 + 1.6)
+    box("A1_%d" % (k + 1), px - 1.6, px + 1.6, min(y0a, y1a), max(y0a, y1a),
+        zlo, zhi, col, parent=piv)
+    cyl("C1_%d" % (k + 1), px, py - sg * R1, zhi, zhi + 0.9, 1.1, M_RED, parent=piv)
+    box("Arm%d" % (k + 1), px - RA - 1.2, px, py - 1.6, py + 1.6, zlo, zhi, col, parent=piv)
+    cyl("Tip%d" % (k + 1), px - RA, py, zhi, zhi + 0.9, 1.1, M_RED, parent=piv)
+    cyl("Post%d" % (k + 1), px, py, 1.0, zhi + 0.8, 0.9, M_BASE)
     cart = box("Cart%d" % (k + 1), xc - 7.1, xc + 7.1, -8, 8, 10.5, 17.5, M_CART)
     cyl("Pin%d" % (k + 1), xc, 0, zhi, 10.6, 1.0, M_RED, parent=cart)
-    # кривошип на моторе, на высоте слоя
     crank = bpy.data.objects.new("Crank%d" % (k + 1), None)
-    crank.location = (MOT[k], YSP, 0)
+    crank.location = (MOT[k], ysp, 0)
     sc.collection.objects.link(crank)
-    cyl("CrD%d" % (k + 1), MOT[k], YSP, zlo, zhi, 7.0, M_GOLD, parent=crank)
-    cyl("CrP%d" % (k + 1), MOT[k] - RC, YSP, zhi, zhi + 0.9, 1.0, M_RED, parent=crank)
-    # спица и серьга
+    cyl("CrD%d" % (k + 1), MOT[k], ysp, zlo, zhi, 7.0, M_GOLD, parent=crank)
+    cyl("CrP%d" % (k + 1), MOT[k] - RC, ysp, zhi, zhi + 0.9, 1.0, M_RED, parent=crank)
     bpy.ops.mesh.primitive_cube_add()
     sp_ = bpy.context.object
     sp_.name = "Sp%d" % (k + 1)
@@ -135,31 +142,35 @@ for k in range(4):
     sh.name = "Shatun%d" % (k + 1)
     sh.data.materials.append(M_GOLD)
     stations.append(dict(piv=piv, cart=cart, crank=crank, sp=sp_, lk=lk, sh=sh,
-                         px=px, xc=xc, mot=MOT[k], z=(zlo + zhi) / 2, zhi=zhi))
+                         px=px, xc=xc, py=py, ysp=ysp, sg=sg, mot=MOT[k], zhi=zhi))
 
 
-def corner1(px, phi):
-    return mathutils.Vector((px + R1 * math.sin(phi), PY - R1 * math.cos(phi)))
+def corner1(st, phi):
+    sg = st['sg']
+    return mathutils.Vector((st['px'] + R1 * math.sin(phi),
+                             st['py'] - sg * R1 * math.cos(phi)))
 
 
-def tipf(px, phi):
-    return mathutils.Vector((px - RA * math.cos(phi), PY - RA * math.sin(phi)))
+def tipf(st, phi):
+    sg = st['sg']
+    return mathutils.Vector((st['px'] - RA * math.cos(phi),
+                             st['py'] - sg * RA * math.sin(phi)))
 
 
-def crank_pin(mx, th):
-    return mathutils.Vector((mx - RC * math.cos(th), YSP + RC * math.sin(th)))
+def crank_pin(st, th):
+    return mathutils.Vector((st['mot'] - RC * math.cos(th),
+                             st['ysp'] + RC * math.sin(th)))
 
 
-def tail_x(mx, th):
-    """Хвост спицы: шатун гасит Y-гуляние пина, спица строго на YSP."""
-    pc = crank_pin(mx, th)
-    return pc.x - math.sqrt(max(LSH * LSH - (pc.y - YSP) ** 2, 1.0)), pc
+def tail_x(st, th):
+    pc = crank_pin(st, th)
+    return pc.x - math.sqrt(max(LSH * LSH - (pc.y - st['ysp']) ** 2, 1.0)), pc
 
 
-def solve_phi(px, tx, Lsp):
-    tail = mathutils.Vector((tx, YSP))
+def solve_phi(st, tx):
+    tail = mathutils.Vector((tx, st['ysp']))
     lo, hi = math.radians(-16), math.radians(16)
-    f = lambda p: (corner1(px, p) - tail).length - Lsp
+    f = lambda p: (corner1(st, p) - tail).length - st['L']
     flo = f(lo)
     for _ in range(50):
         mid = (lo + hi) / 2
@@ -171,19 +182,20 @@ def solve_phi(px, tx, Lsp):
 
 
 for st in stations:
-    tx0, _ = tail_x(st['mot'], math.pi / 2)
-    st['L'] = (mathutils.Vector((tx0, YSP)) - corner1(st['px'], 0.0)).length
+    tx0, _ = tail_x(st, math.pi / 2)
+    st['L'] = (mathutils.Vector((tx0, st['ysp'])) - corner1(st, 0.0)).length
 
 for fr in range(1, 241):
     for k, st in enumerate(stations):
+        sg = st['sg']
         th = 2 * math.pi * (fr - 1) / 240.0 * (2 + 0.5 * k) + k * 1.3
-        tx, pc = tail_x(st['mot'], th)
-        phi = solve_phi(st['px'], tx, st['L'])
-        st['piv'].rotation_euler = (0, 0, phi)
+        tx, pc = tail_x(st, th)
+        phi = solve_phi(st, tx)
+        st['piv'].rotation_euler = (0, 0, sg * phi)
         st['piv'].keyframe_insert("rotation_euler", frame=fr)
-        tp = tipf(st['px'], phi)
+        tp = tipf(st, phi)
         dxx = st['xc'] - tp.x
-        cy_ = tp.y + math.sqrt(max(LL * LL - dxx * dxx, 0.04))
+        cy_ = tp.y + sg * math.sqrt(max(LL * LL - dxx * dxx, 0.04))
         st['cart'].location = (st['xc'], cy_, 14.0)
         st['cart'].keyframe_insert("location", frame=fr)
         pin = mathutils.Vector((st['xc'], cy_))
@@ -191,27 +203,24 @@ for fr in range(1, 241):
         st['lk'].location = (mid.x, mid.y, st['zhi'] + 0.45)
         st['lk'].scale = ((pin - tp).length / 2 + 0.9, 0.7, 0.35)
         st['lk'].rotation_euler = (0, 0, math.atan2(pin.y - tp.y, pin.x - tp.x))
-        st['lk'].keyframe_insert("location", frame=fr)
-        st['lk'].keyframe_insert("scale", frame=fr)
-        st['lk'].keyframe_insert("rotation_euler", frame=fr)
+        for ch in ("location", "scale", "rotation_euler"):
+            st['lk'].keyframe_insert(ch, frame=fr)
         st['crank'].rotation_euler = (0, 0, th)
         st['crank'].keyframe_insert("rotation_euler", frame=fr)
-        c1 = corner1(st['px'], phi)
-        tail = mathutils.Vector((tx, YSP))
+        c1 = corner1(st, phi)
+        tail = mathutils.Vector((tx, st['ysp']))
         mid = (c1 + tail) / 2
         st['sp'].location = (mid.x, mid.y, st['zhi'] + 0.45)
         st['sp'].scale = ((tail - c1).length / 2 + 1.2, 0.8, 0.35)
         st['sp'].rotation_euler = (0, 0, math.atan2(tail.y - c1.y, tail.x - c1.x))
-        st['sp'].keyframe_insert("location", frame=fr)
-        st['sp'].keyframe_insert("scale", frame=fr)
-        st['sp'].keyframe_insert("rotation_euler", frame=fr)
+        for ch in ("location", "scale", "rotation_euler"):
+            st['sp'].keyframe_insert(ch, frame=fr)
         mid = (tail + pc) / 2
         st['sh'].location = (mid.x, mid.y, st['zhi'] + 0.45)
         st['sh'].scale = ((pc - tail).length / 2 + 0.9, 0.7, 0.3)
         st['sh'].rotation_euler = (0, 0, math.atan2(pc.y - tail.y, pc.x - tail.x))
-        st['sh'].keyframe_insert("location", frame=fr)
-        st['sh'].keyframe_insert("scale", frame=fr)
-        st['sh'].keyframe_insert("rotation_euler", frame=fr)
+        for ch in ("location", "scale", "rotation_euler"):
+            st['sh'].keyframe_insert(ch, frame=fr)
 
 # ---- свет, камера ----
 bpy.ops.object.light_add(type='SUN', location=(80, -60, 130))
@@ -234,4 +243,4 @@ sc.render.resolution_x, sc.render.resolution_y = 1400, 900
 sc.render.filepath = r"C:\App\gitar\2-0\manual\img\_palka_guitar.png"
 bpy.ops.render.render(write_still=True)
 bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Гитара_палка.blend")
-print("FULL OK")
+print("MIRROR OK")
