@@ -32,14 +32,14 @@ COL = {
 # проникновение и выстреливает детали вверх; тут они мягко усаживаются
 POS = {
     "ptest_plate_v2": ((0, 0, 0), 0),
-    "ptest_triangle_v2": ((95, -2, 5.05), 0),
-    "ptest_spica_v2": ((91.0, -23.35, 6.75), 0.1),
+    "ptest_triangle_v2": ((95, 0, 5.05), 0),
+    "ptest_spica_v2": ((91.0, -21.3, 6.75), -1.0),
     "ptest_crank_r85_v2": ((229, -15, 5.2), -90),   # r8.5: добивает ход до 40
-    "ptest_cart_v2": ((30, 6, 5.1), 0),
+    "ptest_cart_v2": ((30, 8, 5.1), 0),
     "ptest_plug_v2": ((229, -15, 3.05), 0),
     "ptest_bridge_v1": ((120, -19, 10.0), 0),
     "ptest_bridge_v1#2": ((190, -19, 10.0), 0),
-    "ptest_washer_v1": ((95, -2, 6.9), 0),
+    "ptest_washer_v1": ((95, 0, 6.9), 0),
     "ptest_bridge_low_v1": ((65, -10.5, 8.4), 0),
     "ptest_bridge_high_v1": ((30, -14, 14.9), 90),
     "ptest_bridge_high_v1#2": ((30, 16, 14.9), 90),
@@ -239,21 +239,21 @@ def slop(name, x, y, z, a, b, zlo, zhi):
     e.select_set(False)
     return c
 
-slop("j_pin", 229.3, -23.5, 9.0, OBJ["ptest_crank_r85_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
-slop("j_c1", 95, -23.2, 7.4, OBJ["ptest_spica_v2"], OBJ["ptest_triangle_v2"], -0.1, 2.8)
-slop("j_axis", 95, -2, 5.8, OBJ["ptest_plate_v2"], OBJ["ptest_triangle_v2"], -0.1, 0.3)
-cs = slop("j_slot", 30, -2, 11, OBJ["ptest_triangle_v2"], OBJ["ptest_cart_v2"], -0.5, 3.2)
+slop("j_pin", 229.2, -23.5, 9.0, OBJ["ptest_crank_r85_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
+slop("j_c1", 95, -21.2, 7.4, OBJ["ptest_spica_v2"], OBJ["ptest_triangle_v2"], -0.1, 2.8)
+slop("j_axis", 95, 0, 5.8, OBJ["ptest_plate_v2"], OBJ["ptest_triangle_v2"], -0.1, 0.3)
+cs = slop("j_slot", 30, 0, 11, OBJ["ptest_triangle_v2"], OBJ["ptest_cart_v2"], -0.5, 3.2)
 cs.limit_lin_x_lower = -6.2                   # вилка: штырь гуляет по дуге на запад
 cs.limit_lin_x_upper = 0.6
 # КАНАЛ как ДВЕ люфтовые связки у носа и кормы (база 28): пара линейных
 # лимитов ±0.35 держит разворот жёстко (yaw < 1.5 гарантированно)
-for chname, chy in (("j_channel_s", -8), ("j_channel_n", 20)):
+for chname, chy in (("j_channel_s", -6), ("j_channel_n", 22)):
     ch = slop(chname, 30, chy, 9, OBJ["ptest_plate_v2"], OBJ["ptest_cart_v2"], -0.2, 0.5)
     ch.limit_lin_x_lower = -0.35
     ch.limit_lin_x_upper = 0.35
     ch.use_limit_lin_y = True
-    ch.limit_lin_y_lower = -22
-    ch.limit_lin_y_upper = 28
+    ch.limit_lin_y_lower = -24
+    ch.limit_lin_y_upper = 24
     for _ax in ('x', 'y'):
         setattr(ch, 'limit_ang_' + _ax + '_lower', -math.radians(3))
         setattr(ch, 'limit_ang_' + _ax + '_upper', math.radians(3))
