@@ -152,6 +152,8 @@ plates = [
      prep("ptest_serga_v2") + prep("ptest_cart_v2") +          # губок; 3 кривошипа
      prep("ptest_crank_r60_v2") + prep("ptest_crank_r65_v2") +
      prep("ptest_crank_r70_v2") + prep("ptest_leg_v1", copies=4) +
+     prep("ptest_bridge_v1", copies=2) + prep("ptest_bridge_low_v1") +
+     prep("ptest_bridge_high_v1") + prep("ptest_washer_v1") +  # замки (физика!)
      prep("ptest_plug_v2", FLIP)),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
