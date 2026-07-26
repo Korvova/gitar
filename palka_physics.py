@@ -20,7 +20,7 @@ COL = {
     "ptest_plate_v2": mat("plate", (0.7, 0.7, 0.72, 1)),
     "ptest_triangle_v2": mat("tri", (0.25, 0.45, 0.8, 1)),
     "ptest_spica_v2": mat("sp", (0.85, 0.3, 0.2, 1)),
-    "ptest_crank_r65_v2": mat("cr", (0.8, 0.68, 0.2, 1)),
+    "ptest_crank_r85_v2": mat("cr", (0.8, 0.68, 0.2, 1)),
     "ptest_cart_v2": mat("ca", (0.88, 0.88, 0.9, 1)),
     "ptest_plug_v2": mat("plug", (0.6, 0.4, 0.7, 1)),
     "ptest_bridge_v1": mat("br", (0.55, 0.55, 0.6, 1)),
@@ -33,15 +33,16 @@ COL = {
 POS = {
     "ptest_plate_v2": ((0, 0, 0), 0),
     "ptest_triangle_v2": ((95, -2, 5.05), 0),
-    "ptest_spica_v2": ((91.0, -23.25, 6.75), 0.72),
-    "ptest_crank_r65_v2": ((229, -15, 5.2), -90),
+    "ptest_spica_v2": ((91.0, -23.35, 6.75), 0.1),
+    "ptest_crank_r85_v2": ((229, -15, 5.2), -90),   # r8.5: добивает ход до 40
     "ptest_cart_v2": ((30, 6, 5.1), 0),
     "ptest_plug_v2": ((229, -15, 3.05), 0),
     "ptest_bridge_v1": ((120, -19, 10.0), 0),
     "ptest_bridge_v1#2": ((190, -19, 10.0), 0),
     "ptest_washer_v1": ((95, -2, 6.9), 0),
     "ptest_bridge_low_v1": ((65, -10.5, 8.4), 0),
-    "ptest_bridge_high_v1": ((30, 6, 14.9), 90),
+    "ptest_bridge_high_v1": ((30, -14, 14.9), 90),
+    "ptest_bridge_high_v1#2": ((30, 16, 14.9), 90),
 }
 # Bullet считает центр масс = origin объекта; у STL origin в углу детали.
 # Для подвижных деталей центрируем origin (иначе дурная инерция = рывки).
@@ -108,7 +109,8 @@ set_rb(OBJ["ptest_bridge_v1"], 'PASSIVE', 'MESH')     # мостики защё�
 set_rb(OBJ["ptest_bridge_v1#2"], 'PASSIVE', 'MESH')
 set_rb(OBJ["ptest_washer_v1"], 'PASSIVE', 'MESH')     # привинчена M2 к оси
 set_rb(OBJ["ptest_bridge_low_v1"], 'PASSIVE', 'MESH')  # низкий мост над плечом
-set_rb(OBJ["ptest_bridge_high_v1"], 'PASSIVE', 'MESH')  # высокий мост над тележкой
+set_rb(OBJ["ptest_bridge_high_v1"], 'PASSIVE', 'MESH')  # высокие мосты над тележкой
+set_rb(OBJ["ptest_bridge_high_v1#2"], 'PASSIVE', 'MESH')
 
 # ПОДВИЖНЫЕ детали: COMPOUND из выпуклых примитивов (меш-меш у Bullet
 # взрывается, выпуклые контакты — железные). Дырка = кольцо из 8 брусков.
@@ -177,9 +179,9 @@ def compound(name):
     return ob
 
 sp = compound("ptest_spica_v2")               # спица: тело + 2 кольца-дырки
-c_box(sp, 9.5, 119, -2.5, 2.5, 0, 1.6)
+c_box(sp, 9.5, 117, -2.5, 2.5, 0, 1.6)
 c_ring(sp, 4, 0, 0, 1.6, 3.0, 5.5)
-c_box(sp, 115, 132.75, -2.5, 2.5, 1.4, 3.0)
+c_box(sp, 113, 132.75, -2.5, 2.5, 1.4, 3.0)
 c_ring(sp, 138.25, 0, 1.4, 3.0, 3.0, 5.5)
 
 tr = compound("ptest_triangle_v2")            # треугольник: диск-кольцо + плечи
@@ -194,16 +196,15 @@ c_cyl(tr, 0, -21.2, 1.6, 6.0, 2.5)            # штырёк угла-1 длин
 
 ca = compound("ptest_cart_v2")                # тележка: палуба со ЩЕЛЬЮ-кулисой
 ca.rigid_body.mass = 0.2                      # утяжелена (реально: монетка сверху)
-c_box(ca, -9.65, -6.75, -18, 12, 4.5, 8)      # палуба: 4 бокса вокруг щели
-c_box(ca, 6.75, 9.65, -18, 12, 4.5, 8)
-c_box(ca, -6.75, 6.75, -18, -11, 4.5, 8)
-c_box(ca, -6.75, 6.75, -5, 12, 4.5, 8)
+c_box(ca, 6.0, 9.65, -18, 12, 4.5, 8)         # палуба: 3 бокса вокруг ВИЛКИ
+c_box(ca, -9.65, 6.0, -18, -11, 4.5, 8)       # (открыта на запад)
+c_box(ca, -9.65, 6.0, -5, 12, 4.5, 8)
 c_box(ca, -9.65, 9.65, 9.5, 12, 0, 4.5)
 c_box(ca, -9.65, 9.65, -18, -16, 0, 4.5)
 
-cr = compound("ptest_crank_r65_v2")           # кривошип: диск + палец
+cr = compound("ptest_crank_r85_v2")           # кривошип: диск + палец
 c_cyl(cr, 0, 0, 0, 2.5, 11)
-c_cyl(cr, 6.5, 0, 2.5, 7.5, 2.5)
+c_cyl(cr, 8.5, 0, 2.5, 7.5, 2.5)
 
 # УЗЛЫ ШТЫРЬ-В-ДЫРКЕ: люфтовые связки, эквивалент реального зазора Ø5/Ø6.
 # Свобода ±0.5 в плане (люфт), по вертикали — ровно длина штырька. Контакты
@@ -238,15 +239,28 @@ def slop(name, x, y, z, a, b, zlo, zhi):
     e.select_set(False)
     return c
 
-slop("j_pin", 229.4, -21.5, 9.0, OBJ["ptest_crank_r65_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
+slop("j_pin", 229.3, -23.5, 9.0, OBJ["ptest_crank_r85_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
 slop("j_c1", 95, -23.2, 7.4, OBJ["ptest_spica_v2"], OBJ["ptest_triangle_v2"], -0.1, 2.8)
 slop("j_axis", 95, -2, 5.8, OBJ["ptest_plate_v2"], OBJ["ptest_triangle_v2"], -0.1, 0.3)
 cs = slop("j_slot", 30, -2, 11, OBJ["ptest_triangle_v2"], OBJ["ptest_cart_v2"], -0.5, 3.2)
-cs.limit_lin_x_lower = -4.25                  # кулиса: штырь гуляет вдоль щели
-cs.limit_lin_x_upper = 4.25
+cs.limit_lin_x_lower = -6.2                   # вилка: штырь гуляет по дуге на запад
+cs.limit_lin_x_upper = 0.6
+# КАНАЛ как люфтовая связка (зазоры реальные): солвер не проколет рельсу
+ch = slop("j_channel", 30, 6, 9, OBJ["ptest_plate_v2"], OBJ["ptest_cart_v2"], -0.2, 0.5)
+ch.limit_lin_x_lower = -0.35
+ch.limit_lin_x_upper = 0.35
+ch.use_limit_lin_y = True
+ch.limit_lin_y_lower = -22
+ch.limit_lin_y_upper = 28
+for _ax in ('x', 'y'):
+    setattr(ch, 'limit_ang_' + _ax + '_lower', -math.radians(3))
+    setattr(ch, 'limit_ang_' + _ax + '_upper', math.radians(3))
+ch.use_limit_ang_z = True
+ch.limit_ang_z_lower = -math.radians(2.5)
+ch.limit_ang_z_upper = math.radians(2.5)
 
 # КРИВОШИП — КИНЕМАТИЧЕСКИЙ «мотор»: 40 кадров покоя (всё усаживается), потом 1.5°/кадр
-ck = OBJ["ptest_crank_r65_v2"]
+ck = OBJ["ptest_crank_r85_v2"]
 ck.rigid_body.kinematic = True
 for fr in range(1, 501):
     a = 0 if fr <= 40 else (fr - 40) * 1.0
