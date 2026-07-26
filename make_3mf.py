@@ -146,11 +146,13 @@ plates = [
      prep("tier_disk_v3", copies=8) + prep("keylock_key_v2", copies=9), "cool"),
     ("20_test_noga", p020_j,               # тест-нога 20 см на шестерню (+линейка до 40)
      prep("test_leg_v1") + prep("test_leg_ext_v1")),
-    ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД механизма «палка» (1 станция)
-     prep("ptest_plate_v1") + prep("ptest_triangle_v1") + prep("ptest_spica_v1") +
-     prep("ptest_shatun_v1") + prep("ptest_serga_v1") + prep("ptest_crank_v1") +
-     prep("ptest_cart_v1") + prep("ptest_leg_v1", copies=4) +
-     prep("ptest_plug_v1", FLIP)),
+    ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД «палка» v2: БЕЗ штифтов,
+     prep("ptest_plate_v2") + prep("ptest_triangle_v2") +      # бугорки Ø4 в
+     prep("ptest_spica_v2") + prep("ptest_shatun_v2") +        # дырки Ø4.4;
+     prep("ptest_serga_v2") + prep("ptest_cart_v2") +          # 3 кривошипа
+     prep("ptest_crank_r60_v2") + prep("ptest_crank_r65_v2") +
+     prep("ptest_crank_r70_v2") + prep("ptest_leg_v1", copies=4) +
+     prep("ptest_plug_v2", FLIP)),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
