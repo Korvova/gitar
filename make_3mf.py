@@ -146,14 +146,16 @@ plates = [
      prep("tier_disk_v3", copies=8) + prep("keylock_key_v2", copies=9), "cool"),
     ("20_test_noga", p020_j,               # тест-нога 20 см на шестерню (+линейка до 40)
      prep("test_leg_v1") + prep("test_leg_ext_v1")),
-    ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД «палка» v2: БЕЗ штифтов,
-     prep("ptest_plate_v2") + prep("ptest_triangle_v2") +      # спица-шатун:
-     prep("ptest_spica_v2") +                                  # 4-звенник без
-     prep("ptest_cart_v2") +                                   # кулиса; 3 кривошипа
-     prep("ptest_crank_r60_v2") + prep("ptest_crank_r65_v2") +
-     prep("ptest_crank_r70_v2") + prep("ptest_leg_v1", copies=4) +
+    ("21_palka_test", p020_j,              # ТЕСТ-СТЕНД «палка» ФИНАЛ: кулиса-вилка,
+     prep("ptest_plate_v2") + prep("ptest_triangle_v2") +      # 7 кривошипов
+     prep("ptest_spica_v2") +                                  # r6..r10 (ход =
+     prep("ptest_cart_v2") +                                   # 6.15*r - 10.6),
+     prep("ptest_crank_r60_v2") + prep("ptest_crank_r65_v2") + # замки всех узлов
+     prep("ptest_crank_r70_v2") + prep("ptest_crank_r80_v2") + # (мосты, шайба)
+     prep("ptest_crank_r85_v2") + prep("ptest_crank_r90_v2") +
+     prep("ptest_crank_r100_v2") + prep("ptest_leg_v1", copies=4) +
      prep("ptest_bridge_v1", copies=2) + prep("ptest_bridge_low_v1") +
-     prep("ptest_bridge_high_v1") + prep("ptest_washer_v1") +  # замки (физика!)
+     prep("ptest_bridge_high_v1", copies=2) + prep("ptest_washer_v1") +
      prep("ptest_plug_v2", FLIP)),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
