@@ -38,7 +38,7 @@ POS = {
     "ptest_cart_v2": ((30, 8, 5.1), 0),
     "ptest_plug_v2": ((229, -15, 3.05), 0),
     "ptest_bridge_v1": ((120, -19, 10.0), 0),
-    "ptest_bridge_v1#2": ((190, -19, 10.0), 0),
+    "ptest_bridge_v1#2": ((186, -19, 10.0), 0),
     "ptest_washer_v1": ((95, 0, 6.9), 0),
     "ptest_bridge_low_v1": ((65, -10.5, 8.4), 0),
     "ptest_bridge_high_v1": ((30, -14, 14.9), 90),
@@ -179,9 +179,9 @@ def compound(name):
     return ob
 
 sp = compound("ptest_spica_v2")               # спица: тело + 2 кольца-дырки
-c_box(sp, 9.5, 117, -2.5, 2.5, 0, 1.6)
+c_box(sp, 9.5, 114, -2.5, 2.5, 0, 1.6)
 c_ring(sp, 4, 0, 0, 1.6, 3.0, 5.5)
-c_box(sp, 113, 132.75, -2.5, 2.5, 1.4, 3.0)
+c_box(sp, 110, 132.75, -2.5, 2.5, 1.4, 3.0)
 c_ring(sp, 138.25, 0, 1.4, 3.0, 3.0, 5.5)
 
 tr = compound("ptest_triangle_v2")            # треугольник: диск-кольцо + плечи

@@ -20,7 +20,7 @@ COL = {
     "ptest_plate_v2": mat("plate", (0.7, 0.7, 0.72, 1)),
     "ptest_triangle_v2": mat("tri", (0.25, 0.45, 0.8, 1)),
     "ptest_spica_v2": mat("sp", (0.85, 0.3, 0.2, 1)),
-    "ptest_crank_r85_v2": mat("cr", (0.8, 0.68, 0.2, 1)),
+    "ptest_crank_r100_v2": mat("cr", (0.8, 0.68, 0.2, 1)),
     "ptest_cart_v2": mat("ca", (0.88, 0.88, 0.9, 1)),
     "ptest_plug_v2": mat("plug", (0.6, 0.4, 0.7, 1)),
     "ptest_bridge_v1": mat("br", (0.55, 0.55, 0.6, 1)),
@@ -33,12 +33,12 @@ COL = {
 POS = {
     "ptest_plate_v2": ((0, 0, 0), 0),
     "ptest_triangle_v2": ((95, 0, 5.05), 0),
-    "ptest_spica_v2": ((91.0, -21.3, 6.75), -1.0),
-    "ptest_crank_r85_v2": ((229, -15, 5.2), -90),   # r8.5: добивает ход до 40
+    "ptest_spica_v2": ((91.0, -21.1, 6.75), -1.6),
+    "ptest_crank_r100_v2": ((229, -15, 5.2), -90),   # r8.5: добивает ход до 40
     "ptest_cart_v2": ((30, 8, 5.1), 0),
     "ptest_plug_v2": ((229, -15, 3.05), 0),
     "ptest_bridge_v1": ((120, -19, 10.0), 0),
-    "ptest_bridge_v1#2": ((190, -19, 10.0), 0),
+    "ptest_bridge_v1#2": ((186, -19, 10.0), 0),
     "ptest_washer_v1": ((95, 0, 6.9), 0),
     "ptest_bridge_low_v1": ((65, -10.5, 8.4), 0),
     "ptest_bridge_high_v1": ((30, -14, 14.9), 90),
@@ -179,9 +179,9 @@ def compound(name):
     return ob
 
 sp = compound("ptest_spica_v2")               # спица: тело + 2 кольца-дырки
-c_box(sp, 9.5, 117, -2.5, 2.5, 0, 1.6)
+c_box(sp, 9.5, 114, -2.5, 2.5, 0, 1.6)
 c_ring(sp, 4, 0, 0, 1.6, 3.0, 5.5)
-c_box(sp, 113, 132.75, -2.5, 2.5, 1.4, 3.0)
+c_box(sp, 110, 132.75, -2.5, 2.5, 1.4, 3.0)
 c_ring(sp, 138.25, 0, 1.4, 3.0, 3.0, 5.5)
 
 tr = compound("ptest_triangle_v2")            # треугольник: диск-кольцо + плечи
@@ -202,9 +202,9 @@ c_box(ca, -9.65, 6.0, -5, 12, 4.5, 8)
 c_box(ca, -9.65, 9.65, 9.5, 12, 0, 4.5)
 c_box(ca, -9.65, 9.65, -18, -16, 0, 4.5)
 
-cr = compound("ptest_crank_r85_v2")           # кривошип: диск + палец
-c_cyl(cr, 0, 0, 0, 2.5, 11)
-c_cyl(cr, 8.5, 0, 2.5, 7.5, 2.5)
+cr = compound("ptest_crank_r100_v2")           # кривошип: диск + палец
+c_cyl(cr, 0, 0, 0, 2.5, 12.5)
+c_cyl(cr, 10.0, 0, 2.5, 7.5, 2.5)
 
 # УЗЛЫ ШТЫРЬ-В-ДЫРКЕ: люфтовые связки, эквивалент реального зазора Ø5/Ø6.
 # Свобода ±0.5 в плане (люфт), по вертикали — ровно длина штырька. Контакты
@@ -239,7 +239,7 @@ def slop(name, x, y, z, a, b, zlo, zhi):
     e.select_set(False)
     return c
 
-slop("j_pin", 229.2, -23.5, 9.0, OBJ["ptest_crank_r85_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
+slop("j_pin", 229.15, -25.0, 9.0, OBJ["ptest_crank_r100_v2"], OBJ["ptest_spica_v2"], -0.3, 3.1)
 slop("j_c1", 95, -21.2, 7.4, OBJ["ptest_spica_v2"], OBJ["ptest_triangle_v2"], -0.1, 2.8)
 slop("j_axis", 95, 0, 5.8, OBJ["ptest_plate_v2"], OBJ["ptest_triangle_v2"], -0.1, 0.3)
 cs = slop("j_slot", 30, 0, 11, OBJ["ptest_triangle_v2"], OBJ["ptest_cart_v2"], -0.5, 3.2)
@@ -260,11 +260,11 @@ for chname, chy in (("j_channel_s", -6), ("j_channel_n", 22)):
 
 # КРИВОШИП КАЧАЕТСЯ (идея юзера: мотор туда-сюда, не полный оборот):
 # сектор ±80° вокруг нижней точки, период 200 кадров — 2 полных качания
-ck = OBJ["ptest_crank_r85_v2"]
+ck = OBJ["ptest_crank_r100_v2"]
 ck.rigid_body.kinematic = True
 for fr in range(1, 501):
     t = max(0, fr - 40)
-    a = 75 * math.sin(2 * math.pi * t / 300.0)
+    a = 58 * math.sin(2 * math.pi * t / 300.0)   # r10: сектор ±58 даёт 40 мм
     ck.rotation_euler = (0, 0, math.radians(-90 + a))
     ck.keyframe_insert("rotation_euler", frame=fr)
 
