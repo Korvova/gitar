@@ -24,22 +24,35 @@ def _crank(scene):
     return None
 
 
+_state = {"actual": None}
+
+
 @persistent
-def _drive(scene):
-    """Каждый кадр: мотор доворачивается к цели не быстрее stend_speed °/кадр."""
-    if not hasattr(scene, "stend_angle"):
+def _drive(scene, depsgraph=None):
+    """Каждый кадр: мотор доворачивается к цели не быстрее stend_speed °/кадр.
+    Работаем через bpy.data (обработчику даётся копия сцены — записи в неё
+    пропадают), а текущий угол держим в модуле."""
+    sc = bpy.data.scenes.get(scene.name)
+    if sc is None or not hasattr(sc, "stend_angle"):
         return
-    ck = _crank(scene)
+    ck = None
+    for ob in sc.objects:
+        if ob.name.startswith("ptest_crank"):
+            ck = bpy.data.objects.get(ob.name)
+            break
     if not ck:
         return
-    cur = scene.stend_actual
-    err = scene.stend_angle - cur
-    step = scene.stend_speed
+    cur = _state["actual"]
+    if cur is None:
+        cur = sc.get("stend_actual", 0.0)
+    err = sc.stend_angle - cur
+    step = sc.stend_speed
     if abs(err) > step:
         cur += step if err > 0 else -step
     else:
-        cur = scene.stend_angle
-    scene["stend_actual"] = cur
+        cur = sc.stend_angle
+    _state["actual"] = cur
+    sc["stend_actual"] = cur
     ck.rotation_euler = (0, 0, math.radians(-90 + cur))
 
 
@@ -68,6 +81,7 @@ class STEND_OT_reset(bpy.types.Operator):
         ctx.scene.frame_set(1)
         ctx.scene.stend_angle = 0.0
         ctx.scene["stend_actual"] = 0.0
+        _state["actual"] = 0.0
         ck = _crank(ctx.scene)
         if ck:
             ck.rotation_euler = (0, 0, math.radians(-90))
