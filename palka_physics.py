@@ -17,7 +17,6 @@ COL = {
     "ptest_plate_v2": mat("plate", (0.7, 0.7, 0.72, 1)),
     "ptest_triangle_v2": mat("tri", (0.25, 0.45, 0.8, 1)),
     "ptest_spica_v2": mat("sp", (0.85, 0.3, 0.2, 1)),
-    "ptest_shatun_v2": mat("sh", (0.9, 0.55, 0.15, 1)),
     "ptest_serga_v2": mat("se", (0.2, 0.7, 0.35, 1)),
     "ptest_crank_r65_v2": mat("cr", (0.8, 0.68, 0.2, 1)),
     "ptest_cart_v2": mat("ca", (0.88, 0.88, 0.9, 1)),
@@ -26,8 +25,7 @@ COL = {
 POS = {
     "ptest_plate_v2": ((0, 0, 0), 0),
     "ptest_triangle_v2": ((95, -2, 5.0), 0),
-    "ptest_spica_v2": ((91, -23.2, 6.6), 0),
-    "ptest_shatun_v2": ((187.003, -23.331, 8.3), 2.497),
+    "ptest_spica_v2": ((91.0, -23.25, 6.6), 0.72),
     "ptest_serga_v2": ((30, -6, 6.6), 90),
     "ptest_crank_r65_v2": ((229, -15, 5.2), -90),
     "ptest_cart_v2": ((30, 6, 5.0), 0),
@@ -68,8 +66,8 @@ def set_rb(ob, typ, slot):
 
 set_rb(OBJ["ptest_plate_v2"], 'PASSIVE', 19)
 import os
-STEP = int(os.environ.get("PSTEP", "6"))        # 1=вал .. 6=вся цепь
-CHAIN = ["ptest_crank_r65_v2", "ptest_shatun_v2", "ptest_spica_v2",
+STEP = int(os.environ.get("PSTEP", "5"))        # 1=вал .. 6=вся цепь
+CHAIN = ["ptest_crank_r65_v2", "ptest_spica_v2",
          "ptest_triangle_v2", "ptest_serga_v2", "ptest_cart_v2"][:STEP]
 for i, n in enumerate(CHAIN):
     set_rb(OBJ[n], 'ACTIVE', i)
@@ -101,33 +99,13 @@ def joint(name, x, y, z, typ, a, b):
 
 P = OBJ["ptest_plate_v2"]
 if STEP >= 2:
-    joint("j_pin", 229, -21.5, 9.0, 'HINGE', OBJ["ptest_crank_r65_v2"], OBJ["ptest_shatun_v2"])
+    joint("j_pin", 229.4, -21.5, 9.0, 'HINGE', OBJ["ptest_crank_r65_v2"], OBJ["ptest_spica_v2"])
 if STEP >= 3:
-    joint("j_tail", 190, -23.2, 9.0, 'HINGE', OBJ["ptest_shatun_v2"], OBJ["ptest_spica_v2"])
-if STEP >= 4:
     joint("j_c1", 95, -23.2, 7.4, 'HINGE', OBJ["ptest_spica_v2"], OBJ["ptest_triangle_v2"])
     joint("j_axis", 95, -2, 5.8, 'HINGE', P, OBJ["ptest_triangle_v2"])
-    # ВИРТУАЛЬНЫЕ ГУБКИ: спица скользит вдоль X, вбок почти не может
-    gs = joint("j_gubki", 150, -23.2, 7.4, 'GENERIC', P, OBJ["ptest_spica_v2"])
-    gs.use_limit_lin_y = True
-    gs.limit_lin_y_lower = -2.0
-    gs.limit_lin_y_upper = 2.0
-    gs.use_limit_lin_z = True
-    gs.limit_lin_z_lower = 0
-    gs.limit_lin_z_upper = 0
-    gs.use_limit_ang_x = True
-    gs.limit_ang_x_lower = 0
-    gs.limit_ang_x_upper = 0
-    gs.use_limit_ang_y = True
-    gs.limit_ang_y_lower = 0
-    gs.limit_ang_y_upper = 0
-    import math as _mm
-    gs.use_limit_ang_z = True
-    gs.limit_ang_z_lower = -_mm.radians(6)
-    gs.limit_ang_z_upper = _mm.radians(6)
-if STEP >= 5:
+if STEP >= 4:
     joint("j_tip", 30, -2, 7.4, 'HINGE', OBJ["ptest_triangle_v2"], OBJ["ptest_serga_v2"])
-if STEP >= 6:
+if STEP >= 5:
     joint("j_cart_pin", 30, 6, 7.4, 'HINGE', OBJ["ptest_serga_v2"], OBJ["ptest_cart_v2"])
     cs = joint("j_cart_slider", 30, 6, 9, 'GENERIC', P, OBJ["ptest_cart_v2"])
     cs.use_limit_lin_x = True
