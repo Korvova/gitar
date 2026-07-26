@@ -260,13 +260,12 @@ for chname, chy in (("j_channel_s", -6), ("j_channel_n", 22)):
         setattr(ch, 'limit_ang_' + _ax + '_lower', -math.radians(3))
         setattr(ch, 'limit_ang_' + _ax + '_upper', math.radians(3))
 
-# КРИВОШИП — КИНЕМАТИЧЕСКИЙ «мотор»: 40 кадров покоя (всё усаживается), потом 1.5°/кадр
+# КРИВОШИП — КИНЕМАТИЧЕСКИЙ БЕЗ АНИМАЦИИ: КРУТИ ЕГО РУКОЙ!
+# Нажми пробел (плей), выбери кривошип, жми R и веди мышью — физика живая.
 ck = OBJ["ptest_crank_r85_v2"]
 ck.rigid_body.kinematic = True
-for fr in range(1, 501):
-    a = 0 if fr <= 40 else (fr - 40) * 1.0
-    ck.rotation_euler = (0, 0, math.radians(-90 + a))
-    ck.keyframe_insert("rotation_euler", frame=fr)
+sc.frame_start, sc.frame_end = 1, 100000          # "бесконечный" плей
+sc.rigidbody_world.point_cache.frame_end = 100000
 
 # ---- свет и мир ----
 bpy.ops.object.light_add(type='SUN', location=(80, -60, 130))
@@ -278,5 +277,5 @@ w.node_tree.nodes["Background"].inputs[0].default_value = (0.92, 0.92, 0.92, 1)
 w.node_tree.nodes["Background"].inputs[1].default_value = 0.75
 sc.world = w
 
-bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Стенд_физика.blend")
+bpy.ops.wm.save_as_mainfile(filepath=r"C:\App\gitar\2-0\Стенд_ручной.blend")
 print("PHYS OK")
