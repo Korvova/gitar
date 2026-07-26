@@ -94,7 +94,7 @@ leg += Pos(0, 0, 27.5) * Cylinder(2.35, 3.0)
 # ---------------- фальш-мотор: заглушка с пеньком под звёздочку -----------
 plug = Pos(0, 0, 1) * Cylinder(20.5, 2)
 plug += Pos(0, 0, -1.5) * Cylinder(18.5, 3.1)
-plug += Pos(0, 0, 5) * Cylinder(2.45, 6.0)     # пенёк Ø4.9 — звёздочка садится
+plug += Pos(0, 0, 3.4) * Cylinder(2.45, 2.8)   # пенёк Ø4.9 короткий: держит кривошип, под шатуном не торчит
 
 parts = [("ptest_plate_v2", plate), ("ptest_triangle_v2", tri),
          ("ptest_leg_v1", leg), ("ptest_plug_v2", plug),
