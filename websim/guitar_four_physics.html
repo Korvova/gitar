@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Четыре канала — физический расчёт</title>
+<style>
+  :root { --bg:#0e1017; --panel:rgba(22,25,34,0.9); --line:#2b3040; --ink:#e6e8ef;
+          --dim:#6f7689; --accent:#e8b04b; --bad:#e05f52; --ok:#5fb08a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; overflow:hidden; background:var(--bg); color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
+  canvas { display:block; }
+  .panel { position:fixed; top:12px; left:12px; width:252px; background:var(--panel);
+    border:1px solid var(--line); padding:12px; backdrop-filter:blur(8px);
+    max-height:calc(100vh - 24px); overflow-y:auto; }
+  .panel h1 { margin:0 0 10px; font-size:11px; font-weight:500; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--dim); }
+  .panel h2 { margin:12px 0 7px; font-size:10px; font-weight:500; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--dim); border-top:1px solid var(--line); padding-top:9px; }
+  .ctl { margin-bottom:8px; }
+  .ctl label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; }
+  .ctl label span:last-child { color:var(--accent); font-variant-numeric:tabular-nums; }
+  .ctl label i { font-style:normal; display:inline-block; width:9px; height:9px; margin-right:6px; border-radius:2px; }
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:2px; background:var(--line); outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; background:var(--accent); cursor:pointer; border-radius:50%; }
+  input[type=range]::-moz-range-thumb { width:12px; height:12px; border:none; background:var(--accent); cursor:pointer; border-radius:50%; }
+  button { width:100%; margin-top:5px; padding:6px; background:transparent; border:1px solid var(--line);
+    color:var(--ink); font:inherit; font-size:10px; letter-spacing:.09em; text-transform:uppercase; cursor:pointer; }
+  button:hover { border-color:var(--accent); color:var(--accent); }
+  button.on { border-color:var(--bad); color:var(--bad); }
+  table { width:100%; border-collapse:collapse; font-size:10px; margin-top:2px; }
+  th { color:var(--dim); font-weight:400; text-align:right; padding:1px 0; }
+  th:first-child { text-align:left; }
+  td { text-align:right; font-variant-numeric:tabular-nums; padding:1px 0; }
+  td:first-child { text-align:left; }
+  .hint { position:fixed; right:12px; bottom:12px; text-align:right; font-size:10px;
+    letter-spacing:.11em; color:var(--dim); text-transform:uppercase; line-height:1.9; pointer-events:none; }
+  .err { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    text-align:center; padding:40px; font-size:13px; color:var(--bad); }
+  @media (max-width:740px){ .hint{display:none;} .panel{width:198px;} }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <h1>4 канала · физика</h1>
+  <div class="ctl"><label><span><i style="background:#d9714f"></i>Канал 1</span><span id="v0">0.0</span></label><input type="range" id="s0" min="-20" max="20" step="0.5" value="0"></div>
+  <div class="ctl"><label><span><i style="background:#4f9a95"></i>Канал 2</span><span id="v1">0.0</span></label><input type="range" id="s1" min="-20" max="20" step="0.5" value="0"></div>
+  <div class="ctl"><label><span><i style="background:#c9a44c"></i>Канал 3</span><span id="v2">0.0</span></label><input type="range" id="s2" min="-20" max="20" step="0.5" value="0"></div>
+  <div class="ctl"><label><span><i style="background:#8a6fb0"></i>Канал 4</span><span id="v3">0.0</span></label><input type="range" id="s3" min="-20" max="20" step="0.5" value="0"></div>
+  <h2>Приводы</h2>
+  <div class="ctl"><label><span>Момент удержания</span><span id="vh">140 мН·м</span></label><input type="range" id="hold" min="5" max="200" step="5" value="140"></div>
+  <div class="ctl"><label><span>Скорость</span><span id="vr">700 мкш/с</span></label><input type="range" id="rate" min="50" max="3000" step="50" value="700"></div>
+  <div class="ctl"><label><span>Нагрузка тележек</span><span id="vl">0.5 Н</span></label><input type="range" id="load" min="0" max="20" step="0.5" value="0.5"></div>
+  <button id="sweep">Гонять все</button>
+  <button id="center">Все в центр</button>
+  <button id="block">Упор в канал 2</button>
+  <button id="pause">Пауза</button>
+  <button id="expl">Разнести слои</button>
+  <button id="ghost">Скрыть дерево</button>
+  <button id="top">Вид сверху</button>
+  <button id="reset">Собрать заново</button>
+
+  <h2>Состояние</h2>
+  <table>
+    <tr><th>кан</th><th>цель</th><th>факт</th><th>ош.</th><th>рассинх</th></tr>
+    <tr id="r0"><td>1</td><td>0.0</td><td>0.0</td><td>0.00</td><td>0.00</td></tr>
+    <tr id="r1"><td>2</td><td>0.0</td><td>0.0</td><td>0.00</td><td>0.00</td></tr>
+    <tr id="r2"><td>3</td><td>0.0</td><td>0.0</td><td>0.00</td><td>0.00</td></tr>
+    <tr id="r3"><td>4</td><td>0.0</td><td>0.0</td><td>0.00</td><td>0.00</td></tr>
+  </table>
+</div>
+
+<div class="hint">лкм — поворот<br>пкм / shift — сдвиг<br>wasd — сдвиг<br>колесо — приближение<br>r — сброс вида</div>
+<div class="err" id="err">Не удалось загрузить движки.<br>Проверьте доступ к cdnjs.cloudflare.com.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script>
+if (typeof CANNON==='undefined' || typeof THREE==='undefined'){
+  document.getElementById('err').style.display='flex'; throw new Error('libs'); }
+
+// ============================================================
+//  Физика в метрах, графика в сантиметрах (S = 100).
+//  Каждый канал планарный в своей глубине: рычаг и спица рядом,
+//  наружу из слоя выходит только стойка к тележке.
+// ============================================================
+const S=100;
+const B=0.045, A=0.012, LANE=0.012, CR=0.005973;
+const R_PIN=0.00125, SLOT=0.00145, CART_Z=-0.0052;
+const CH=[
+  { cy:0.308, my:-0.18, L:0.443040, pz:-0.0071, rz:-0.0090, col:0xd9714f },
+  { cy:0.320, my:-0.14, L:0.415043, pz:-0.0104, rz:-0.0123, col:0x4f9a95 },
+  { cy:0.332, my:-0.10, L:0.387046, pz:-0.0137, rz:-0.0156, col:0xc9a44c },
+  { cy:0.344, my:-0.06, L:0.359050, pz:-0.0170, rz:-0.0189, col:0x8a6fb0 }
+];
+const FULL=200, MICRO=16, USTEP=2*Math.PI/(FULL*MICRO), TEETH=FULL/4;
+
+// обратная задача: положение тележки → угол вала (одинакова для всех каналов)
+function inv(x, cy, my, L){
+  const phi=-Math.asin(Math.max(-1,Math.min(1,x/B)));
+  const ax=A*Math.cos(phi), ay=(cy-B)+A*Math.sin(phi);
+  const dx=ax-LANE, dy=ay-my, d=Math.hypot(dx,dy), ux=dx/d, uy=dy/d;
+  const t=(d*d+CR*CR-L*L)/(2*d);
+  const h=Math.sqrt(Math.max(0,CR*CR-t*t));
+  const c1x=LANE+t*ux-h*uy, c1y=my+t*uy+h*ux;
+  const c2x=LANE+t*ux+h*uy, c2y=my+t*uy-h*ux;
+  return (c1x>c2x)?Math.atan2(c1y-my,c1x-LANE):Math.atan2(c2y-my,c2x-LANE);
+}
+
+// ============================================================
+//  ГРАФИКА
+// ============================================================
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0e1017);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,0.1,400);
+const TARGET=new THREE.Vector3(14,-0.9,0), HOME=TARGET.clone();
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const flat=new THREE.Group(); flat.rotation.x=-Math.PI/2; scene.add(flat);
+const root=new THREE.Group(); root.rotation.z=-Math.PI/2; flat.add(root);
+
+const gFret=new THREE.Group(), gCarts=new THREE.Group(), gBack=new THREE.Group(), gBody=new THREE.Group();
+const gCh=[0,1,2,3].map(()=>new THREE.Group());
+[gBody,gBack,...gCh.slice().reverse(),gCarts,gFret].forEach(g=>root.add(g));
+const EXPL=[[gFret,4.0],[gCarts,2.4],[gCh[0],0.8],[gCh[1],-0.6],[gCh[2],-2.0],[gCh[3],-3.4],[gBack,-5.0]];
+
+const M={
+  wood: new THREE.MeshStandardMaterial({color:0x9a6b43,roughness:.85}),
+  board:new THREE.MeshStandardMaterial({color:0x2e2119,roughness:.8}),
+  alu:  new THREE.MeshStandardMaterial({color:0x9aa2b2,metalness:.7,roughness:.35}),
+  body: new THREE.MeshStandardMaterial({color:0x8d5f3c,roughness:.8,transparent:true,opacity:.22}),
+  steel:new THREE.MeshStandardMaterial({color:0x8b95ab,metalness:.8,roughness:.28}),
+  motor:new THREE.MeshStandardMaterial({color:0x2b2f3d,metalness:.65,roughness:.4}),
+  stop: new THREE.MeshStandardMaterial({color:0xe05f52,roughness:.5}),
+  limit:new THREE.MeshStandardMaterial({color:0xe05f52,emissive:0x5a1a14,roughness:.6})
+};
+function cylZ(r,h,mat){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,18),mat);
+  m.rotation.x=Math.PI/2; m.castShadow=true; m.receiveShadow=true; return m; }
+function box(w,h,d,mat,x,y,z,g){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; (g||root).add(m); return m; }
+
+box(5,40,0.40,M.board,0,20,-0.20,gFret);
+box(5,40,0.21,M.wood,0,20,-2.095,gBack);
+[-2.4,2.4].forEach(x=>box(0.2,40,1.35,M.wood,x,20,-1.315,gBack));
+box(0.06,40,0.06,M.limit,-2.5,20,0.22,gFret);
+box(0.06,40,0.06,M.limit, 2.5,20,0.22,gFret);
+box(26,22,10,M.body,0,-11,-5.6,gBody);
+[30.2,31.4,32.6,33.8,35.0].forEach(y=>box(4.6,0.18,0.24,M.alu,0,y,CART_Z*S,gCarts));
+
+// ============================================================
+//  ФИЗИКА
+// ============================================================
+const world=new CANNON.World();
+world.gravity.set(0,0,0);
+world.solver.iterations=25;
+world.solver.tolerance=1e-8;
+world.defaultContactMaterial.contactEquationStiffness=2e6;
+world.defaultContactMaterial.contactEquationRelaxation=5;
+world.defaultContactMaterial.friction=0.06;
+world.defaultContactMaterial.restitution=0;
+
+function lockAxes(b,lin,ang){
+  if(b.linearFactor&&b.linearFactor.set) b.linearFactor.set(lin[0],lin[1],lin[2]);
+  if(b.angularFactor&&b.angularFactor.set) b.angularFactor.set(ang[0],ang[1],ang[2]); }
+function bearing(b,Iz){ b.updateMassProperties(); b.invMass=0;
+  b.inertia.set(0,0,Iz); b.invInertia.set(0,0,1/Iz); b.updateInertiaWorld(true);
+  lockAxes(b,[0,0,0],[0,0,1]); }
+function planar(b,Iz){ b.updateMassProperties();
+  b.inertia.set(0,0,Iz); b.invInertia.set(0,0,1/Iz); b.updateInertiaWorld(true);
+  lockAxes(b,[1,1,1],[0,0,1]); }
+
+const channels=CH.map((c,k)=>{
+  const mat=new THREE.MeshStandardMaterial({color:c.col,metalness:.45,roughness:.45});
+  const g=gCh[k];
+  const GP=1<<k, GC=1<<(k+4);              // группы столкновений: палец k ↔ тележка k
+  const pivY=c.cy-B;
+
+  // ---- тела ----
+  const crank=new CANNON.Body({mass:0.04,position:new CANNON.Vec3(LANE,c.my,c.rz)});
+  crank.addShape(new CANNON.Box(new CANNON.Vec3(0.006,0.006,0.002)));
+  crank.collisionFilterGroup=0; crank.collisionFilterMask=0;
+  crank.angularDamping=.02; bearing(crank,1.6e-5); world.addBody(crank);
+
+  const rod=new CANNON.Body({mass:0.008});
+  rod.addShape(new CANNON.Box(new CANNON.Vec3(c.L/2,0.001,0.001)));
+  rod.collisionFilterGroup=0; rod.collisionFilterMask=0;
+  rod.linearDamping=.03; rod.angularDamping=.03;
+  planar(rod,0.008*c.L*c.L/12); world.addBody(rod);
+
+  const bell=new CANNON.Body({mass:0.012,position:new CANNON.Vec3(0,pivY,c.pz)});
+  bell.addShape(new CANNON.Sphere(R_PIN), new CANNON.Vec3(0,B,CART_Z-c.pz));
+  bell.collisionFilterGroup=GP; bell.collisionFilterMask=GC;
+  bell.angularDamping=.03; bearing(bell,1.4e-5); world.addBody(bell);
+
+  const cart=new CANNON.Body({mass:0.02,position:new CANNON.Vec3(0,c.cy,CART_Z)});
+  cart.addShape(new CANNON.Box(new CANNON.Vec3(0.00075,0.005,0.0015)),new CANNON.Vec3(-(SLOT+0.00075),0,0));
+  cart.addShape(new CANNON.Box(new CANNON.Vec3(0.00075,0.005,0.0015)),new CANNON.Vec3( (SLOT+0.00075),0,0));
+  cart.fixedRotation=true; cart.updateMassProperties(); lockAxes(cart,[1,0,0],[0,0,0]);
+  cart.collisionFilterGroup=GC; cart.collisionFilterMask=GP;
+  cart.linearDamping=.08; world.addBody(cart);
+
+  world.addConstraint(new CANNON.PointToPointConstraint(
+    crank,new CANNON.Vec3(CR,0,0), rod,new CANNON.Vec3(-c.L/2,0,0), 1e3));
+  world.addConstraint(new CANNON.PointToPointConstraint(
+    bell,new CANNON.Vec3(A,0,c.rz-c.pz), rod,new CANNON.Vec3(c.L/2,0,0), 1e3));
+
+  // упоры по кромкам грифа
+  [-0.027,0.027].forEach(x=>{
+    const b=new CANNON.Body({mass:0,position:new CANNON.Vec3(x,c.cy,CART_Z)});
+    b.addShape(new CANNON.Box(new CANNON.Vec3(0.002,0.006,0.003)));
+    b.collisionFilterGroup=GP; b.collisionFilterMask=GC; world.addBody(b); });
+
+  // ---- визуал ----
+  box(3.5,3.5,3.4,M.motor,LANE*S,c.my*S,c.rz*S-1.9,gBody);
+  box(3.9,3.9,0.28,M.motor,LANE*S,c.my*S,c.rz*S-0.34,gBody);
+  const vCrank=new THREE.Group(); vCrank.position.set(LANE*S,c.my*S,0); g.add(vCrank);
+  { const hub=cylZ(0.26,0.18,mat); hub.position.z=c.rz*S-0.19; vCrank.add(hub);
+    const arm=new THREE.Mesh(new THREE.BoxGeometry(CR*S+0.3,0.3,0.18),mat);
+    arm.position.set(CR*S/2-0.03,0,c.rz*S-0.19); arm.castShadow=true; vCrank.add(arm);
+    const pin=cylZ(0.09,0.34,M.steel); pin.position.set(CR*S,0,c.rz*S-0.03); vCrank.add(pin); }
+  const vRod=new THREE.Group(); g.add(vRod);
+  { const b=new THREE.Mesh(new THREE.BoxGeometry(c.L*S,0.18,0.18),M.steel); b.castShadow=true; vRod.add(b);
+    [-1,1].forEach(t=>{ const e=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.05,10,20),M.steel);
+      e.position.x=t*c.L*S/2; vRod.add(e); }); }
+  const hPv=Math.abs(-1.99-c.pz*S)+0.1;
+  const pv=cylZ(0.11,hPv,M.steel); pv.position.set(0,pivY*S,-1.99+hPv/2); g.add(pv);
+  const vBell=new THREE.Group(); vBell.position.set(0,pivY*S,c.pz*S); g.add(vBell);
+  { const sh=new THREE.Shape();
+    sh.moveTo(0,0); sh.lineTo(A*S,0); sh.quadraticCurveTo(A*S*.45,B*S*.45,0,B*S); sh.closePath();
+    const pl=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:0.08,bevelEnabled:false}),mat);
+    pl.position.z=-0.04; pl.castShadow=true; vBell.add(pl);
+    const ab=new THREE.Mesh(new THREE.BoxGeometry(A*S,0.24,0.08),mat);
+    ab.position.set(A*S/2,0,0); ab.castShadow=true; vBell.add(ab);
+    const bb=new THREE.Mesh(new THREE.BoxGeometry(0.24,B*S,0.08),mat);
+    bb.position.set(0,B*S/2,0); bb.castShadow=true; vBell.add(bb);
+    vBell.add(cylZ(0.22,0.1,mat));
+    const b1=cylZ(0.16,0.1,mat); b1.position.set(A*S,0,0); vBell.add(b1);
+    const b2=cylZ(0.15,0.1,mat); b2.position.set(0,B*S,0); vBell.add(b2);
+    const dn=Math.abs(c.pz-c.rz)*S+0.14;
+    const pinA=cylZ(0.09,dn,M.steel); pinA.position.set(A*S,0,-dn/2+0.02); vBell.add(pinA);
+    const up=Math.abs(CART_Z-c.pz)*S+0.10;
+    const pinB=cylZ(R_PIN*S,up,M.steel); pinB.position.set(0,B*S,up/2-0.02); vBell.add(pinB); }
+  const vCart=new THREE.Group(); vCart.position.set(0,c.cy*S,CART_Z*S); gCarts.add(vCart);
+  [-1,1].forEach(t=>{ const w=new THREE.Mesh(new THREE.BoxGeometry(0.15,1.0,0.22),mat);
+    w.position.x=t*(SLOT*S+0.075); w.castShadow=true; vCart.add(w); });
+  [-1,1].forEach(t=>{ const e=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.16,0.22),mat);
+    e.position.y=t*0.42; e.castShadow=true; vCart.add(e); });
+
+  // ---- прошивка ----
+  const st={ count:0, target:0, phase:0, lag:0, goal:0 };
+  function setGoal(mm){ st.goal=mm; st.target=Math.round(inv(mm/1000,c.cy,c.my,c.L)/USTEP); }
+  function assemble(){
+    const zA=new CANNON.Vec3(0,0,1);
+    crank.position.set(LANE,c.my,c.rz); crank.quaternion.set(0,0,0,1);
+    crank.velocity.setZero(); crank.angularVelocity.setZero();
+    bell.position.set(0,pivY,c.pz); bell.quaternion.set(0,0,0,1);
+    bell.velocity.setZero(); bell.angularVelocity.setZero();
+    const cx=LANE+CR, cy2=c.my, ax=A, ay=pivY;
+    rod.position.set((cx+ax)/2,(cy2+ay)/2,c.rz);
+    rod.quaternion.setFromAxisAngle(zA,Math.atan2(ay-cy2,ax-cx));
+    rod.velocity.setZero(); rod.angularVelocity.setZero();
+    cart.position.set(0,c.cy,CART_Z); cart.velocity.setZero();
+    st.count=0; st.target=0; st.phase=0; st.goal=0;
+  }
+  function lockCart(){ cart.position.y=c.cy; cart.position.z=CART_Z;
+    cart.velocity.y=0; cart.velocity.z=0;
+    cart.quaternion.set(0,0,0,1); cart.angularVelocity.setZero(); }
+  function firmware(dt,rate){
+    st.phase+=rate*dt;
+    while(st.phase>=1){ st.phase-=1;
+      if(st.count<st.target) st.count++; else if(st.count>st.target) st.count--; else break; } }
+  function forces(holdT,load){
+    const q=crank.quaternion;
+    st.lag=st.count*USTEP-2*Math.atan2(q.z,q.w);
+    crank.torque.z+=holdT*Math.sin(TEETH*st.lag)-0.010*crank.angularVelocity.z;
+    cart.force.x+=-load*Math.tanh(cart.velocity.x/0.004); }
+  function draw(){
+    vCrank.quaternion.set(crank.quaternion.x,crank.quaternion.y,crank.quaternion.z,crank.quaternion.w);
+    vBell.quaternion.set(bell.quaternion.x,bell.quaternion.y,bell.quaternion.z,bell.quaternion.w);
+    vRod.position.set(rod.position.x*S,rod.position.y*S,c.rz*S);
+    vRod.quaternion.set(rod.quaternion.x,rod.quaternion.y,rod.quaternion.z,rod.quaternion.w);
+    vCart.position.x=cart.position.x*S; }
+  assemble();
+  return { st, setGoal, assemble, lockCart, firmware, forces, draw, cart, cy:c.cy };
+});
+
+// упор в канал 2
+const obstacle=new CANNON.Body({mass:0,position:new CANNON.Vec3(0.012,CH[1].cy,CART_Z)});
+obstacle.addShape(new CANNON.Box(new CANNON.Vec3(0.002,0.006,0.003)));
+obstacle.collisionFilterGroup=1<<1; obstacle.collisionFilterMask=1<<5;
+const vStop=box(0.4,1.4,0.7,M.stop,1.2,CH[1].cy*S,CART_Z*S,gCarts); vStop.visible=false;
+let obstacleOn=false;
+
+scene.add(new THREE.AmbientLight(0x8a93ad,.6));
+const key=new THREE.DirectionalLight(0xffffff,1.0);
+key.position.set(14,30,12); key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-30; key.shadow.camera.right=30;
+key.shadow.camera.top=30; key.shadow.camera.bottom=-30;
+scene.add(key);
+
+// ============================================================
+//  УПРАВЛЕНИЕ
+// ============================================================
+let holdT=0.140, rate=700, load=0.5, paused=false, ghost=false, sweep=0, explode=0, explodeT=0;
+const $=id=>document.getElementById(id);
+for(let i=0;i<4;i++) $('s'+i).oninput=e=>{ sweep=0; $('sweep').className='';
+  channels[i].setGoal(+e.target.value); $('v'+i).textContent=(+e.target.value).toFixed(1); };
+$('hold').oninput=e=>{ holdT=+e.target.value/1000; $('vh').textContent=e.target.value+' мН·м'; };
+$('rate').oninput=e=>{ rate=+e.target.value; $('vr').textContent=rate+' мкш/с'; };
+$('load').oninput=e=>{ load=+e.target.value; $('vl').textContent=(+e.target.value).toFixed(1)+' Н'; };
+$('sweep').onclick=()=>{ sweep=sweep?0:1; $('sweep').className=sweep?'on':''; };
+$('center').onclick=()=>{ sweep=0; $('sweep').className='';
+  channels.forEach((c,i)=>{ c.setGoal(0); $('s'+i).value=0; $('v'+i).textContent='0.0'; }); };
+$('pause').onclick=()=>{ paused=!paused; $('pause').textContent=paused?'Продолжить':'Пауза'; };
+$('reset').onclick=()=>{ channels.forEach((c,i)=>{ c.assemble(); $('s'+i).value=0; $('v'+i).textContent='0.0'; }); };
+$('block').onclick=()=>{ obstacleOn=!obstacleOn;
+  if(obstacleOn) world.addBody(obstacle); else world.removeBody(obstacle);
+  vStop.visible=obstacleOn; $('block').className=obstacleOn?'on':'';
+  $('block').textContent=obstacleOn?'Убрать упор':'Упор в канал 2'; };
+$('expl').onclick=()=>{ explode=explode?0:1; $('expl').className=explode?'on':''; };
+$('ghost').onclick=()=>{ ghost=!ghost;
+  $('ghost').textContent=ghost?'Показать дерево':'Скрыть дерево';
+  [M.wood,M.board].forEach(m=>{ m.transparent=ghost; m.opacity=ghost?.12:1; m.needsUpdate=true; }); };
+$('top').onclick=()=>{ camTheta=0; camPhi=0.06; camDist=44; TARGET.copy(HOME); };
+
+let camTheta=0.12, camPhi=0.5, camDist=52, dragging=0, px=0, py=0;
+const el=renderer.domElement; el.style.cursor='grab';
+el.addEventListener('contextmenu',e=>e.preventDefault());
+const vR=new THREE.Vector3(), vF=new THREE.Vector3(), vU=new THREE.Vector3();
+function axes(){ vR.set(Math.cos(camTheta),0,-Math.sin(camTheta));
+  vF.subVectors(TARGET,camera.position).normalize(); vU.crossVectors(vR,vF).normalize(); }
+function pan(dx,dy){ axes(); const k=camDist*.0016;
+  TARGET.addScaledVector(vR,-dx*k); TARGET.addScaledVector(vU,dy*k); }
+function down(x,y,m){ dragging=m; px=x; py=y; el.style.cursor=m===2?'move':'grabbing'; }
+function move(x,y){ if(!dragging) return; const dx=x-px,dy=y-py; px=x; py=y;
+  if(dragging===2){ pan(dx,dy); return; }
+  camTheta-=dx*.006; camPhi=Math.max(.04,Math.min(1.56,camPhi-dy*.005)); }
+function up(){ dragging=0; el.style.cursor='grab'; }
+el.addEventListener('mousedown',e=>down(e.clientX,e.clientY,(e.button===2||e.button===1||e.shiftKey)?2:1));
+addEventListener('mousemove',e=>move(e.clientX,e.clientY));
+addEventListener('mouseup',up);
+let pinch=0;
+el.addEventListener('touchstart',e=>{ if(e.touches.length===2){ dragging=2;
+    px=(e.touches[0].clientX+e.touches[1].clientX)/2; py=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  } else down(e.touches[0].clientX,e.touches[0].clientY,1); },{passive:true});
+el.addEventListener('touchmove',e=>{ e.preventDefault();
+  if(e.touches.length===2){ const cx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    pan(cx-px,cy-py); camDist=Math.min(120,Math.max(14,camDist*(pinch/Math.max(1,d))));
+    px=cx; py=cy; pinch=d;
+  } else move(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+addEventListener('touchend',up);
+el.addEventListener('wheel',e=>{ e.preventDefault();
+  camDist=Math.min(120,Math.max(14,camDist+e.deltaY*.035)); },{passive:false});
+const keys={};
+addEventListener('keydown',e=>{ keys[e.key.toLowerCase()]=true;
+  if(e.key.toLowerCase()==='r'){ camTheta=.12; camPhi=.5; camDist=52; TARGET.copy(HOME); } });
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+function kb(dt){ let dx=0,dy=0;
+  if(keys['a']||keys['arrowleft'])dx+=1; if(keys['d']||keys['arrowright'])dx-=1;
+  if(keys['w']||keys['arrowup'])dy-=1;  if(keys['s']||keys['arrowdown'])dy+=1;
+  if(dx||dy) pan(dx*dt*900,dy*dt*900);
+  if(keys['q']) TARGET.y-=camDist*.6*dt; if(keys['e']) TARGET.y+=camDist*.6*dt; }
+
+// ============================================================
+//  ЦИКЛ
+// ============================================================
+const FIXED=1/900, clock=new THREE.Clock();
+let accum=0, tt=0;
+function sane(){ return channels.every(c=>Number.isFinite(c.cart.position.x)
+  && Math.abs(c.cart.position.x)<0.05); }
+function physics(dt){
+  accum+=dt; let n=0;
+  try{
+    while(accum>=FIXED && n<18){
+      channels.forEach(c=>{ c.firmware(FIXED,rate); c.forces(holdT,load); });
+      world.step(FIXED);
+      channels.forEach(c=>c.lockCart());
+      accum-=FIXED; n++;
+    }
+  } catch(e){ console.warn('шаг физики сорвался:',e); channels.forEach(c=>c.assemble()); accum=0; return; }
+  if(n>=18) accum=0;
+  if(!sane()) { channels.forEach(c=>c.assemble()); accum=0; }
+}
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),.05); kb(dt); tt+=dt;
+  if(sweep) channels.forEach((c,i)=>{
+    const v=20*Math.sin(tt*0.9+i*Math.PI/2);
+    c.setGoal(v); $('s'+i).value=v.toFixed(1); $('v'+i).textContent=v.toFixed(1); });
+  if(!paused) physics(dt);
+  channels.forEach((c,i)=>{
+    c.draw();
+    const real=c.cart.position.x*1000, lagSt=c.st.lag/(2*Math.PI/FULL);
+    const tr=$('r'+i).children;
+    tr[1].textContent=c.st.goal.toFixed(1);
+    tr[2].textContent=real.toFixed(1);
+    tr[3].textContent=(real-c.st.goal).toFixed(2);
+    tr[4].textContent=lagSt.toFixed(2);
+    tr[4].style.color=Math.abs(lagSt)>1.6?'#e05f52':'#5fb08a';
+  });
+  explodeT+=(explode-explodeT)*Math.min(1,dt*4);
+  EXPL.forEach(([g,k])=>{ g.position.z=k*explodeT; });
+  camera.position.set(
+    TARGET.x+camDist*Math.sin(camPhi)*Math.sin(camTheta),
+    TARGET.y+camDist*Math.cos(camPhi),
+    TARGET.z+camDist*Math.sin(camPhi)*Math.cos(camTheta));
+  axes(); camera.up.copy(vU); camera.lookAt(TARGET);
+  renderer.render(scene,camera);
+}
+animate();
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>

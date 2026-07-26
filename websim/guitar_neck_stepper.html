@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Привод тележки — шаговый двигатель</title>
+<style>
+  :root {
+    --bg: #0e1017; --panel: rgba(22,25,34,0.88); --line: #2b3040;
+    --ink: #e6e8ef; --dim: #6f7689; --accent: #e8b04b; --bad: #e05f52; --ok: #5fb08a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  canvas { display: block; }
+  .panel { position: fixed; top: 14px; left: 14px; width: 252px; background: var(--panel);
+    border: 1px solid var(--line); padding: 13px 13px 11px; backdrop-filter: blur(8px);
+    max-height: calc(100vh - 28px); overflow-y: auto; }
+  .panel h1 { margin: 0 0 11px; font-size: 11px; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--dim); }
+  .ctl { margin-bottom: 10px; }
+  .ctl label { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.05em; margin-bottom: 5px; }
+  .ctl label span:last-child { color: var(--accent); font-variant-numeric: tabular-nums; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--line); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--accent); cursor: pointer; border-radius: 50%; }
+  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border: none; background: var(--accent); cursor: pointer; border-radius: 50%; }
+  button { width: 100%; margin-top: 5px; padding: 7px; background: transparent; border: 1px solid var(--line);
+    color: var(--ink); font: inherit; font-size: 10.5px; letter-spacing: 0.09em; text-transform: uppercase; cursor: pointer; }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.on { border-color: var(--bad); color: var(--bad); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hud { position: fixed; left: 14px; bottom: 14px; font-size: 11px; letter-spacing: 0.05em; line-height: 1.85; pointer-events: none; }
+  .hud .row { display: flex; gap: 10px; }
+  .hud .k { color: var(--dim); width: 168px; }
+  .hud .v { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .hud .v.ok { color: var(--ok); } .hud .v.bad { color: var(--bad); }
+  .hint { position: fixed; right: 14px; bottom: 14px; text-align: right; font-size: 10px;
+    letter-spacing: 0.11em; color: var(--dim); text-transform: uppercase; line-height: 1.9; pointer-events: none; }
+  .err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    text-align: center; padding: 40px; font-size: 13px; line-height: 1.7; color: var(--bad); }
+  @media (max-width: 720px) { .hint { display: none; } .panel { width: 200px; } }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <h1>NEMA 14 · 1/16</h1>
+  <div class="ctl">
+    <label><span>Цель</span><span id="v-goal">0.0 мм</span></label>
+    <input type="range" id="goal" min="-20" max="20" step="0.5" value="0">
+  </div>
+  <div class="ctl">
+    <label><span>Скорость</span><span id="v-rate">600 мкш/с</span></label>
+    <input type="range" id="rate" min="50" max="3000" step="50" value="600">
+  </div>
+  <div class="ctl">
+    <label><span>Момент удержания</span><span id="v-hold">140 мН·м</span></label>
+    <input type="range" id="hold" min="5" max="200" step="5" value="140">
+  </div>
+  <div class="ctl">
+    <label><span>Нагрузка тележки</span><span id="v-ld">0.5 Н</span></label>
+    <input type="range" id="ld" min="0" max="20" step="0.5" value="0.5">
+  </div>
+  <button id="home">Привязка к упору</button>
+  <button id="sweep">Гонять край-край</button>
+  <button id="block">Поставить упор</button>
+  <button id="pause">Пауза</button>
+  <button id="ghost">Скрыть дерево</button>
+  <button id="top">Вид сверху</button>
+  <button id="reset">Собрать заново</button>
+</div>
+
+<div class="hud">
+  <div class="row"><span class="k">ЦЕЛЬ</span><span class="v" id="h-goal">0.0 мм</span></div>
+  <div class="row"><span class="k">ДУМАЕТ ПРОШИВКА</span><span class="v" id="h-calc">0.0 мм</span></div>
+  <div class="row"><span class="k">НА САМОМ ДЕЛЕ</span><span class="v" id="h-real">0.0 мм</span></div>
+  <div class="row"><span class="k">ОШИБКА</span><span class="v" id="h-err">0.00 мм</span></div>
+  <div class="row"><span class="k">РАССИНХРОН</span><span class="v" id="h-lag">0.00 шага</span></div>
+  <div class="row"><span class="k">СЧЁТЧИК</span><span class="v" id="h-cnt">0</span></div>
+  <div class="row"><span class="k">СОСТОЯНИЕ</span><span class="v ok" id="h-st">—</span></div>
+</div>
+
+<div class="hint">лкм — поворот<br>пкм / shift — сдвиг<br>wasd — сдвиг<br>колесо — приближение<br>r — сброс вида</div>
+<div class="err" id="err">Не удалось загрузить движки.<br>Проверьте доступ к cdnjs.cloudflare.com.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script>
+if (typeof CANNON === 'undefined' || typeof THREE === 'undefined') {
+  document.getElementById('err').style.display = 'flex';
+  throw new Error('libs');
+}
+
+// ============================================================
+//  ГЕОМЕТРИЯ (физика в метрах, графика в сантиметрах)
+// ============================================================
+const S = 100;
+const ARM_A = 0.015, ARM_B = 0.050;
+const PVX = 0, PVY = 0.335;
+const MOX = 0.015, MOY = -0.040;
+const CR = 0.007;                       // кривошип на валу шаговика
+// тяга подобрана так, что в среднем положении кривошип стоит ПОПЕРЁК тяги:
+// только тогда вылет может меняться в обе стороны и доступен весь ход
+const SPOKE = Math.sqrt((MOX + CR - ARM_A) ** 2 + (PVY - MOY) ** 2);
+const R_PIN = 0.00125, SLOT = 0.00145, CART_Y = 0.3829;
+const X_HOME = -0.025 + (SLOT + 0.0015);   // где тележка упрётся в левую кромку
+
+// ---------- кинематика для «прошивки» ----------
+function fwd(psi) {                      // угол вала → положение тележки
+  const cx = MOX + CR * Math.cos(psi), cy = MOY + CR * Math.sin(psi);
+  const dx = cx - PVX, dy = cy - PVY, d = Math.hypot(dx, dy);
+  const ux = dx / d, uy = dy / d;
+  const t = (d * d + ARM_A * ARM_A - SPOKE * SPOKE) / (2 * d);
+  const h = Math.sqrt(Math.max(0, ARM_A * ARM_A - t * t));
+  const ax = PVX + t * ux - h * uy, ay = PVY + t * uy + h * ux;
+  return -ARM_B * Math.sin(Math.atan2(ay - PVY, ax - PVX));
+}
+function inv(x) {                        // положение тележки → угол вала
+  const phi = -Math.asin(Math.max(-1, Math.min(1, x / ARM_B)));
+  const ax = PVX + ARM_A * Math.cos(phi), ay = PVY + ARM_A * Math.sin(phi);
+  const dx = ax - MOX, dy = ay - MOY, d = Math.hypot(dx, dy);
+  const ux = dx / d, uy = dy / d;
+  const t = (d * d + CR * CR - SPOKE * SPOKE) / (2 * d);
+  const h = Math.sqrt(Math.max(0, CR * CR - t * t));
+  const c1x = MOX + t * ux - h * uy, c1y = MOY + t * uy + h * ux;
+  const c2x = MOX + t * ux + h * uy, c2y = MOY + t * uy - h * ux;
+  return (c1x > c2x) ? Math.atan2(c1y - MOY, c1x - MOX)
+                     : Math.atan2(c2y - MOY, c2x - MOX);
+}
+
+// ---------- параметры шаговика ----------
+const FULL = 200, MICRO = 16;
+const USTEP = 2 * Math.PI / (FULL * MICRO);
+const TEETH = FULL / 4;                  // 50 электрических циклов на оборот
+
+// ============================================================
+//  ГРАФИКА
+// ============================================================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e1017);
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 400);
+const TARGET = new THREE.Vector3(11, -0.5, 0), HOME_CAM = TARGET.clone();
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const flat = new THREE.Group(); flat.rotation.x = -Math.PI / 2; scene.add(flat);
+const root = new THREE.Group(); root.rotation.z = -Math.PI / 2; flat.add(root);
+
+const M = {
+  wood:  new THREE.MeshStandardMaterial({ color: 0x9a6b43, roughness: 0.85 }),
+  board: new THREE.MeshStandardMaterial({ color: 0x2e2119, roughness: 0.8 }),
+  body:  new THREE.MeshStandardMaterial({ color: 0x8d5f3c, roughness: 0.8, transparent: true, opacity: 0.3 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x8b95ab, metalness: 0.8, roughness: 0.28 }),
+  motor: new THREE.MeshStandardMaterial({ color: 0x2b2f3d, metalness: 0.65, roughness: 0.4 }),
+  gold:  new THREE.MeshStandardMaterial({ color: 0xc9a44c, metalness: 0.85, roughness: 0.32 }),
+  bell:  new THREE.MeshStandardMaterial({ color: 0x2f4a86, metalness: 0.45, roughness: 0.45 }),
+  cart:  new THREE.MeshStandardMaterial({ color: 0x4f9a95, metalness: 0.45, roughness: 0.42 }),
+  stop:  new THREE.MeshStandardMaterial({ color: 0xe05f52, roughness: 0.5 }),
+  limit: new THREE.MeshStandardMaterial({ color: 0xe05f52, emissive: 0x5a1a14, roughness: 0.6 })
+};
+function cylZ(r, h, mat) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 26), mat);
+  m.rotation.x = Math.PI / 2; m.castShadow = true; m.receiveShadow = true; return m;
+}
+function box(w, h, d, mat, x, y, z, parent) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  (parent || root).add(m); return m;
+}
+
+box(5, 40, 0.4, M.board, 0, 20, -2.2);
+box(5, 40, 0.7, M.wood, 0, 20, -1.65);
+box(0.3, 37.6, 1.3, M.wood, -2.35, 18.8, -0.65);
+box(0.3, 37.6, 1.3, M.wood,  2.35, 18.8, -0.65);
+box(5, 1.05, 1.3, M.wood, 0, 39.42, -0.65);
+box(5, 0.35, 0.5, M.wood, 0, 37.57, -0.25);
+box(0.06, 40, 0.06, M.limit, -2.5, 20, 0.02);
+box(0.06, 40, 0.06, M.limit,  2.5, 20, 0.02);
+box(26, 22, 9, M.body, 0, -11, -4.0);                     // дека: z −8.5 … +0.5
+
+// NEMA 14: корпус 35 × 35 мм стоит торцом к механизму, вал выходит наружу
+box(3.5, 3.5, 3.4, M.motor, MOX * S, MOY * S, -3.8);      // корпус: z −5.5 … −2.1
+box(3.9, 3.9, 0.3, M.motor, MOX * S, MOY * S, -2.25);     // фланец
+const crankView = new THREE.Group(); crankView.position.set(MOX * S, MOY * S, 0); root.add(crankView);
+{
+  const shaft = cylZ(0.25, 0.85, M.steel);                 // вал Ø5 мм
+  shaft.position.z = -1.75; crankView.add(shaft);
+  const hub = cylZ(0.35, 0.25, M.gold); hub.position.z = -1.425; crankView.add(hub);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(CR * S + 0.5, 0.4, 0.25), M.gold);
+  arm.position.set((CR * S) / 2 - 0.1, 0, -1.425); arm.castShadow = true; crankView.add(arm);
+  const boss = cylZ(0.25, 0.25, M.gold); boss.position.set(CR * S, 0, -1.425); crankView.add(boss);
+  const pin = cylZ(0.15, 0.45, M.steel); pin.position.set(CR * S, 0, -1.075); crankView.add(pin);
+}
+
+const spokeView = new THREE.Group(); root.add(spokeView);
+{
+  const b = new THREE.Mesh(new THREE.BoxGeometry(SPOKE * S, 0.16, 0.16), M.steel);
+  b.castShadow = true; spokeView.add(b);
+  [-1, 1].forEach(s => {
+    const e = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.07, 12, 26), M.steel);
+    e.position.x = s * SPOKE * S / 2; e.castShadow = true; spokeView.add(e);
+  });
+}
+
+const pivotPin = cylZ(0.16, 0.9, M.steel); pivotPin.position.set(PVX * S, PVY * S, -0.95); root.add(pivotPin);
+const bellView = new THREE.Group(); bellView.position.set(PVX * S, PVY * S, -0.7); root.add(bellView);
+{
+  const a = ARM_A * S, b = ARM_B * S;
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0); shape.lineTo(a, 0);
+  shape.quadraticCurveTo(a * 0.45, b * 0.45, 0, b); shape.closePath();
+  const plate = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false }), M.bell);
+  plate.position.z = -0.15; plate.castShadow = true; bellView.add(plate);
+  const armA = new THREE.Mesh(new THREE.BoxGeometry(a, 0.34, 0.3), M.bell);
+  armA.position.set(a / 2, 0, 0); armA.castShadow = true; bellView.add(armA);
+  const armB = new THREE.Mesh(new THREE.BoxGeometry(0.34, b, 0.3), M.bell);
+  armB.position.set(0, b / 2, 0); armB.castShadow = true; bellView.add(armB);
+  bellView.add(cylZ(0.34, 0.32, M.bell));
+  const bossA = cylZ(0.26, 0.32, M.bell); bossA.position.set(a, 0, 0); bellView.add(bossA);
+  const bossB = cylZ(0.20, 0.32, M.bell); bossB.position.set(0, b, 0); bellView.add(bossB);
+  const pinA = cylZ(0.13, 0.55, M.steel); pinA.position.set(a, 0, -0.35); bellView.add(pinA);
+  const pinB = cylZ(R_PIN * S, 0.65, M.steel); pinB.position.set(0, b, 0.42); bellView.add(pinB);
+}
+
+const cartView = new THREE.Group(); cartView.position.set(0, CART_Y * S, -0.25); root.add(cartView);
+[-1, 1].forEach(s => {
+  const w = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.2, 0.4), M.cart);
+  w.position.x = s * (SLOT * S + 0.075); w.castShadow = true; cartView.add(w);
+});
+[-1, 1].forEach(s => {
+  const c = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.4), M.cart);
+  c.position.y = s * 0.5; c.castShadow = true; cartView.add(c);
+});
+const stopView = box(0.4, 1.6, 0.6, M.stop, 1.2, CART_Y * S, -0.25);
+stopView.visible = false;
+
+scene.add(new THREE.AmbientLight(0x8a93ad, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.0);
+key.position.set(14, 30, 12); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -26; key.shadow.camera.right = 26;
+key.shadow.camera.top = 26; key.shadow.camera.bottom = -26;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xe8b04b, 0.35); rim.position.set(-14, 9, -11); scene.add(rim);
+
+// ============================================================
+//  ФИЗИКА
+// ============================================================
+const G_LINK = 1, G_PIN = 2, G_CART = 4, G_OBST = 8;
+const world = new CANNON.World();
+world.gravity.set(0, 0, 0);
+world.solver.iterations = 30;
+world.solver.tolerance = 1e-8;
+world.defaultContactMaterial.contactEquationStiffness = 2e6;
+world.defaultContactMaterial.contactEquationRelaxation = 5;
+world.defaultContactMaterial.friction = 0.06;
+world.defaultContactMaterial.restitution = 0;
+
+function lockAxes(body, lin, ang) {
+  if (body.linearFactor && body.linearFactor.set) body.linearFactor.set(lin[0], lin[1], lin[2]);
+  if (body.angularFactor && body.angularFactor.set) body.angularFactor.set(ang[0], ang[1], ang[2]);
+}
+function bearing(body, Iz) {
+  body.updateMassProperties();
+  body.invMass = 0;
+  body.inertia.set(0, 0, Iz); body.invInertia.set(0, 0, 1 / Iz);
+  body.updateInertiaWorld(true);
+  lockAxes(body, [0, 0, 0], [0, 0, 1]);
+}
+function planar(body, Iz) {
+  body.updateMassProperties();
+  body.inertia.set(0, 0, Iz); body.invInertia.set(0, 0, 1 / Iz);
+  body.updateInertiaWorld(true);
+  lockAxes(body, [1, 1, 1], [0, 0, 1]);
+}
+
+const M_SPOKE = 0.010, M_BELL = 0.020, M_CART = 0.030;
+
+const crank = new CANNON.Body({ mass: 0.04, position: new CANNON.Vec3(MOX, MOY, 0) });
+crank.addShape(new CANNON.Box(new CANNON.Vec3(0.008, 0.008, 0.003)));
+crank.collisionFilterGroup = G_LINK; crank.collisionFilterMask = 0;
+// момент инерции ротора с кривошипом и муфтой; взят с запасом ради
+// устойчивости счёта — настоящий ротор NEMA 14 примерно на порядок легче
+bearing(crank, 2.0e-5);
+world.addBody(crank);
+
+const spoke = new CANNON.Body({ mass: M_SPOKE });
+spoke.addShape(new CANNON.Box(new CANNON.Vec3(SPOKE / 2, 0.0015, 0.0015)));
+spoke.collisionFilterGroup = G_LINK; spoke.collisionFilterMask = 0;
+spoke.linearDamping = 0.03; spoke.angularDamping = 0.03;
+planar(spoke, M_SPOKE * SPOKE * SPOKE / 12);
+world.addBody(spoke);
+
+const BELL_CM = new CANNON.Vec3(ARM_A / 3, ARM_B / 3, 0);
+const bell = new CANNON.Body({ mass: M_BELL, position: new CANNON.Vec3(PVX, PVY, 0) });
+bell.addShape(new CANNON.Sphere(R_PIN), new CANNON.Vec3(0, ARM_B, 0));
+bell.collisionFilterGroup = G_PIN; bell.collisionFilterMask = G_CART;
+bell.angularDamping = 0.03;
+bearing(bell, 2.0e-5);
+world.addBody(bell);
+
+const cart = new CANNON.Body({ mass: M_CART, position: new CANNON.Vec3(0, CART_Y, 0) });
+cart.addShape(new CANNON.Box(new CANNON.Vec3(0.00075, 0.006, 0.002)), new CANNON.Vec3(-(SLOT + 0.00075), 0, 0));
+cart.addShape(new CANNON.Box(new CANNON.Vec3(0.00075, 0.006, 0.002)), new CANNON.Vec3( (SLOT + 0.00075), 0, 0));
+cart.fixedRotation = true; cart.updateMassProperties();
+lockAxes(cart, [1, 0, 0], [0, 0, 0]);
+cart.collisionFilterGroup = G_CART; cart.collisionFilterMask = G_PIN | G_OBST;
+cart.linearDamping = 0.08;
+world.addBody(cart);
+
+function lockCart() {
+  cart.position.y = CART_Y; cart.position.z = 0;
+  cart.velocity.y = 0; cart.velocity.z = 0;
+  cart.quaternion.set(0, 0, 0, 1);
+  cart.angularVelocity.setZero();
+}
+
+const jointMotor = new CANNON.PointToPointConstraint(
+  crank, new CANNON.Vec3(CR, 0, 0), spoke, new CANNON.Vec3(-SPOKE / 2, 0, 0), 1e3);
+const jointBell = new CANNON.PointToPointConstraint(
+  bell, new CANNON.Vec3(ARM_A, 0, 0), spoke, new CANNON.Vec3(SPOKE / 2, 0, 0), 1e3);
+world.addConstraint(jointMotor);
+world.addConstraint(jointBell);
+
+function staticBox(hx, hy, x, y, group) {
+  const b = new CANNON.Body({ mass: 0, position: new CANNON.Vec3(x, y, 0) });
+  b.addShape(new CANNON.Box(new CANNON.Vec3(hx, hy, 0.004)));
+  b.collisionFilterGroup = group; b.collisionFilterMask = G_CART;
+  return b;
+}
+world.addBody(staticBox(0.002, 0.008, -0.027, CART_Y, G_OBST));
+world.addBody(staticBox(0.002, 0.008,  0.027, CART_Y, G_OBST));
+const obstacle = staticBox(0.002, 0.008, 0.012, CART_Y, G_OBST);
+let obstacleOn = false;
+
+// ---------- состояние «прошивки» ----------
+let stepCount = 0, stepTarget = 0, stepPhase = 0;
+let lag = 0, homing = 0, homeTimer = 0, homed = false, sweep = 0;
+
+function assemble() {
+  const zAxis = new CANNON.Vec3(0, 0, 1);
+  crank.position.set(MOX, MOY, 0);
+  crank.quaternion.set(0, 0, 0, 1);
+  crank.velocity.setZero(); crank.angularVelocity.setZero();
+
+  const cx = MOX + CR, cy = MOY;
+  const dx = cx - PVX, dy = cy - PVY, d = Math.hypot(dx, dy);
+  const ux = dx / d, uy = dy / d;
+  const t = (d * d + ARM_A * ARM_A - SPOKE * SPOKE) / (2 * d);
+  const h = Math.sqrt(Math.max(0, ARM_A * ARM_A - t * t));
+  const ax = PVX + t * ux - h * uy, ay = PVY + t * uy + h * ux;
+  const phi = Math.atan2(ay - PVY, ax - PVX);
+
+  bell.position.set(PVX, PVY, 0);
+  bell.quaternion.setFromAxisAngle(zAxis, phi);
+  bell.velocity.setZero(); bell.angularVelocity.setZero();
+
+  spoke.position.set((cx + ax) / 2, (cy + ay) / 2, 0);
+  spoke.quaternion.setFromAxisAngle(zAxis, Math.atan2(ay - cy, ax - cx));
+  spoke.velocity.setZero(); spoke.angularVelocity.setZero();
+
+  cart.position.set(-ARM_B * Math.sin(phi), CART_Y, 0);
+  cart.velocity.setZero();
+
+  stepCount = 0; stepTarget = 0; stepPhase = 0;
+  homing = 0; homed = false; sweep = 0;
+}
+assemble();
+
+// ============================================================
+//  УПРАВЛЕНИЕ
+// ============================================================
+let goal = 0, rate = 600, holdT = 0.140, load = 0.5;
+let paused = false, ghost = false;
+const $ = id => document.getElementById(id);
+
+function setGoal(mm) {
+  goal = mm;
+  stepTarget = Math.round(inv(mm / 1000) / USTEP);
+  $('v-goal').textContent = mm.toFixed(1) + ' мм';
+  $('goal').value = mm;
+}
+$('goal').oninput = e => { sweep = 0; setGoal(+e.target.value); };
+$('rate').oninput = e => { rate = +e.target.value; $('v-rate').textContent = rate + ' мкш/с'; };
+$('hold').oninput = e => { holdT = +e.target.value / 1000; $('v-hold').textContent = e.target.value + ' мН·м'; };
+$('ld').oninput   = e => { load = +e.target.value; $('v-ld').textContent = (+e.target.value).toFixed(1) + ' Н'; };
+$('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? 'Продолжить' : 'Пауза'; };
+$('reset').onclick = assemble;
+$('home').onclick = () => { homing = 1; homeTimer = 0; homed = false; sweep = 0; };
+$('sweep').onclick = () => {
+  sweep = sweep ? 0 : 1;
+  $('sweep').className = sweep ? 'on' : '';
+  $('sweep').textContent = sweep ? 'Остановить гон' : 'Гонять край-край';
+};
+$('block').onclick = () => {
+  obstacleOn = !obstacleOn;
+  if (obstacleOn) world.addBody(obstacle); else world.removeBody(obstacle);
+  stopView.visible = obstacleOn;
+  $('block').textContent = obstacleOn ? 'Убрать упор' : 'Поставить упор';
+  $('block').className = obstacleOn ? 'on' : '';
+};
+$('ghost').onclick = () => {
+  ghost = !ghost;
+  $('ghost').textContent = ghost ? 'Показать дерево' : 'Скрыть дерево';
+  [M.wood, M.board].forEach(m => { m.transparent = ghost; m.opacity = ghost ? 0.18 : 1; m.needsUpdate = true; });
+};
+$('top').onclick = () => { camTheta = 0; camPhi = 0.06; camDist = 34; TARGET.copy(HOME_CAM); };
+
+// ---------- камера ----------
+let camTheta = 0.0, camPhi = 0.45, camDist = 42;
+let dragging = 0, px = 0, py = 0;
+const el = renderer.domElement;
+el.style.cursor = 'grab';
+el.addEventListener('contextmenu', ev => ev.preventDefault());
+const vRight = new THREE.Vector3(), vFwd = new THREE.Vector3(), vUp = new THREE.Vector3();
+function screenAxes() {
+  vRight.set(Math.cos(camTheta), 0, -Math.sin(camTheta));
+  vFwd.subVectors(TARGET, camera.position).normalize();
+  vUp.crossVectors(vRight, vFwd).normalize();
+}
+function pan(dx, dy) {
+  screenAxes();
+  const k = camDist * 0.0016;
+  TARGET.addScaledVector(vRight, -dx * k);
+  TARGET.addScaledVector(vUp, dy * k);
+}
+function down(x, y, mode) { dragging = mode; px = x; py = y; el.style.cursor = mode === 2 ? 'move' : 'grabbing'; }
+function move(x, y) {
+  if (!dragging) return;
+  const dx = x - px, dy = y - py; px = x; py = y;
+  if (dragging === 2) { pan(dx, dy); return; }
+  camTheta -= dx * 0.006;
+  camPhi = Math.max(0.04, Math.min(1.56, camPhi - dy * 0.005));
+}
+function up() { dragging = 0; el.style.cursor = 'grab'; }
+el.addEventListener('mousedown', ev => down(ev.clientX, ev.clientY, (ev.button === 2 || ev.button === 1 || ev.shiftKey) ? 2 : 1));
+addEventListener('mousemove', ev => move(ev.clientX, ev.clientY));
+addEventListener('mouseup', up);
+let pinch = 0;
+el.addEventListener('touchstart', ev => {
+  if (ev.touches.length === 2) {
+    dragging = 2;
+    px = (ev.touches[0].clientX + ev.touches[1].clientX) / 2;
+    py = (ev.touches[0].clientY + ev.touches[1].clientY) / 2;
+    pinch = Math.hypot(ev.touches[0].clientX - ev.touches[1].clientX, ev.touches[0].clientY - ev.touches[1].clientY);
+  } else down(ev.touches[0].clientX, ev.touches[0].clientY, 1);
+}, { passive: true });
+el.addEventListener('touchmove', ev => {
+  ev.preventDefault();
+  if (ev.touches.length === 2) {
+    const cx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2;
+    const cy = (ev.touches[0].clientY + ev.touches[1].clientY) / 2;
+    const d = Math.hypot(ev.touches[0].clientX - ev.touches[1].clientX, ev.touches[0].clientY - ev.touches[1].clientY);
+    pan(cx - px, cy - py);
+    camDist = Math.min(90, Math.max(12, camDist * (pinch / Math.max(1, d))));
+    px = cx; py = cy; pinch = d;
+  } else move(ev.touches[0].clientX, ev.touches[0].clientY);
+}, { passive: false });
+addEventListener('touchend', up);
+el.addEventListener('wheel', ev => {
+  ev.preventDefault();
+  camDist = Math.min(90, Math.max(12, camDist + ev.deltaY * 0.03));
+}, { passive: false });
+const keys = {};
+addEventListener('keydown', ev => {
+  keys[ev.key.toLowerCase()] = true;
+  if (ev.key.toLowerCase() === 'r') { camTheta = 0; camPhi = 0.45; camDist = 42; TARGET.copy(HOME_CAM); }
+});
+addEventListener('keyup', ev => { keys[ev.key.toLowerCase()] = false; });
+function keyboardPan(dt) {
+  let dx = 0, dy = 0;
+  if (keys['a'] || keys['arrowleft'])  dx += 1;
+  if (keys['d'] || keys['arrowright']) dx -= 1;
+  if (keys['w'] || keys['arrowup'])    dy -= 1;
+  if (keys['s'] || keys['arrowdown'])  dy += 1;
+  if (dx || dy) pan(dx * dt * 900, dy * dt * 900);
+  if (keys['q']) TARGET.y -= camDist * 0.6 * dt;
+  if (keys['e']) TARGET.y += camDist * 0.6 * dt;
+}
+
+// ============================================================
+//  ЦИКЛ
+// ============================================================
+const FIXED = 1 / 1200;
+const clock = new THREE.Clock();
+let accum = 0;
+
+function crankAngle() {
+  const q = crank.quaternion;
+  return 2 * Math.atan2(q.z, q.w);
+}
+
+function firmware() {
+  // привязка: медленно идём влево, пока тележка не перестанет двигаться
+  if (homing) {
+    stepTarget = stepCount - 10;
+    if (Math.abs(cart.velocity.x) < 0.0006) homeTimer += FIXED; else homeTimer = 0;
+    if (homeTimer > 0.25) {
+      stepCount = Math.round(inv(X_HOME) / USTEP);   // теперь знаем, где стоим
+      stepTarget = stepCount;
+      homing = 0; homed = true; homeTimer = 0;
+      setGoal(Math.round(X_HOME * 1000 * 2) / 2);
+    }
+  } else if (sweep) {
+    if (Math.abs(stepCount - stepTarget) < 2) setGoal(goal > 0 ? -20 : 20);
+  }
+
+  // выдача импульсов с ограничением по скорости
+  const r = homing ? Math.min(rate, 400) : rate;
+  stepPhase += r * FIXED;
+  while (stepPhase >= 1) {
+    stepPhase -= 1;
+    if (stepCount < stepTarget) stepCount++;
+    else if (stepCount > stepTarget) stepCount--;
+    else break;
+  }
+}
+
+function applyForces() {
+  const cmd = stepCount * USTEP;
+  lag = cmd - crankAngle();
+  // Момент шаговика: максимум при рассогласовании ровно в один полный шаг,
+  // дальше падает и меняет знак — именно так и теряются шаги.
+  crank.torque.z += holdT * Math.sin(TEETH * lag) - 0.010 * crank.angularVelocity.z;
+  cart.force.x += -load * Math.tanh(cart.velocity.x / 0.004);
+}
+
+function sane() {
+  return Number.isFinite(crank.angularVelocity.z) && Number.isFinite(cart.position.x)
+      && Math.abs(bell.angularVelocity.z) < 300 && Math.abs(spoke.position.y) < 2;
+}
+
+function physics(dt) {
+  accum += dt;
+  let n = 0;
+  try {
+    while (accum >= FIXED && n < 24) {
+      firmware();
+      applyForces();
+      world.step(FIXED);
+      lockCart();
+      accum -= FIXED; n++;
+    }
+  } catch (e) {
+    console.warn('шаг физики сорвался:', e); assemble(); accum = 0; return;
+  }
+  if (n >= 24) accum = 0;
+  if (!sane()) { assemble(); accum = 0; }
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  keyboardPan(dt);
+  if (!paused) physics(dt);
+
+  crankView.quaternion.set(crank.quaternion.x, crank.quaternion.y, crank.quaternion.z, crank.quaternion.w);
+  bellView.quaternion.set(bell.quaternion.x, bell.quaternion.y, bell.quaternion.z, bell.quaternion.w);
+  spokeView.position.set(spoke.position.x * S, spoke.position.y * S, -1.05);
+  spokeView.quaternion.set(spoke.quaternion.x, spoke.quaternion.y, spoke.quaternion.z, spoke.quaternion.w);
+  cartView.position.x = cart.position.x * S;
+
+  const calc = fwd(stepCount * USTEP) * 1000;      // что думает прошивка
+  const real = cart.position.x * 1000;             // что на самом деле
+  const lagSteps = lag / (2 * Math.PI / FULL);
+
+  $('h-goal').textContent = goal.toFixed(1) + ' мм';
+  $('h-calc').textContent = calc.toFixed(2) + ' мм';
+  $('h-real').textContent = real.toFixed(2) + ' мм';
+  $('h-err').textContent  = (real - calc).toFixed(2) + ' мм';
+  $('h-lag').textContent  = lagSteps.toFixed(2) + ' шага';
+  $('h-cnt').textContent  = stepCount;
+
+  const st = $('h-st');
+  if (homing) { st.textContent = 'ищет упор'; st.className = 'v'; }
+  else if (Math.abs(lagSteps) > 1.6) { st.textContent = 'теряет шаги'; st.className = 'v bad'; }
+  else if (!homed) { st.textContent = 'не привязан'; st.className = 'v bad'; }
+  else if (stepCount !== stepTarget) { st.textContent = 'едет'; st.className = 'v'; }
+  else { st.textContent = 'на месте'; st.className = 'v ok'; }
+
+  camera.position.set(
+    TARGET.x + camDist * Math.sin(camPhi) * Math.sin(camTheta),
+    TARGET.y + camDist * Math.cos(camPhi),
+    TARGET.z + camDist * Math.sin(camPhi) * Math.cos(camTheta)
+  );
+  screenAxes(); camera.up.copy(vUp); camera.lookAt(TARGET);
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
