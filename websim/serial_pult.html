@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пульт стенда — USB (Web Serial)</title>
+<style>
+  :root { --bg:#0e1017; --panel:rgba(22,25,34,.9); --line:#2b3040; --ink:#e6e8ef;
+          --dim:#6f7689; --accent:#e8b04b; --bad:#e05f52; --ok:#5fb08a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; display:flex;
+    align-items:flex-start; justify-content:center; padding:22px 12px; }
+  .card { width:420px; max-width:96vw; background:var(--panel); border:1px solid var(--line); padding:16px; }
+  h1 { margin:0 0 4px; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+  h2 { margin:16px 0 8px; font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+       color:var(--dim); border-top:1px solid var(--line); padding-top:10px; }
+  .sub { font-size:10px; color:var(--dim); margin-bottom:10px; }
+  button { padding:9px 10px; margin:3px 2px; background:transparent; border:1px solid var(--line);
+    color:var(--ink); font:inherit; font-size:12px; cursor:pointer; border-radius:4px; }
+  button:hover { border-color:var(--accent); color:var(--accent); }
+  button.main { width:100%; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+  button.on { border-color:var(--ok); color:var(--ok); }
+  button.stop { border-color:var(--bad); color:var(--bad); width:100%; font-size:14px; }
+  .row { display:flex; gap:4px; flex-wrap:wrap; align-items:center; margin:4px 0; }
+  .row button { flex:1; }
+  label { font-size:11px; display:flex; justify-content:space-between; margin:8px 0 3px; }
+  label span:last-child { color:var(--accent); }
+  input[type=range] { -webkit-appearance:none; width:100%; height:2px; background:var(--line); outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px;
+    background:var(--accent); cursor:pointer; border-radius:50%; }
+  #log { margin-top:12px; height:130px; overflow-y:auto; background:#0a0c12; border:1px solid var(--line);
+    padding:7px; font-size:10.5px; line-height:1.55; white-space:pre-wrap; }
+  #log .tx { color:var(--dim); }
+  #log .rx { color:var(--ok); }
+  #log .er { color:var(--bad); }
+  .cmdline { display:flex; gap:4px; margin-top:6px; }
+  .cmdline input { flex:1; background:#0a0c12; border:1px solid var(--line); color:var(--ink);
+    font:inherit; font-size:11px; padding:6px; }
+  select { background:#0a0c12; color:var(--ink); border:1px solid var(--line); font:inherit; padding:5px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🎸 Пульт стенда · USB</h1>
+  <div class="sub">Chrome/Edge → «Подключить» → выбери COM-порт ESP32 (115200)</div>
+  <button class="main" id="conn">🔌 Подключить</button>
+
+  <h2>Стенд · кривошип</h2>
+  <div class="row">
+    <button onclick="send('deg -90')">⟲ 90°</button>
+    <button onclick="send('deg -15')">⟲ 15°</button>
+    <button onclick="send('deg 15')">15° ⟳</button>
+    <button onclick="send('deg 90')">90° ⟳</button>
+  </div>
+  <label><span>Качание: полуугол</span><span id="vHalf">60°</span></label>
+  <input type="range" id="half" min="10" max="150" step="5" value="60">
+  <label><span>Скорость</span><span id="vRpm">30 об/мин</span></label>
+  <input type="range" id="rpm" min="5" max="90" step="5" value="30">
+  <div class="row">
+    <button id="swing" onclick="toggleSwing()">▶ Качать</button>
+    <button onclick="send('zero')">⌂ Ноль здесь</button>
+  </div>
+  <button class="stop" onclick="stopAll()">⏹ СТОП</button>
+
+  <h2>Мотор</h2>
+  <div class="row">
+    <button onclick="send('hold')">✊ Держать</button>
+    <button onclick="send('free')">🖐 Отпустить</button>
+    <button onclick="send('status')">ℹ Статус</button>
+    <select id="cur" onchange="send('cur '+this.value)">
+      <option>200</option><option selected>350</option><option>500</option><option>700</option>
+    </select>
+  </div>
+
+  <div id="log"></div>
+  <div class="cmdline">
+    <input id="cmd" placeholder="команда вручную (deg 45 20, sw 60, status...)"
+           onkeydown="if(event.key==='Enter'){send(this.value);this.value='';}">
+    <button onclick="const c=document.getElementById('cmd');send(c.value);c.value='';">➤</button>
+  </div>
+</div>
+
+<script>
+let port = null, writer = null, swinging = false;
+const log = document.getElementById('log');
+
+function addLog(txt, cls) {
+  const d = document.createElement('div');
+  d.className = cls; d.textContent = txt;
+  log.appendChild(d);
+  while (log.children.length > 200) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+document.getElementById('half').oninput = e => {
+  document.getElementById('vHalf').textContent = e.target.value + '°';
+  if (swinging) sendSwing();
+};
+document.getElementById('rpm').oninput = e => {
+  document.getElementById('vRpm').textContent = e.target.value + ' об/мин';
+  if (swinging) sendSwing();
+};
+
+async function connect() {
+  if (port) { try { await port.close(); } catch(e){} port = null; writer = null;
+    document.getElementById('conn').textContent = '🔌 Подключить';
+    document.getElementById('conn').className = 'main'; return; }
+  if (!('serial' in navigator)) { addLog('Web Serial не поддерживается — нужен Chrome или Edge', 'er'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    document.getElementById('conn').textContent = '✓ Подключено (нажми — отключить)';
+    document.getElementById('conn').className = 'main on';
+    addLog('— подключено —', 'rx');
+    readLoop();
+  } catch (e) { addLog('не подключилось: ' + e.message, 'er'); port = null; }
+}
+document.getElementById('conn').onclick = connect;
+
+async function readLoop() {
+  const decoder = new TextDecoder();
+  let buf = '';
+  const reader = port.readable.getReader();
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value);
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (line) addLog('← ' + line, line.startsWith('err') ? 'er' : 'rx');
+      }
+    }
+  } catch (e) { addLog('связь оборвалась: ' + e.message, 'er'); }
+  finally { reader.releaseLock(); }
+}
+
+async function send(cmd) {
+  if (!writer) { addLog('сначала подключись', 'er'); return; }
+  addLog('→ ' + cmd, 'tx');
+  await writer.write(new TextEncoder().encode(cmd + '\n'));
+}
+
+function sendSwing() {
+  send('sw ' + document.getElementById('half').value + ' ' + document.getElementById('rpm').value);
+}
+function toggleSwing() {
+  swinging = !swinging;
+  const b = document.getElementById('swing');
+  if (swinging) { sendSwing(); b.textContent = '⏸ Качается…'; b.className = 'on'; }
+  else { send('sw 0'); b.textContent = '▶ Качать'; b.className = ''; }
+}
+function stopAll() {
+  swinging = false;
+  const b = document.getElementById('swing');
+  b.textContent = '▶ Качать'; b.className = '';
+  send('stop');
+}
+</script>
+</body>
+</html>
