@@ -173,6 +173,10 @@ void execCmd(String line) {
     else { demoOn = a1 != 0; demoNextAt = millis() + 500; serialReply(demoOn ? "ok тренажёр" : "ok тренажёр стоп"); }
   }
   else if (cmd == "zero") { posDeg = 0; posMM = 0; hasL = hasR = false; serialReply("ok ноль здесь"); }
+  else if (cmd == "mode") {                    // mode 1 = SpreadCycle (сила), 0 = StealthChop (тихо)
+    drv.en_spreadCycle(a1 != 0);
+    serialReply(a1 != 0 ? "ok SpreadCycle (сила)" : "ok StealthChop (тихо)");
+  }
   else serialReply("err ? " + cmd);
 }
 
