@@ -47,12 +47,12 @@ def deka_base(sec_y0, motors, south_shelf):
                 b -= Pos(LANE + sx * 15.5, yl + sy * 15.5, 1.5) * Cylinder(1.7, 3.2)
     # ямки гребёнок-поддержек лент (между моторами) и мостиков-прижимов вилок
     for yg in (m - sec_y0 + 30 for m in motors):
-        for gx in (6, 34):
+        for gx in (-4, 18):
             if 4 < yg < L - 4:
                 b -= Pos(gx, yg, 1.5) * Cylinder(3.0, 3.2)
     # сетка Ø2.6 под стойки электроники (свободный запад)
-    for ex in (-18, -8):
-        for ey in range(20, L - 10, 40):
+    for ex in (-19, -11):
+        for ey in range(25, L - 15, 35):
             b -= Pos(ex, ey, 1.5) * Cylinder(1.3, 3.2)
     return b
 
@@ -77,11 +77,11 @@ for k in range(4):
     sleeves.append(s)
 
 # ---------------- гребёнка поддержки лент (между моторами) ----------------
-comb = BB(-6, 26, -2, 2, 0, 21)
+comb = BB(-6, 21.9, -2, 2, 3, 22.5)
 for zf in Z_FLOOR:
     comb -= BB(5.4, 14.6, -2.1, 2.1, zf - 0.15, zf + 1.95)    # щели лент
-comb += Pos(-4, 0, -2.9) * Cylinder(2.85, 5.8)                # штыри в ямки дна
-comb += Pos(24, 0, -2.9) * Cylinder(2.85, 5.8)
+comb += Pos(-4, 0, 1.6) * Cylinder(2.85, 2.8)                 # штыри в ямки дна
+comb += Pos(18, 0, 1.6) * Cylinder(2.85, 2.8)
 
 # ---------------- хвосты лент с ВИЛКАМИ ----------------
 # сегменты: голова сек-1 (до ~175) + ext 250 (175..425) + хвост до вилки
@@ -132,5 +132,13 @@ for k in range(4):
     clear.append((f"tl{k}", f"cr{k}", 0.0))
     for j in range(k):                                 # чужие ленты мимо дисков
         clear.append((f"tl{k}", f"cr{j}", 0.5))
+COMB_Y = (535, 585, 635)
+for i, yg in enumerate(COMB_Y):
+    dk = "dk1" if yg < DK2_Y0 else "dk2"
+    asm.add(f"comb{i}", rf"{OUT}\gdk_comb.stl", loc=(0, yg, 0))
+    touch.append((f"comb{i}", dk))
+    for k in range(4):
+        if MY[k] - 12 > yg:                     # лента k доходит до этой гребёнки
+            clear.append((f"tl{k}", f"comb{i}", 0.1))
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("дека: каркас чист")
