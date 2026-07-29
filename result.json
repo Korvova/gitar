@@ -1,9 +1,9 @@
 {
     "error_string": "Success.",
-    "export_time": 284,
+    "export_time": 298,
     "layer_height": 0.0,
     "plate_index": 0,
-    "prepare_time": 758,
+    "prepare_time": 696,
     "return_code": 0,
     "sparse_infill_density": 0.0,
     "wall_loops": 0

@@ -45,12 +45,12 @@ def build_section(tag, sec_y0, south_shelf=True):
     wy_west = [snap_mid(t, sec_y0) for t in (40, 85, 130)]
 
     base = BB(-26, 26, 0, L, 0, 3)
-    base += BB(7, 10, 0, L, 3, 23)
-    base += BB(22, 25, 0, L, 3, 23)
-    base -= BB(9.8, 22.2, 18, L + 0.1, 1.4, 23.1)       # карман (после стыка)
+    base += BB(1, 4, 0, L, 3, 23)
+    base += BB(16.2, 19.2, 0, L, 3, 23)
+    base -= BB(3.8, 16.2, 18, L + 0.1, 1.4, 23.1)       # карман (после стыка)
     base += BB(-26, -22, 0, L, 3, 23)                   # западная стенка сплошная
     for yr in (50, 110):
-        base += BB(-22, 5, yr - 2, yr + 2, 3, 8)        # рёбра дна
+        base += BB(-22, 0.9, yr - 2, yr + 2, 3, 8)      # рёбра дна (до жёлоба)
     # стык СЕВЕР: верхняя полка + бутербродные Ø2.6
     base -= BB(-26.1, 26.1, -0.1, 18, -0.1, 1.5)
     for hx in JX:
@@ -59,7 +59,7 @@ def build_section(tag, sec_y0, south_shelf=True):
         base += BB(-26, 26, L, L + 18, 0, 1.5)
         for hx in JX:
             base -= Pos(hx, L + 9, 0.75) * Cylinder(1.6, 1.7)
-    for wx in (8.5, 23.5):                              # каналы винтов крышки
+    for wx in (2.5, 17.7):                              # каналы винтов крышки
         for wy in wy_wall:
             base -= Pos(wx, wy, 18) * Cylinder(1.3, 10.2)
     for wy in wy_west:                                  # каналы накладки (запад)
@@ -68,20 +68,20 @@ def build_section(tag, sec_y0, south_shelf=True):
     # фретборд = и крышка стопки (идея юзера): язычок-потолок верхней ленты
     # с 45-градусными скосами — печать ладами вверх без поддержек
     fret = BB(-26, 26, 0, L, 0, 2)
-    tongue = Polyline((11.5, 0), (20.5, 0), (18.5, -2), (13.5, -2), (11.5, 0))
+    tongue = Polyline((5.5, 0), (14.5, 0), (12.5, -2), (7.5, -2), (5.5, 0))
     tface = make_face(Plane.XZ * tongue)
     fret += Pos(0, 18, 0) * extrude(tface, L - 18)
     for Ln in frets_in(sec_y0 + 5, sec_y0 + L - 5):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
-    holes = [(wx, wy) for wx in (8.5, 23.5) for wy in wy_wall]
+    holes = [(wx, wy) for wx in (2.5, 17.7) for wy in wy_wall]
     holes += [(-23.8, wy) for wy in wy_west]
     for wx, wy in holes:
         fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
     return base, fret, holes
 
-tray = BB(10.2, 21.8, 18, L, 0, 1.6)
-tray += BB(10.2, 11.4, 18, L, 1.6, 5.4)
-tray += BB(20.6, 21.8, 18, L, 1.6, 5.4)
+tray = BB(4.2, 15.8, 18, L, 0, 1.6)
+tray += BB(4.2, 5.4, 18, L, 1.6, 5.4)
+tray += BB(14.6, 15.8, 18, L, 1.6, 5.4)
 export_stl(Part() + tray, rf"{OUT}\gs2_tray.stl")
 print("gs2_tray ok")
 
@@ -108,7 +108,7 @@ for tag in ("gs2", "gs3"):
     clear, touch = [], []
     for k, zf in enumerate(Z_FLOOR):
         asm.add(f"tray{k}", rf"{OUT}\gs2_tray.stl", loc=(0, 0, zf - 1.6))
-        asm.add(f"band{k}", rf"{OUT}\gs2_band_test.stl", loc=(16, 0, zf + 0.05))
+        asm.add(f"band{k}", rf"{OUT}\gs2_band_test.stl", loc=(10, 0, zf + 0.05))
         clear.append((f"band{k}", f"tray{k}", 0.0))
         touch.append((f"tray{k}", "base"))
         if k:

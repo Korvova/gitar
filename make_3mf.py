@@ -171,6 +171,14 @@ plates = [
      prep("gs2_base") + prep("gs2_tray", copies=4) + prep("gs2_fret")),
     ("34_gitara_sec3", p020_j,             # секция-3 (низ грифа): то же + свои лады
      prep("gs3_base") + prep("gs2_tray", copies=4) + prep("gs3_fret")),
+    ("35_gitara_deka1", p020_j,            # ДЕКА-1: дно (3 мотора NEMA17) +
+     prep("gdk1_base") + prep("gdk_comb", copies=3) +          # кривошипы, втулки,
+     prep("gdk_crank0") + prep("gdk_crank1") + prep("gdk_crank2") +   # гребёнки
+     prep("gdk_sleeve0") + prep("gdk_sleeve1") + prep("gdk_sleeve2")),
+    ("36_gitara_deka2", p020_j,            # ДЕКА-2 + ленты: сегменты и хвосты
+     prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
+     prep("gdk_comb") + prep("gdk_ext", copies=4) +
+     prep("gdk_tail0") + prep("gdk_tail1") + prep("gdk_tail2") + prep("gdk_tail3")),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
