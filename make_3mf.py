@@ -160,6 +160,13 @@ plates = [
     ("30_gitara_joints", p020_j,           # ГИТАРА: тест узлов сборности —
      prep("git_spica_seg_a") + prep("git_spica_seg_b") +   # стык спицы-ленты
      prep("git_neck_joint_a") + prep("git_neck_joint_b", FLIP)),  # и стык грифа
+    ("31_gitara_sec1_plity", p020_j,       # ГИТАРА секция-1: 5 плит стопки
+     prep("gs1_p0_base") + prep("gs1_p1_mid") +
+     prep("gs1_p2_mid") + prep("gs1_p3_mid")),
+    ("32_gitara_sec1_meh", p012_j,         # палуба + механика (штыри с бримом)
+     prep("gs1_p4_deck") + prep("gs1_cart", copies=4) +
+     prep("gs1_arm0") + prep("gs1_arm1") + prep("gs1_arm2") + prep("gs1_arm3") +
+     prep("gs1_spica0") + prep("gs1_spica1") + prep("gs1_spica2") + prep("gs1_spica3")),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
