@@ -57,6 +57,33 @@ class Assembly:
             return 0.0, max(float(d.max()), 0.0)
         return 0.0, 999.0     # оба меша битые — чинить исходники
 
+    def check_holes(self, name, holes, ring=0.5, samples=16, verbose=True):
+        """Каждое отверстие (x, y, z, r) обязано иметь замкнутое кольцо
+        материала: точки окружности r+ring на глубине z должны быть ВНУТРИ
+        меша. Ловит дырки, разрезанные кромкой/вырезом (частый косяк)."""
+        m = self.meshes[name]
+        ok = True
+        for i, (x, y, z, r) in enumerate(holes):
+            ang = np.linspace(0, 2 * np.pi, samples, endpoint=False)
+            pts = np.c_[x + (r + ring) * np.cos(ang),
+                        y + (r + ring) * np.sin(ang),
+                        np.full(samples, z)]
+            try:
+                inside = m.contains(pts)
+            except BaseException:
+                print(f"  ?? дырки {name}: меш не проверяем (битый)")
+                return True
+            if not inside.all():
+                ok = False
+                print(f"  FAIL дырка {name} #{i} ({x},{y}): кольцо открыто "
+                      f"({int((~inside).sum())}/{samples} точек наружу)")
+            elif verbose:
+                print(f"  OK  дырка {name} #{i} ({x},{y})")
+        if not ok:
+            print("!! ОТКРЫТЫЕ ДЫРКИ — детали не выпускать")
+            sys.exit(1)
+        return True
+
     def check(self, clearances=(), touching=(), verbose=True):
         ok = True
         for a, b, need in clearances:

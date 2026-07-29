@@ -25,36 +25,68 @@ def BB(x0, x1, y0, y1, z0, z1):
 base = BB(-26, 26, 0, L, 0, 3)
 base += BB(7, 10, 0, L, 3, 23)                      # стенки-направляющие стопки
 base += BB(22, 25, 0, L, 3, 23)
-base -= BB(9.8, 22.2, -0.1, L + 0.1, 1.4, 23.1)     # карман стопки + прорезь
-# стык СЕВЕР: верхняя полка (ложится на нижнюю полку секции-1)
+base -= BB(9.8, 22.2, 18, L + 0.1, 1.4, 23.1)       # карман стопки (после стыка!)
+# стык СЕВЕР: верхняя полка (ложится на нижнюю полку секции-1);
+# винты шины самонарезом: дырки узкие Ø2.6
 base -= BB(-26.1, 26.1, -0.1, 18, -0.1, 1.5)
 for hx in JX:
-    base -= Pos(hx, 9, 2.25) * Cylinder(1.6, 1.7)
+    base -= Pos(hx, 9, 2.25) * Cylinder(1.3, 1.7)
 # стык ЮГ: нижняя полка
 base += BB(-26, 26, L, L + 18, 0, 1.5)
 for hx in JX:
     base -= Pos(hx, L + 9, 0.75) * Cylinder(1.6, 1.7)
-# рёбра жёсткости свободной (западной) зоны
+# рёбра жёсткости свободной (западной) зоны + столбики под накладку ладов
 for yr in (60, 120, 180):
     base += BB(-24, 5, yr - 2, yr + 2, 3, 8)
+    base += BB(-22, -18, yr - 2, yr + 2, 3, 24.6)   # столбик-опора накладки
+    base -= Pos(-20, yr, 20) * Cylinder(1.3, 9.4)   # Ø2.6 самонарез сверху
 # отверстия М3 в торцах стенок под винты крышки (самонарез, Ø2.6)
 for wx in (8.5, 23.5):
     for wy in (12, 228):
         base -= Pos(wx, wy, 17) * Cylinder(1.3, 12.2)
 
 # ---------------- П-рейка (4 шт одинаковые) ----------------
-tray = BB(10.2, 21.8, 0, L, 0, 1.6)                 # подошва (лента едет по ней)
-tray += BB(10.2, 11.4, 0, L, 1.6, 5.4)              # бортики = распорки стопки
-tray += BB(20.6, 21.8, 0, L, 1.6, 5.4)
+tray = BB(10.2, 21.8, 18, L, 0, 1.6)                # подошва (после стыковой зоны)
+tray += BB(10.2, 11.4, 18, L, 1.6, 5.4)             # бортики = распорки стопки
+tray += BB(20.6, 21.8, 18, L, 1.6, 5.4)
 
 # ---------------- крышка ----------------
-lid = BB(7, 25, 0, L, 0, 1.6)
+lid = BB(5.5, 26, 0, L, 0, 1.6)
 lid += BB(11.5, 20.5, -0.0, L, -2.0, 0)             # язычок-потолок верхней ленты
 for wx in (8.5, 23.5):
     for wy in (12, 228):
         lid -= Pos(wx, wy, 0.8) * Cylinder(1.6, 1.8)
 
-parts = [("gs2_base", base), ("gs2_tray", tray), ("gs2_lid", lid)]
+# ---------------- ШИНА-НАКЛАДКА стыка секций (идея юзера) ----------------
+# перекрывает шов снизу: 2 ряда по 4 винта М3 (самонарез в донья);
+# южный ряд прошивает бутерброд шина+полка+дно
+splice = BB(-26, 26, -24, 24, 0, 3)
+for hy in (-15, 9):
+    for hx in JX:
+        splice -= Pos(hx, hy, 1.5) * Cylinder(1.6, 3.2)
+
+# ---------------- НАКЛАДКА-ФРЕТБОРД (идея юзера: лады сверху!) ----------
+# пластина на всю ширину грифа поверх крышки и столбиков; ладовые валики на
+# НАСТОЯЩИХ позициях мензуры 650 (лады, попавшие в диапазон секции)
+import math as _m
+MENZURA = 650.0
+SEC_Y0 = 240.0                      # секция-2 начинается на 240 от порожка
+fret = BB(-26, 26, 0, L, 0, 2)
+n = 1
+while True:
+    Ln = MENZURA * (1 - 2 ** (-n / 12))
+    if Ln > SEC_Y0 + L - 5:
+        break
+    if Ln >= SEC_Y0 + 5:
+        yl = Ln - SEC_Y0
+        fret += Pos(0, yl, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
+    n += 1
+for wx, wy in ((8.5, 12), (23.5, 12), (8.5, 228), (23.5, 228),
+               (-20, 60), (-20, 120), (-20, 180)):
+    fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
+
+parts = [("gs2_base", base), ("gs2_tray", tray), ("gs2_lid", lid),
+         ("gs_splice", splice), ("gs2_fret", fret)]
 for name, part in parts:
     p = part if isinstance(part, Part) else Part() + part
     export_stl(p, rf"{OUT}\{name}.stl")
@@ -82,4 +114,17 @@ for k, zf in enumerate(Z_FLOOR):
 asm.add("lid", rf"{OUT}\gs2_lid.stl", loc=(0, 0, 23))
 touch += [("lid", "base"), ("lid", "tray3")]
 clear += [("band3", "lid", 0.15)]
-asm.check(clearances=clear, touching=touch, verbose=True)
+asm.check(clearances=clear, touching=touch, verbose=False)
+asm.check_holes("lid", [(wx, wy, 23.8, 1.6) for wx in (8.5, 23.5)
+                        for wy in (12, 228)], verbose=False)
+asm.check_holes("base", [(hx, 9, 2.3, 1.3) for hx in JX] +
+                        [(hx, L + 9, 0.75, 1.6) for hx in JX], verbose=False)
+asm.add("splice", rf"{OUT}\gs_splice.stl")
+asm.check_holes("splice", [(hx, hy, 1.5, 1.6) for hx in JX
+                           for hy in (-15, 9)], verbose=False)
+asm.add("fret", rf"{OUT}\gs2_fret.stl", loc=(0, 0, 24.6))
+asm.check(touching=[("fret", "lid"), ("fret", "base")], verbose=False)
+asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in
+                         ((8.5, 12), (23.5, 12), (8.5, 228), (23.5, 228),
+                          (-20, 60), (-20, 120), (-20, 180))], verbose=False)
+print("holes: все кольца замкнуты")

@@ -107,8 +107,9 @@ p0 += axis_stud(AXES_Y[0], 3)
 p0 = tie_boss(p0, 3, 6.8)
 p0 = tie_holes(p0, 0, 6.8, r=1.3)
 p0 += BB(-26, 26, 240, 258, 0, 1.5)
-for hx in (-20, -7, 7, 20):
-    p0 -= Pos(hx, 249, 0.75) * Cylinder(1.6, 1.7)      # в дне Ø2.6 — М3 сам нарежет
+for hx in (-21, -9, 5, 21):
+    p0 -= Pos(hx, 249, 0.75) * Cylinder(1.6, 1.7)     # сквозь полку (бутерброд)
+    p0 -= Pos(hx, 225, 1.5) * Cylinder(1.3, 3.2)      # северный ряд шины Ø2.6      # в дне Ø2.6 — М3 сам нарежет
 
 # ---------------- P1..P3: межэтажки ----------------
 mids = []
@@ -132,6 +133,12 @@ deck += BB(-26, 26, CARTS_Y[0] - 10.35, CARTS_Y[0] - 7.35, DECK_T, DECK_T + RAIL
 deck += BB(-26, 26, CARTS_Y[3] + 7.35, CARTS_Y[3] + 10.35, DECK_T, DECK_T + RAIL_H)
 deck = tie_boss(deck, 0, DECK_T)
 deck = tie_holes(deck, 0, DECK_T + RAIL_H)
+# ладовые валики (мензура 650) на свободном юге палубы — имитация грифа
+import math as _m
+for n in range(1, 9):
+    Ln = 650.0 * (1 - 2 ** (-n / 12))
+    if 85 <= Ln <= 235:
+        deck += Pos(0, Ln, DECK_T) * Rot(0, 90, 0) * Cylinder(1.2, 48)
 
 # ---------------- плечи (4 шт, разная высота штыря) ----------------
 arms = []
