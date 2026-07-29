@@ -75,6 +75,11 @@ def build_section(tag, sec_y0, south_shelf=True):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (2.5, 17.7) for wy in wy_wall]
     holes += [(-23.8, wy) for wy in wy_west]
+    if tag == "gs3":
+        # язык на юг ПОВЕРХ крышки корпуса (идея юзера): ложится в её окно
+        # на бобышки, винты сквозь язык + бобышку в стенки хребта
+        fret += BB(-27.5, 27.5, L, L + 26, 0, 2)
+        holes += [(-24, L + 10), (24, L + 10)]
     for wx, wy in holes:
         fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
     return base, fret, holes

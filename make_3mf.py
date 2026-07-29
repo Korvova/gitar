@@ -196,8 +196,7 @@ plates = [
      sum([prep(f"gk_band{i}", ID) for i in (4, 5, 6)], [])),
     ("47_korpus_planki", p020_j,           # планки стыков дна и крышки (7 шт)
      sum([prep(f"gk_pl_{n}", ID) for n in
-          ("dy_w", "dy_e", "dx", "ty_w", "ty_e", "tx_n", "tx_s")], []) +
-     prep("gk_pl_neck", FLIP)),
+          ("dy_w", "dy_e", "dx", "ty_w", "ty_e", "tx_n", "tx_s")], [])),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),

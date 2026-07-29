@@ -24,7 +24,7 @@ def BB(x0, x1, y0, y1, z0, z1):
         abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
 
 
-def deka_base(sec_y0, motors, south_shelf, tumba_xy, lid_y):
+def deka_base(sec_y0, motors, south_shelf, tumba_xy, lid_y, neck_mount=False):
     """Дно секции деки: колодцы NEMA17, стыки, стенки, ямки гребёнок."""
     b = BB(-26, 26, 0, L, 0, 3)
     b += BB(-26, -22, 0, L, 3, 23)                     # стенки как у секций грифа
@@ -61,6 +61,11 @@ def deka_base(sec_y0, motors, south_shelf, tumba_xy, lid_y):
     for ty in lid_y:
         for sx in (-24, 24):
             b -= Pos(sx, ty, 18.2) * Cylinder(1.3, 10)
+    if neck_mount:              # язык фретборда сек-3: стенки понижены до 20
+        for x0, x1 in ((-26.1, -21.9), (21.9, 26.1)):   # (под бобышки крышки),
+            b -= BB(x0, x1, -0.1, 30.5, 20, 23.1)       # каналы под винты языка
+        for sx in (-24, 24):
+            b -= Pos(sx, 10, 16.1) * Cylinder(1.3, 8.2)
     return b
 
 # ---------------- кривошипы: ступица задаёт этаж ----------------
@@ -124,7 +129,7 @@ for k in range(4):
 TUMBA1 = [(-15, 45), (-15, 105), (-15, 150), (20, 65), (20, 115)]
 TUMBA2 = [(-15, 45), (-15, 110), (20, 60), (20, 120)]
 parts = [("gdk1_base", deka_base(DK1_Y0, [505, 555, 605], True,
-                                 TUMBA1, (6, 40, 100, 135))),
+                                 TUMBA1, (40, 100, 135), neck_mount=True)),
          ("gdk2_base", deka_base(DK2_Y0, [668], False, TUMBA2, (75, 120))),
          ("gdk_comb", comb), ("gdk_ext", ext)]
 parts += [(f"gdk_crank{k}", cranks[k]) for k in range(4)]
