@@ -35,14 +35,16 @@ for hx in JX:
 base += BB(-26, 26, L, L + 18, 0, 1.5)
 for hx in JX:
     base -= Pos(hx, L + 9, 0.75) * Cylinder(1.6, 1.7)
-# рёбра жёсткости свободной (западной) зоны + столбики под накладку ладов
+# ЗАПАДНАЯ СТЕНКА сплошная до накладки (юзер: бок не должен зиять) +
+# рёбра жёсткости; каналы Ø2.6 под винты накладки — в стенке, между ладов
+base += BB(-26, -22, 0, L, 3, 24.6)
 for yr in (60, 120, 180):
-    base += BB(-24, 5, yr - 2, yr + 2, 3, 8)
-    base += BB(-22, -18, yr - 2, yr + 2, 3, 24.6)   # столбик-опора накладки
-    base -= Pos(-20, yr, 20) * Cylinder(1.3, 9.4)   # Ø2.6 самонарез сверху
+    base += BB(-22, 5, yr - 2, yr + 2, 3, 8)
+for wy in (70, 110, 178):
+    base -= Pos(-23.8, wy, 19.6) * Cylinder(1.3, 10.2)
 # отверстия М3 в торцах стенок под винты крышки (самонарез, Ø2.6)
 for wx in (8.5, 23.5):
-    for wy in (12, 228):
+    for wy in (12, 221.5):
         base -= Pos(wx, wy, 17) * Cylinder(1.3, 12.2)
 
 # ---------------- П-рейка (4 шт одинаковые) ----------------
@@ -54,7 +56,7 @@ tray += BB(20.6, 21.8, 18, L, 1.6, 5.4)
 lid = BB(5.5, 26, 0, L, 0, 1.6)
 lid += BB(11.5, 20.5, -0.0, L, -2.0, 0)             # язычок-потолок верхней ленты
 for wx in (8.5, 23.5):
-    for wy in (12, 228):
+    for wy in (12, 221.5):
         lid -= Pos(wx, wy, 0.8) * Cylinder(1.6, 1.8)
 
 # ---------------- ШИНА-НАКЛАДКА стыка секций (идея юзера) ----------------
@@ -81,8 +83,9 @@ while True:
         yl = Ln - SEC_Y0
         fret += Pos(0, yl, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     n += 1
-for wx, wy in ((8.5, 12), (23.5, 12), (8.5, 228), (23.5, 228),
-               (-20, 60), (-20, 120), (-20, 180)):
+FRET_HOLES = ((8.5, 12), (23.5, 12), (8.5, 221.5), (23.5, 221.5),
+              (-23.8, 70), (-23.8, 110), (-23.8, 178))
+for wx, wy in FRET_HOLES:
     fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
 
 parts = [("gs2_base", base), ("gs2_tray", tray), ("gs2_lid", lid),
@@ -119,12 +122,27 @@ asm.check_holes("lid", [(wx, wy, 23.8, 1.6) for wx in (8.5, 23.5)
                         for wy in (12, 228)], verbose=False)
 asm.check_holes("base", [(hx, 9, 2.3, 1.3) for hx in JX] +
                         [(hx, L + 9, 0.75, 1.6) for hx in JX], verbose=False)
-asm.add("splice", rf"{OUT}\gs_splice.stl")
-asm.check_holes("splice", [(hx, hy, 1.5, 1.6) for hx in JX
+asm.add("splice", rf"{OUT}\gs_splice.stl", loc=(0, 0, -3))
+asm.check_holes("splice", [(hx, hy, -1.5, 1.6) for hx in JX
                            for hy in (-15, 9)], verbose=False)
 asm.add("fret", rf"{OUT}\gs2_fret.stl", loc=(0, 0, 24.6))
 asm.check(touching=[("fret", "lid"), ("fret", "base")], verbose=False)
-asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in
-                         ((8.5, 12), (23.5, 12), (8.5, 228), (23.5, 228),
-                          (-20, 60), (-20, 120), (-20, 180))], verbose=False)
+asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in FRET_HOLES],
+                verbose=False)
+# соосность каналов стыка: болт должен проходить шину+полку+дно свободно
+asm.add("p0", rf"{OUT}\gs1_p0_base.stl", loc=(0, -240, 0))
+import numpy as np
+for hx in JX:
+    pts = np.array([[hx, 9, zz] for zz in (-2.5, -1.5, 0.5, 2.0)])
+    blocked = []
+    for nm in ("splice", "base", "p0"):
+        try:
+            if asm.meshes[nm].contains(pts).any():
+                blocked.append(nm)
+        except BaseException:
+            pass
+    if blocked:
+        print(f"  FAIL канал стыка x={hx}: перекрыт {blocked}")
+        raise SystemExit(1)
+print("каналы стыка сквозные")
 print("holes: все кольца замкнуты")
