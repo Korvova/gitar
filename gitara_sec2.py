@@ -48,7 +48,7 @@ def build_section(tag, sec_y0, south_shelf=True):
     base += BB(7, 10, 0, L, 3, 23)
     base += BB(22, 25, 0, L, 3, 23)
     base -= BB(9.8, 22.2, 18, L + 0.1, 1.4, 23.1)       # карман (после стыка)
-    base += BB(-26, -22, 0, L, 3, 24.6)                 # западная стенка сплошная
+    base += BB(-26, -22, 0, L, 3, 23)                   # западная стенка сплошная
     for yr in (50, 110):
         base += BB(-22, 5, yr - 2, yr + 2, 3, 8)        # рёбра дна
     # стык СЕВЕР: верхняя полка + бутербродные Ø2.6
@@ -61,24 +61,20 @@ def build_section(tag, sec_y0, south_shelf=True):
             base -= Pos(hx, L + 9, 0.75) * Cylinder(1.6, 1.7)
     for wx in (8.5, 23.5):                              # каналы винтов крышки
         for wy in wy_wall:
-            base -= Pos(wx, wy, 17) * Cylinder(1.3, 12.2)
+            base -= Pos(wx, wy, 18) * Cylinder(1.3, 10.2)
     for wy in wy_west:                                  # каналы накладки (запад)
         base -= Pos(-23.8, wy, 19.6) * Cylinder(1.3, 10.2)
 
-    lid = BB(5.5, 26, 0, L, 0, 1.6)
-    lid += BB(11.5, 20.5, 0, L, -2.0, 0)
-    for wx in (8.5, 23.5):
-        for wy in wy_wall:
-            lid -= Pos(wx, wy, 0.8) * Cylinder(1.6, 1.8)
-
+    # фретборд = и крышка стопки (идея юзера): язычок-потолок верхней ленты
     fret = BB(-26, 26, 0, L, 0, 2)
+    fret += BB(11.5, 20.5, 18, L, -2.0, 0)
     for Ln in frets_in(sec_y0 + 5, sec_y0 + L - 5):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (8.5, 23.5) for wy in wy_wall]
     holes += [(-23.8, wy) for wy in wy_west]
     for wx, wy in holes:
         fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
-    return base, lid, fret, holes
+    return base, fret, holes
 
 tray = BB(10.2, 21.8, 18, L, 0, 1.6)
 tray += BB(10.2, 11.4, 18, L, 1.6, 5.4)
@@ -91,9 +87,8 @@ export_stl(Part() + band, rf"{OUT}\gs2_band_test.stl")
 
 ALL = {}
 for tag, y0 in (("gs2", 160), ("gs3", 320)):
-    base, lid, fret, holes = build_section(tag, y0)
-    for nm, part in ((f"{tag}_base", base), (f"{tag}_lid", lid),
-                     (f"{tag}_fret", fret)):
+    base, fret, holes = build_section(tag, y0)
+    for nm, part in ((f"{tag}_base", base), (f"{tag}_fret", fret)):
         p = Part() + part
         export_stl(p, rf"{OUT}\{nm}.stl")
         print(f"{nm}: volume={p.volume:.0f} mm3, solids={len(p.solids())}")
@@ -116,12 +111,11 @@ for tag in ("gs2", "gs3"):
         if k:
             touch.append((f"tray{k}", f"tray{k - 1}"))
             clear.append((f"band{k - 1}", f"tray{k}", 0.15))
-    asm.add("lid", rf"{OUT}\{tag}_lid.stl", loc=(0, 0, 23))
-    asm.add("fret", rf"{OUT}\{tag}_fret.stl", loc=(0, 0, 24.6))
-    touch += [("lid", "base"), ("lid", "tray3"), ("fret", "lid"), ("fret", "base")]
-    clear += [("band3", "lid", 0.15)]
+    asm.add("fret", rf"{OUT}\{tag}_fret.stl", loc=(0, 0, 23))
+    touch += [("fret", "base"), ("fret", "tray3")]
+    clear += [("band3", "fret", 0.15)]
     asm.check(clearances=clear, touching=touch, verbose=False)
-    asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in ALL[tag]],
+    asm.check_holes("fret", [(wx, wy, 24.0, 1.6) for wx, wy in ALL[tag]],
                     verbose=False)
     # каналы стыка (север) сквозные с предыдущей секцией (все донья одинаковы
     # по стыку: сверяем с сек-1 для gs2)
