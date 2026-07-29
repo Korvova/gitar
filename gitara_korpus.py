@@ -119,7 +119,7 @@ for i in range(N_SEG):
 TUMBA = [(-15, 525), (-15, 585), (-15, 630), (-15, 685), (-15, 750),
          (20, 545), (20, 595), (20, 700), (20, 760)]
 # крепёж крышки к стенкам хребта (вертикально, Ø3.2 в крышке / 2.6 в стенке)
-TOP_SCREWS = [(sx, y) for y in (520, 580, 615, 715, 760) for sx in (-24, 24)]
+TOP_SCREWS = [(sx, y) for y in (486, 520, 580, 615, 715, 760) for sx in (-24, 24)]
 
 # ================== ДНО ==================
 # сплошное (хребет висит на тумбах высоко над ним), 4 куска: x=0 и y=720
@@ -167,6 +167,7 @@ ring = Pos(0, ROZ_Y, Z_TOP0 - 3) * (Cylinder(ROZ_R + 5.5, 6) -
                                     Cylinder(ROZ_R + 2.5, 6.2))    # кольцо-ребро
 top_p += (ring - BB(-27.2, 27.2, 478, 801, Z_TOP0 - 10, Z_TOP0)    # мимо хребта
           - BB(38, 82, 478, 960, Z_TOP0 - 10, Z_TOP0))             # проём планки
+top_p -= BB(-26.6, 26.6, 479.9, 500, 25, 26.1)     # ниша планки грифа
 bort_t = Pos(0, 0, Z_TOP0 - 10) * extrude(F1 - F11, 10)            # бортик вниз
 bort_t -= BB(-28, 28, 470, 500, Z_TOP0 - 10.1, Z_TOP0 + 0.1)       # проём грифа
 top_p += bort_t
@@ -193,6 +194,28 @@ pl_ty_e = plank(40, 105, 700, 740, Z_TOP0 - 1.5, [q for q in JT_Y if q[0] > 0])
 pl_tx_n = plank(40, 80, 500, 695, Z_TOP0 - 1.5, JT_XN)
 pl_tx_n -= Pos(0, ROZ_Y, Z_TOP0 - 0.75) * Cylinder(ROZ_R + 2, 1.7)  # дуга розетки
 pl_tx_s = plank(40, 80, 745, 940, Z_TOP0 - 1.5, JT_XS)
+
+# планка ГРИФ-КРЫШКА (усиление верхнего пояса стыка, идея юзера): лежит в нише
+# крышки (дно 25) и на фретборде сек-3 (верх 25); винты: 2 сквозь штатные
+# дырки фретборда в стенки секции + 2 сквозь крышку в стенки хребта (486)
+def _frets650(y0, y1):
+    out, n = [], 1
+    while True:
+        Ln = 650.0 * (1 - 2 ** (-n / 12))
+        if Ln > y1:
+            return out
+        if Ln >= y0:
+            out.append(Ln)
+        n += 1
+_fs = [320.0] + _frets650(320.5, 480.0) + [480.0]
+_mids = [(a + b) / 2 for a, b in zip(_fs, _fs[1:]) if b - a > 7]
+Y3S = min(_mids, key=lambda m: abs(m - 468))           # южные винты фретборда
+pl_neck = BB(-26, 26, 456, 500, 25, 26.5)
+for f in _frets650(325, 475):                           # канавки под лады сек-3
+    if f > 455:
+        pl_neck -= Pos(0, f, 25) * Rot(0, 90, 0) * Cylinder(1.7, 54)
+for hx, hy in ((2.5, Y3S), (17.7, Y3S), (-24, 486), (24, 486)):
+    pl_neck -= Pos(hx, hy, 25.75) * Cylinder(1.6, 1.7)
 
 # ================== ЛЕНТА ОБЕЧАЙКИ (плоские сегменты + гнутая для сцены) ====
 H_BAND = 95.0                                          # z -69..26
@@ -228,6 +251,7 @@ parts = [("gk_dno_ne", dno_ne), ("gk_dno_nw", dno_nw),
          ("gk_pl_dy_w", pl_dy_w), ("gk_pl_dy_e", pl_dy_e), ("gk_pl_dx", pl_dx),
          ("gk_pl_ty_w", pl_ty_w), ("gk_pl_ty_e", pl_ty_e),
          ("gk_pl_tx_n", pl_tx_n), ("gk_pl_tx_s", pl_tx_s),
+         ("gk_pl_neck", pl_neck),
          ("gk_band_bent", bent)]
 parts += [(f"gk_band{i}", bands[i]) for i in range(N_SEG)]
 for name, part in parts:
@@ -262,6 +286,9 @@ touch += [("pl_dy_w", "dno_nw"), ("pl_dy_e", "dno_se"), ("pl_dx", "dno_sw"),
           ("pl_ty_w", "top_wn"), ("pl_ty_e", "top_es"),
           ("pl_tx_n", "top_en"), ("pl_tx_s", "top_ws")]
 clear += [("pl_ty_w", "dk1", 0.0), ("pl_ty_e", "dk2", 0.0)]
+asm.add("pl_neck", rf"{OUT}\gk_pl_neck.stl")
+asm.add("fret3", rf"{OUT}\gs3_fret.stl", loc=(0, 320, 23))
+touch += [("pl_neck", "top_wn"), ("pl_neck", "fret3")]
 asm.check(clearances=clear, touching=touch, verbose=False)
 asm.check_holes("pl_dy_w", [(x, y, Z_BOT1 + 0.7, 1.6)
                             for x, y in JD_Y if x < 0], verbose=False)
