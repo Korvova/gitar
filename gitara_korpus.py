@@ -78,7 +78,7 @@ F0, F1, F11 = face_of(C0), face_of(C1), face_of(C11)
 
 Z_TOP0, Z_TOP1 = 23.0, 26.0                            # крышка (уровень фретбордов)
 Z_BOT0, Z_BOT1 = -69.0, -66.0                          # дно
-ROZ_Y, ROZ_R = 570.0, 43.5                             # розетка Ø87, классика
+ROZ_Y, ROZ_R = 665.0, 43.5                # розетка Ø87 у талии, как у настоящей
 
 # проём грифа в северном торце: дуговые позиции x=+-28 на y=480
 s_e = S[np.argmin(np.linalg.norm(C0 - [28, 480], axis=1))]
@@ -119,7 +119,7 @@ for i in range(N_SEG):
 TUMBA = [(-15, 525), (-15, 585), (-15, 630), (-15, 685), (-15, 750),
          (20, 545), (20, 595), (20, 700), (20, 760)]
 # крепёж крышки к стенкам хребта (вертикально, Ø3.2 в крышке / 2.6 в стенке)
-TOP_SCREWS = [(sx, y) for y in (520, 580, 630, 690, 750) for sx in (-24, 24)]
+TOP_SCREWS = [(sx, y) for y in (520, 580, 615, 715, 760) for sx in (-24, 24)]
 
 # ================== ДНО ==================
 # сплошное (хребет висит на тумбах высоко над ним), 4 куска: x=0 и y=720
@@ -230,6 +230,13 @@ for i, (a, b, hs) in enumerate(SEG_HOLES):
 bent = Pos(0, 0, Z_BOT0) * extrude(F0 - F1, H_BAND)                # для сцены
 bent -= BB(-28, 28, 470, 500, 0, Z_TOP1 + 0.1)
 bent += BB(-28, 28, 479, 481 + 8, -8, 0) & Pos(0, 0, -4) * extrude(F1, 8, both=True)
+for zz in (Z_BOT1 + 5, Z_TOP0 - 5):                    # дырки как у пластин
+    bent = radial_holes(bent, HOLES_S, zz)
+for b in bnds:                                         # щели-границы сегментов
+    pb, nb = at_s(b)
+    ang = np.degrees(np.arctan2(nb[1], nb[0]))
+    bent -= (Pos(pb[0], pb[1], (Z_BOT0 + Z_TOP1) / 2) * Rot(0, 0, ang) *
+             Box(30, 0.5, H_BAND + 2))
 
 # ================== ЭКСПОРТ ==================
 parts = [("gk_dno_ne", dno_ne), ("gk_dno_nw", dno_nw),

@@ -124,8 +124,8 @@ for k in range(4):
 TUMBA1 = [(-15, 45), (-15, 105), (-15, 150), (20, 65), (20, 115)]
 TUMBA2 = [(-15, 45), (-15, 110), (20, 60), (20, 120)]
 parts = [("gdk1_base", deka_base(DK1_Y0, [505, 555, 605], True,
-                                 TUMBA1, (40, 100, 150))),
-         ("gdk2_base", deka_base(DK2_Y0, [668], False, TUMBA2, (50, 110))),
+                                 TUMBA1, (40, 100, 135))),
+         ("gdk2_base", deka_base(DK2_Y0, [668], False, TUMBA2, (75, 120))),
          ("gdk_comb", comb), ("gdk_ext", ext)]
 parts += [(f"gdk_crank{k}", cranks[k]) for k in range(4)]
 parts += [(f"gdk_sleeve{k}", sleeves[k]) for k in range(4)]
