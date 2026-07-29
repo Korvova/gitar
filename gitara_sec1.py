@@ -26,7 +26,7 @@ import math as _m
 OUT = r"C:\App\gitar\2-0\Print\Print"
 
 W, L = 52, 240                 # гриф: ширина, длина секции
-CARTS_Y = [18, 54, 87, 118]    # центры тележек (лады 1-4)
+CARTS_Y = [18, 34, 50, 66]    # центры тележек (лады 1-4)
 AXES_Y = [y + 52 for y in CARTS_Y]
 LANE_X = 16                    # центр жёлоба спиц (стек всех 4 лент)
 def cols_for(k):
@@ -40,7 +40,7 @@ def cols_for(k):
             if not out or y - out[-1] >= 30:
                 out.append(y)
     return out
-TIE = [(25, 10), (-25, 10), (25, 135), (-25, 135), (25, 228), (-25, 228)]
+TIE = [(23.5, 6), (-23.5, 6), (23.5, 135), (-23.5, 135), (23.5, 228), (-23.5, 228)]
 
 FLOOR = 1.6                    # плита межэтажки
 CAV = 3.8                      # полость этажа
@@ -80,6 +80,14 @@ def columns(z0, z1, ys):
     return c
 
 
+def tie_boss(part, z0, z1):
+    """Приливы-бобышки на стенках у точек стяжки (Ø3.2 в стенку 2 не влезает)."""
+    for x, y in TIE:
+        s = 1 if x > 0 else -1
+        part += BB(s * 21, s * 26, y - 4, y + 4, z0, z1)
+    return part
+
+
 def tie_holes(part, z0, z1, r=1.6):
     for x, y in TIE:
         part -= Pos(x, y, (z0 + z1) / 2) * Cylinder(r, (z1 - z0) + 0.2)
@@ -96,6 +104,7 @@ p0 = BB(-26, 26, 0, L, 0, 3)
 p0 += walls(3, 6.8)
 p0 += columns(3, 6.8, cols_for(0))
 p0 += axis_stud(AXES_Y[0], 3)
+p0 = tie_boss(p0, 3, 6.8)
 p0 = tie_holes(p0, 0, 6.8, r=1.3)      # в дне Ø2.6 — М3 сам нарежет
 
 # ---------------- P1..P3: межэтажки ----------------
@@ -107,6 +116,7 @@ for k in (1, 2, 3):
     m += walls(FLOOR, FLOOR + CAV)
     m += columns(FLOOR, FLOOR + CAV, cols_for(k))
     m += axis_stud(AXES_Y[k], FLOOR)
+    m = tie_boss(m, FLOOR, FLOOR + CAV)
     m = tie_holes(m, 0, FLOOR + CAV)
     mids.append(m)
 
@@ -114,8 +124,10 @@ for k in (1, 2, 3):
 deck = BB(-26, 26, 0, L, 0, DECK_T)
 for yc in CARTS_Y:
     deck -= slot_cut(yc, -0.1, DECK_T + 0.1)
-    deck += BB(-26, 26, yc - 10.35, yc - 7.35, DECK_T, DECK_T + RAIL_H)
-    deck += BB(-26, 26, yc + 7.35, yc + 10.35, DECK_T, DECK_T + RAIL_H)
+# тележки-пальцы стоят вплотную (шаг 16): ОДИН общий канал, борта внешние
+deck += BB(-26, 26, CARTS_Y[0] - 10.35, CARTS_Y[0] - 7.35, DECK_T, DECK_T + RAIL_H)
+deck += BB(-26, 26, CARTS_Y[3] + 7.35, CARTS_Y[3] + 10.35, DECK_T, DECK_T + RAIL_H)
+deck = tie_boss(deck, 0, DECK_T)
 deck = tie_holes(deck, 0, DECK_T + RAIL_H)
 
 # ---------------- плечи (4 шт, разная высота штыря) ----------------
