@@ -167,8 +167,8 @@ plates = [
      prep("gs1_p4_deck") + prep("gs1_cart", copies=4) +
      prep("gs1_arm0") + prep("gs1_arm1") + prep("gs1_arm2") + prep("gs1_arm3") +
      prep("gs1_spica0") + prep("gs1_spica1") + prep("gs1_spica2") + prep("gs1_spica3")),
-    ("33_gitara_sec2", p020_j,             # секция-2: моноблок с щелями лент
-     prep("gs2_mono")),
+    ("33_gitara_sec2", p020_j,             # секция-2 РАЗБОРНАЯ: дно + 4 П-рейки
+     prep("gs2_base") + prep("gs2_tray", copies=4) + prep("gs2_lid", FLIP)),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
