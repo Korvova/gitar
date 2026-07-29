@@ -24,7 +24,7 @@ def BB(x0, x1, y0, y1, z0, z1):
         abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
 
 
-def deka_base(sec_y0, motors, south_shelf):
+def deka_base(sec_y0, motors, south_shelf, tumba_xy, lid_y):
     """Дно секции деки: колодцы NEMA17, стыки, стенки, ямки гребёнок."""
     b = BB(-26, 26, 0, L, 0, 3)
     b += BB(-26, -22, 0, L, 3, 23)                     # стенки как у секций грифа
@@ -54,6 +54,13 @@ def deka_base(sec_y0, motors, south_shelf):
     for ex in (-19, -11):
         for ey in range(25, L - 15, 35):
             b -= Pos(ex, ey, 1.5) * Cylinder(1.3, 3.2)
+    # корпус: дырки Ø3.4 в дне — винты М3 сверху в тумбы дна корпуса
+    for tx, ty in tumba_xy:
+        b -= Pos(tx, ty, 1.5) * Cylinder(1.7, 3.2)
+    # корпус: вертикальные каналы Ø2.6 в верх стенок — крышка корпуса
+    for ty in lid_y:
+        for sx in (-24, 24):
+            b -= Pos(sx, ty, 18.2) * Cylinder(1.3, 10)
     return b
 
 # ---------------- кривошипы: ступица задаёт этаж ----------------
@@ -113,8 +120,12 @@ for k in range(4):
     t -= BB(-7.5, 7.5, ln - 13, ln - 7, -0.1, 1.7)     # ВИЛКА: паз 6 по центру my
     tails.append(t)
 
-parts = [("gdk1_base", deka_base(DK1_Y0, [505, 555, 605], True)),
-         ("gdk2_base", deka_base(DK2_Y0, [668], False)),
+# тумбы корпуса (лок): винты сверху сквозь дно; каналы крышки в верх стенок
+TUMBA1 = [(-15, 45), (-15, 105), (-15, 150), (20, 65), (20, 115)]
+TUMBA2 = [(-15, 45), (-15, 110), (20, 60), (20, 120)]
+parts = [("gdk1_base", deka_base(DK1_Y0, [505, 555, 605], True,
+                                 TUMBA1, (40, 100, 150))),
+         ("gdk2_base", deka_base(DK2_Y0, [668], False, TUMBA2, (50, 110))),
          ("gdk_comb", comb), ("gdk_ext", ext)]
 parts += [(f"gdk_crank{k}", cranks[k]) for k in range(4)]
 parts += [(f"gdk_sleeve{k}", sleeves[k]) for k in range(4)]

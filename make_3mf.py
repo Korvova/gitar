@@ -113,6 +113,7 @@ def prep(name, transform=None, copies=1, tag=""):
     return [p] * copies
 
 FLIP = trimesh.transformations.rotation_matrix(math.pi, [1, 0, 0])      # вверх ногами
+ID = np.eye(4)                                          # только положить на стол
 LAY = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])  # лёжа (Y->Z)
 
 plates = [
@@ -179,6 +180,20 @@ plates = [
      prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
      prep("gdk_comb") + prep("gdk_ext", copies=8) +
      prep("gdk_tail0") + prep("gdk_tail1") + prep("gdk_tail2") + prep("gdk_tail3")),
+    # ---- КОРПУС в настоящих размерах: дно 4 куска (тумбами вверх),
+    # крышка 4 куска (печать ВВЕРХ НОГАМИ: лицо на столе, бортики вверх),
+    # обечайка: 7 плоских лент 95x~209 (PETG, гнутся при сборке)
+    ("37_korpus_dno_nw", p020_j, prep("gk_dno_nw", ID)),
+    ("38_korpus_dno_ne", p020_j, prep("gk_dno_ne", ID)),
+    ("39_korpus_dno_sw", p020_j, prep("gk_dno_sw", ID)),
+    ("40_korpus_dno_se", p020_j, prep("gk_dno_se", ID)),
+    ("41_korpus_top_wn", p020_j, prep("gk_top_wn", FLIP)),
+    ("42_korpus_top_ws", p020_j, prep("gk_top_ws", FLIP)),
+    ("43_korpus_top_e", p020_j, prep("gk_top_en", FLIP) + prep("gk_top_es", FLIP)),
+    ("44_korpus_lenty_a", p020_j, sum([prep(f"gk_band{i}", ID) for i in (0, 1)], [])),
+    ("45_korpus_lenty_b", p020_j, sum([prep(f"gk_band{i}", ID) for i in (2, 3)], [])),
+    ("46_korpus_lenty_c", p020_j,
+     sum([prep(f"gk_band{i}", ID) for i in (4, 5, 6)], [])),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
