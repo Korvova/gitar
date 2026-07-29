@@ -66,8 +66,11 @@ def build_section(tag, sec_y0, south_shelf=True):
         base -= Pos(-23.8, wy, 19.6) * Cylinder(1.3, 10.2)
 
     # фретборд = и крышка стопки (идея юзера): язычок-потолок верхней ленты
+    # с 45-градусными скосами — печать ладами вверх без поддержек
     fret = BB(-26, 26, 0, L, 0, 2)
-    fret += BB(11.5, 20.5, 18, L, -2.0, 0)
+    tongue = Polyline((11.5, 0), (20.5, 0), (18.5, -2), (13.5, -2), (11.5, 0))
+    tface = make_face(Plane.XZ * tongue)
+    fret += Pos(0, 18, 0) * extrude(tface, -(L - 18))
     for Ln in frets_in(sec_y0 + 5, sec_y0 + L - 5):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (8.5, 23.5) for wy in wy_wall]
