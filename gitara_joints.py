@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+"""ГИТАРА v1 — ТЕСТ УЗЛОВ СБОРНОСТИ (первые печатные детали полной гитары).
+1) Стык СПИЦЫ-ленты (рисунок юзера): встречные ступеньки внахлёст —
+   сжатие держат упёртые торцы, растяжение — 2 болта M3 (или M2 самонарез).
+2) Стык СЕКЦИЙ ГРИФА: двойной ласточкин хвост + 2 наших штырька Ø5 в ямки Ø6
+   + сквозные Ø3.2 под M3 (если захочется жёстче — стянуть болтами).
+Запуск: .venv-b123d\\Scripts\\python gitara_joints.py
+"""
+from build123d import *
+
+OUT = r"C:\App\gitar\2-0\Print\Print"
+STUD = 2.5
+HOLE = 3.0
+
+
+def BB(x0, x1, y0, y1, z0, z1):
+    return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(
+        abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
+
+
+# ---------------- СПИЦА-ЛЕНТА 2×8, стык-нахлёст по рисунку юзера ----------
+# сегмент A: конец с НИЖНЕЙ полутолщиной; сегмент B: с ВЕРХНЕЙ. Нахлёст 18 мм,
+# два отверстия Ø3.2 (M3 болт+гайка; M2 самонарезом тоже можно — держит нахлёст)
+LAP = 18
+
+
+def spica_seg(lower_end):
+    s = BB(0, 120, -4, 4, 0, 2)
+    if lower_end:      # срезаем ВЕРХНЮЮ половину на конце → остаётся нижний язык
+        s -= BB(120 - LAP, 120.1, -4.1, 4.1, 1.0, 2.1)
+    else:              # срезаем НИЖНЮЮ половину → верхний язык
+        s -= BB(120 - LAP, 120.1, -4.1, 4.1, -0.1, 1.0)
+    for hx in (120 - LAP + 5, 120 - 5):
+        s -= Pos(hx, 0, 1) * Cylinder(1.6, 2.2)
+    return s
+
+spica_a = spica_seg(True)
+spica_b = spica_seg(False)
+
+# ---------------- СТЫК ГРИФА: пластины 70×52×6, двойной ласточкин ---------
+# Хвосты в плоскости печати (плашмя, без поддержек). Зазор посадки 0.15/сторону.
+GAP = 0.15
+
+
+def dovetail(male):
+    """Трапец-шип: у корня 10, на конце 16, вылет 10. y-центры ±13."""
+    g = 0 if male else GAP
+    tails = []
+    for yc in (-13, 13):
+        t = Polyline((0, -5 - g), (10, -8 - g), (10, 8 + g), (0, 5 + g), (0, -5 - g))
+        face = make_face(Plane.XY * Pos(0, yc, 0) * t)
+        tails.append(extrude(face, 6))
+    return tails
+
+# пластина A: с шипами и штырьками Ø5 сверху шипов? — штырьки на ПЛАСТИНЕ B
+# сверлятся сквозь шип: собрал ласточкины -> сверху воткнул штырьки-замки.
+plate_a = BB(-70, 0, -26, 26, 0, 6)
+for t in dovetail(True):
+    plate_a += Pos(0, 0, 0) * t
+for hx, hy in ((-8, -13), (-8, 13)):        # сквозные Ø3.2 под М3-стяжку
+    plate_a -= Pos(hx, hy, 3) * Cylinder(1.6, 6.2)
+plate_a -= Pos(5, 0, 3) * Cylinder(3.0, 6.2)   # ямка Ø6 в зоне шва (штырь-замок
+                                               # ляжет в совмещённые половины)
+
+plate_b = BB(0, 70, -26, 26, 0, 6)
+for t in dovetail(False):
+    plate_b -= Pos(0, 0, 0) * t
+for hx, hy in ((8, -13), (8, 13)):
+    plate_b -= Pos(hx, hy, 3) * Cylinder(1.6, 6.2)
+plate_b -= Pos(5, 0, 3) * Cylinder(3.0, 6.2)
+
+# штырь-замок шва Ø5.7 (в совмещённую ямку Ø6 обеих половин — плотно, руками)
+pin = Pos(0, 0, 2.9) * Cylinder(2.85, 5.8)
+pin += Pos(0, 0, 6.3) * Cylinder(4.0, 1.0)     # шляпка, чтобы вынимать
+
+parts = [("git_spica_seg_a", spica_a), ("git_spica_seg_b", spica_b),
+         ("git_neck_joint_a", plate_a), ("git_neck_joint_b", plate_b),
+         ("git_joint_pin", pin)]
+for name, part in parts:
+    p = part if isinstance(part, Part) else Part() + part
+    export_stl(p, rf"{OUT}\{name}.stl")
+    print(f"{name}: volume={p.volume:.0f} mm3, solids={len(p.solids())}")
+print("export done")
