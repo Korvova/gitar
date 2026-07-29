@@ -170,6 +170,9 @@ plates = [
     ("33_gitara_sec2", p020_j,             # секция-2 РАЗБОРНАЯ: дно + 4 П-рейки
      prep("gs2_base") + prep("gs2_tray", copies=4) + prep("gs2_lid", FLIP) +
      prep("gs2_fret")),
+    ("34_gitara_sec3", p020_j,             # секция-3 (низ грифа): то же + свои лады
+     prep("gs3_base") + prep("gs2_tray", copies=4) + prep("gs3_lid", FLIP) +
+     prep("gs3_fret")),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
