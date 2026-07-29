@@ -33,34 +33,34 @@ class Assembly:
         self.meshes[name] = m
         return m
 
-    def _pair(self, a, b):
+    def _dist(self, a, b):
+        """Мин. зазор между мешами; при контакте/пересечении -> объём
+        пересечения (мм³) булевой операцией (manifold) как мера беды."""
         cm = trimesh.collision.CollisionManager()
         cm.add_object(a, self.meshes[a])
-        hit = cm.in_collision_single(self.meshes[b])
-        if hit:
-            # глубина проникновения через пересечение объёмов недоступна дёшево —
-            # оцениваем максимальной глубиной контактных точек FCL
-            _, data = cm.in_collision_single(self.meshes[b], return_data=True)
-            depth = max((c.depth for c in data), default=0.0)
-            return -depth
-        return cm.min_distance_single(self.meshes[b])
+        if not cm.in_collision_single(self.meshes[b]):
+            return cm.min_distance_single(self.meshes[b]), 0.0
+        inter = trimesh.boolean.intersection(
+            [self.meshes[a], self.meshes[b]], engine='manifold')
+        vol = float(inter.volume) if inter is not None and not inter.is_empty else 0.0
+        return 0.0, vol
 
     def check(self, clearances=(), touching=(), verbose=True):
         ok = True
         for a, b, need in clearances:
-            d = self._pair(a, b)
-            good = d >= need - 1e-6
+            d, vol = self._dist(a, b)
+            good = vol < 0.01 and d >= need - 1e-6
             ok &= good
             if verbose or not good:
                 print(f"  {'OK ' if good else 'FAIL'} зазор {a} <-> {b}: "
-                      f"{d:+.3f} мм (нужно >= {need})")
+                      f"{d:.3f} мм (нужно >= {need}, пересечение {vol:.2f} мм3)")
         for a, b in touching:
-            d = self._pair(a, b)
-            good = d >= -0.05
+            d, vol = self._dist(a, b)
+            good = vol < 1.0            # посадка: касание да, объёмного нет
             ok &= good
             if verbose or not good:
                 print(f"  {'OK ' if good else 'FAIL'} посадка {a} <-> {b}: "
-                      f"{d:+.3f} мм (пересечение <= 0.05)")
+                      f"зазор {d:.3f} мм, пересечение {vol:.2f} мм3 (< 1)")
         if not ok:
             print("!! ГЕОМЕТРИЯ НАРУШЕНА — детали не выпускать")
             sys.exit(1)
