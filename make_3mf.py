@@ -177,7 +177,7 @@ plates = [
      prep("gdk_sleeve0") + prep("gdk_sleeve1") + prep("gdk_sleeve2")),
     ("36_gitara_deka2", p020_j,            # ДЕКА-2 + ленты: сегменты и хвосты
      prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
-     prep("gdk_comb") + prep("gdk_ext", copies=4) +
+     prep("gdk_comb") + prep("gdk_ext", copies=8) +
      prep("gdk_tail0") + prep("gdk_tail1") + prep("gdk_tail2") + prep("gdk_tail3")),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
