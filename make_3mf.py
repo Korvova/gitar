@@ -159,8 +159,8 @@ plates = [
      prep("ptest_plug_v2", FLIP)),
     ("30_gitara_joints", p020_j,           # ГИТАРА: тест узлов сборности —
      prep("git_spica_seg_a") + prep("git_spica_seg_b") +   # стык спицы-ленты
-     prep("git_neck_joint_a") + prep("git_neck_joint_b") + # (рисунок юзера) и
-     prep("git_joint_pin", copies=3)),                     # ласточкин грифа
+     prep("git_neck_joint_a") + prep("git_neck_joint_b", FLIP) +  # и стык грифа
+     prep("git_joint_pin", copies=3)),                     # тем же нахлёстом
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
