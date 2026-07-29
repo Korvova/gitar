@@ -70,7 +70,7 @@ def build_section(tag, sec_y0, south_shelf=True):
     fret = BB(-26, 26, 0, L, 0, 2)
     tongue = Polyline((11.5, 0), (20.5, 0), (18.5, -2), (13.5, -2), (11.5, 0))
     tface = make_face(Plane.XZ * tongue)
-    fret += Pos(0, 18, 0) * extrude(tface, -(L - 18))
+    fret += Pos(0, 18, 0) * extrude(tface, L - 18)
     for Ln in frets_in(sec_y0 + 5, sec_y0 + L - 5):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (8.5, 23.5) for wy in wy_wall]
@@ -117,7 +117,13 @@ for tag in ("gs2", "gs3"):
     asm.add("fret", rf"{OUT}\{tag}_fret.stl", loc=(0, 0, 23))
     touch += [("fret", "base"), ("fret", "tray3")]
     clear += [("band3", "fret", 0.15)]
+    # язычок обязан быть НАД верхней лентой: зазор к ней маленький
+    _d, _ = asm._dist("band3", "fret")
     asm.check(clearances=clear, touching=touch, verbose=False)
+    d_t, _ = asm._dist("band3", "fret")
+    if d_t > 0.5:
+        print(f"  FAIL {tag}: язычок фретборда не над лентой (зазор {d_t:.2f})")
+        raise SystemExit(1)
     asm.check_holes("fret", [(wx, wy, 24.0, 1.6) for wx, wy in ALL[tag]],
                     verbose=False)
     # каналы стыка (север) сквозные с предыдущей секцией (все донья одинаковы
