@@ -59,14 +59,6 @@ for wx in (8.5, 23.5):
     for wy in (12, 221.5):
         lid -= Pos(wx, wy, 0.8) * Cylinder(1.6, 1.8)
 
-# ---------------- ШИНА-НАКЛАДКА стыка секций (идея юзера) ----------------
-# перекрывает шов снизу: 2 ряда по 4 винта М3 (самонарез в донья);
-# южный ряд прошивает бутерброд шина+полка+дно
-splice = BB(-26, 26, -24, 24, 0, 3)
-for hy in (-15, 9):
-    for hx in JX:
-        splice -= Pos(hx, hy, 1.5) * Cylinder(1.6, 3.2)
-
 # ---------------- НАКЛАДКА-ФРЕТБОРД (идея юзера: лады сверху!) ----------
 # пластина на всю ширину грифа поверх крышки и столбиков; ладовые валики на
 # НАСТОЯЩИХ позициях мензуры 650 (лады, попавшие в диапазон секции)
@@ -89,7 +81,7 @@ for wx, wy in FRET_HOLES:
     fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
 
 parts = [("gs2_base", base), ("gs2_tray", tray), ("gs2_lid", lid),
-         ("gs_splice", splice), ("gs2_fret", fret)]
+         ("gs2_fret", fret)]
 for name, part in parts:
     p = part if isinstance(part, Part) else Part() + part
     export_stl(p, rf"{OUT}\{name}.stl")
@@ -122,9 +114,6 @@ asm.check_holes("lid", [(wx, wy, 23.8, 1.6) for wx in (8.5, 23.5)
                         for wy in (12, 228)], verbose=False)
 asm.check_holes("base", [(hx, 9, 2.3, 1.3) for hx in JX] +
                         [(hx, L + 9, 0.75, 1.6) for hx in JX], verbose=False)
-asm.add("splice", rf"{OUT}\gs_splice.stl", loc=(0, 0, -3))
-asm.check_holes("splice", [(hx, hy, -1.5, 1.6) for hx in JX
-                           for hy in (-15, 9)], verbose=False)
 asm.add("fret", rf"{OUT}\gs2_fret.stl", loc=(0, 0, 24.6))
 asm.check(touching=[("fret", "lid"), ("fret", "base")], verbose=False)
 asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in FRET_HOLES],
@@ -133,9 +122,9 @@ asm.check_holes("fret", [(wx, wy, 25.6, 1.6) for wx, wy in FRET_HOLES],
 asm.add("p0", rf"{OUT}\gs1_p0_base.stl", loc=(0, -240, 0))
 import numpy as np
 for hx in JX:
-    pts = np.array([[hx, 9, zz] for zz in (-2.5, -1.5, 0.5, 2.0)])
+    pts = np.array([[hx, 9, zz] for zz in (0.5, 2.0)])
     blocked = []
-    for nm in ("splice", "base", "p0"):
+    for nm in ("base", "p0"):
         try:
             if asm.meshes[nm].contains(pts).any():
                 blocked.append(nm)
