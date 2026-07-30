@@ -19,18 +19,17 @@ SX = [(i - (N_STR - 1) / 2) * PITCH for i in range(N_STR)]   # -30..30
 
 # --- потенциометр ALPS (джойстиковый, запчасть PS4) --- TODO: замерить!
 POT_W, POT_L, POT_H = 9.7, 11.2, 4.5   # корпус (x, y, высота)
-CROSS_D, CROSS_T = 4.4, 1.3            # крест шлица: размах и толщина лопасти
-CROSS_H = 3.0                          # глубина креста
-AXIS_H = 7.0                           # верх оси-втулки над рамой (корпус+крест)
+ROT_D, ROT_H = 8.6, 2.0                # белый РОТОР-диск сверху корпуса
+BLADE_W, BLADE_T, BLADE_H = 3.6, 1.4, 2.5   # прямоуг. ПРОРЕЗЬ ротора (лопатка)
+AXIS_H = POT_H + ROT_H                 # верх ротора над рамой
 
 # --- струна ---
 STR_L = 100.0                          # длина рычага
 STR_T, STR_H = 2.0, 10.0               # сечение
-STR_Z = AXIS_H + 1.0                   # низ балки над рамой
+STR_Z = AXIS_H                         # низ балки = верх ротора
 
 POT_Y = ROZ_Y - 42                     # ряд потенциометров (север накладки)
-POST_Y = POT_Y + STR_L + 12            # стойки гармошек (юг)
-
+POST_Y = POT_Y + 116                   # ось канала стоек гармошек (юг)
 
 def BB(x0, x1, y0, y1, z0, z1):
     return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(
@@ -40,58 +39,83 @@ def BB(x0, x1, y0, y1, z0, z1):
 RX = 48
 rama = BB(-RX, RX, POT_Y - 12, POST_Y + 10, 0, 3)
 rama -= BB(-RX + 10, RX - 10, POT_Y + 10, POST_Y - 14, -0.1, 3.1)  # окно
-# посадочные лунки-маркеры потенциометров (позиционирование корпуса) + провода
+# блок гнёзд-стаканов: потенциометры сидят в карманах по свои плечи
+rama += BB(-42, 42, POT_Y - 8, POT_Y + 8, 3, 3 + POT_H)
 for sx in SX:
     rama -= BB(sx - POT_W / 2, sx + POT_W / 2,
-               POT_Y - POT_L / 2, POT_Y + POT_L / 2, 2.6, 3.1)
-    rama -= BB(sx - 2, sx + 2, POT_Y - POT_L / 2 - 3, POT_Y - POT_L / 2,
+               POT_Y - POT_L / 2, POT_Y + POT_L / 2, 2.9, 3 + POT_H + 0.1)
+    rama -= BB(sx - 2, sx + 2, POT_Y - POT_L / 2 - 3, POT_Y + POT_L / 2,
                -0.1, 3.1)                              # щель проводов вниз
-# стойки гармошек: колонна с вертикальным пазом (гармошка вставляется сверху)
+for kx, ky in ((-40, POT_Y), (40, POT_Y)):             # каналы прижим-планки
+    rama -= Pos(kx, ky, 3 + POT_H - 2) * Cylinder(0.9, 4.2)
+# стойки гармошек: колонна с ПЛОЩАДКОЙ сверху, гармошка лапкой + винт М2
 for sx in SX:
-    rama += BB(sx - 4, sx + 4, POST_Y - 4, POST_Y + 4, 3, STR_Z + STR_H)
-    rama -= BB(sx - 0.7, sx + 0.7, POST_Y - 4.1, POST_Y - 1,
-               STR_Z + 1, STR_Z + STR_H + 0.1)
+    rama += BB(sx - 4, sx + 4, POST_Y - 3, POST_Y + 5, 3, 3 + STR_Z + 4)
+    rama -= Pos(sx, POST_Y, 3 + STR_Z + 2.2) * Cylinder(0.9, 3.7)
+# ножки моста-скобы (запирает струны сверху) — каналы М2
+for kx in (-40, 40):
+    rama -= Pos(kx, POT_Y + 16, 1.8) * Cylinder(0.9, 2.5)
 # крепёж к крышке: 4 × М3 по углам (Ø3.2; в крышке — слепые каналы Ø2.6)
 FRAME_SCREWS = [(sx, sy) for sx in (-RX + 5, RX - 5)
                 for sy in (POT_Y - 6, POST_Y + 4)]
 for fx, fy in FRAME_SCREWS:
     rama -= Pos(fx, fy, 1.5) * Cylinder(1.6, 3.2)
 
+# ============ ПРИЖИМ-ПЛАНКА ряда потенциометров (не вылетят) ============
+klamp = BB(-42, 42, POT_Y - 8, POT_Y + 8, 0, 1.5)
+for sx in SX:
+    klamp -= Pos(sx, POT_Y, 0.75) * Cylinder(ROT_D / 2 + 0.5, 1.7)  # окна роторов
+for kx in (-40, 40):
+    klamp -= Pos(kx, POT_Y, 0.75) * Cylinder(1.1, 1.7)              # винты М2
+
 # ================== СТРУНА (рычаг, 6 одинаковых) ==================
-# лок: ось потенциометра в (0,0), рычаг на юг (+y)
-struna = BB(-STR_T / 2, STR_T / 2, -2, STR_L - 8, 0, STR_H)   # тело
-struna += Pos(0, 0, -1.5) * Cylinder(3.2, 3)                  # башмак над осью
-# крест-лопатки ВНИЗ в шлиц потенциометра (TODO: замер!)
-struna += BB(-CROSS_D / 2, CROSS_D / 2, -CROSS_T / 2, CROSS_T / 2,
-             -CROSS_H - 3, -1.5)
-struna += BB(-CROSS_T / 2, CROSS_T / 2, -CROSS_D / 2, CROSS_D / 2,
-             -CROSS_H - 3, -1.5)
-# юг: паз под язык гармошки (сменная!)
-struna -= BB(-0.7, 0.7, STR_L - 12, STR_L - 8.1, 1, STR_H + 0.1)
+# лок: ось ротора в (0,0), z0 = верх ротора; рычаг на юг (+y)
+struna = BB(-STR_T / 2, STR_T / 2, -2, STR_L - 10, 0, STR_H)  # тело
+struna += Pos(0, 0, 1) * Cylinder(3.1, 2)                     # башмак над ротором
+# ОДИНОЧНАЯ лопатка вниз в прямоугольную прорезь ротора (TODO: замер!)
+struna += BB(-BLADE_W / 2, BLADE_W / 2, -BLADE_T / 2, BLADE_T / 2,
+             -BLADE_H, 0.1)
+# юг: бобышка с площадкой — лапка гармошки НАХЛЁСТОМ + винт М2 (юзер)
+struna += BB(-3, 3, STR_L - 10, STR_L - 2, 0, 4)
+struna -= Pos(0, STR_L - 6, 2.2) * Cylinder(0.9, 3.7)
 
 # ================== ГАРМОШКА (пружина, сменный расходник) =============
-# полоска 0.8, высота 6, зигзаг 4 колена в плоскости качания; языки по концам
-g = BB(-0.6, 0.6, 0, 3.5, 0, 6)                       # северный язык (в струну)
-yy = 3.5
-for i in range(4):                                     # колена зигзага
+# лок: (0,0) = дырка северной лапки. Зигзаг 0.8 x h6 в окне между бобышкой
+# струны и стойкой; лапки горизонтальные, НАХЛЁСТОМ + винты М2 (юзер)
+g = BB(-3, 3, -3, 3.8, 4, 5.5)                        # северная лапка (на струну)
+g -= Pos(0, 0, 4.75) * Cylinder(1.1, 1.7)
+g += BB(-0.6, 0.6, 4.1, 5.5, 0, 6)
+yy = 5.5
+for i in range(3):                                     # колена зигзага
     dx = 4 if i % 2 == 0 else -4
-    g += BB(min(0, dx) - 0.4, max(0, dx) + 0.4, yy, yy + 0.8, 0, 6)
-    g += BB(dx - 0.4, dx + 0.4, yy + 0.8, yy + 3.2, 0, 6)
-    g += BB(min(0, dx) - 0.4, max(0, dx) + 0.4, yy + 3.2, yy + 4.0, 0, 6)
-    yy += 4.0
-g += BB(-0.6, 0.6, yy, yy + 3.5, 0, 6)                # южный язык (в стойку)
+    g += BB(min(0, dx) - 0.4, max(0, dx) + 0.4, yy, yy + 0.76, 0, 6)
+    g += BB(dx - 0.4, dx + 0.4, yy + 0.76, yy + 3.04, 0, 6)
+    g += BB(min(0, dx) - 0.4, max(0, dx) + 0.4, yy + 3.04, yy + 3.8, 0, 6)
+    yy += 3.8
+g += BB(-0.6, 0.6, yy, 18.4, 0, 6)
+g += BB(-3, 3, 18.4, 25, 4, 5.5)                      # южная лапка (на стойку)
+g -= Pos(0, 22, 4.75) * Cylinder(1.1, 1.7)
 garm = g
+
+# ============ МОСТ-СКОБА над струнами (струны не выпрыгнут) ============
+bridge = BB(-42, 42, POT_Y + 12, POT_Y + 20, STR_Z + STR_H + 3.3,
+            STR_Z + STR_H + 5.3)
+for kx in (-40, 40):                                   # ножки до рамы
+    bridge += BB(kx - 2, kx + 2, POT_Y + 14, POT_Y + 18, 3,
+                 STR_Z + STR_H + 3.3)
+    bridge -= Pos(kx, POT_Y + 16, (STR_Z + STR_H + 8.6) / 2) *         Cylinder(1.1, STR_Z + STR_H + 2.6)             # канал М2 сквозь ножку
+# NB: мост в координатах рамы (z от её верха=3 -> строим от 3);
+bridge = Pos(0, 0, 3) * bridge
 
 # ============ болванка потенциометра (для сцены, НЕ печатать) ============
 pot = BB(-POT_W / 2, POT_W / 2, -POT_L / 2, POT_L / 2, 0, POT_H)
-pot += Pos(0, 0, POT_H + (AXIS_H - POT_H) / 2) * Cylinder(3.4, AXIS_H - POT_H)
-pot -= BB(-CROSS_D / 2, CROSS_D / 2, -CROSS_T / 2, CROSS_T / 2,
-          POT_H, AXIS_H + 0.1)
-pot -= BB(-CROSS_T / 2, CROSS_T / 2, -CROSS_D / 2, CROSS_D / 2,
-          POT_H, AXIS_H + 0.1)
+pot += Pos(0, 0, POT_H + ROT_H / 2) * Cylinder(ROT_D / 2, ROT_H)   # ротор-диск
+pot -= BB(-BLADE_W / 2 - 0.1, BLADE_W / 2 + 0.1, -BLADE_T / 2 - 0.1,
+          BLADE_T / 2 + 0.1, POT_H, POT_H + ROT_H + 0.1)           # прорезь
 
 parts = [("gst_rama", rama), ("gst_struna", struna),
-         ("gst_garm", garm), ("gst_pot_dummy", pot)]
+         ("gst_garm", garm), ("gst_klamp", klamp), ("gst_bridge", bridge),
+         ("gst_pot_dummy", pot)]
 for name, part in parts:
     p = part if isinstance(part, Part) else Part() + part
     export_stl(p, rf"{OUT}\{name}.stl")
@@ -104,11 +128,20 @@ from clearance import Assembly
 asm = Assembly()
 asm.add("top", rf"{OUT}\gk_top_wn.stl")
 asm.add("rama", rf"{OUT}\gst_rama.stl", loc=(0, 0, 26))
-clear, touch = [], [("rama", "top")]
+asm.add("klamp", rf"{OUT}\gst_klamp.stl", loc=(0, 0, 26 + 3 + POT_H))
+asm.add("bridge", rf"{OUT}\gst_bridge.stl", loc=(0, 0, 26))
+clear = [("bridge", "klamp", 0.3)]
+touch = [("rama", "top"), ("klamp", "rama"), ("bridge", "rama")]
 for i, sx in enumerate(SX):
     asm.add(f"str{i}", rf"{OUT}\gst_struna.stl",
             loc=(sx, POT_Y, 26 + 3 + STR_Z))
+    asm.add(f"g{i}", rf"{OUT}\gst_garm.stl",
+            loc=(sx, POT_Y + STR_L - 6, 26 + 3 + STR_Z))
     clear.append((f"str{i}", "rama", 0.3))             # рычаг ничего не задевает
+    clear.append((f"str{i}", "klamp", 0.2))            # и прижим-планку
+    clear.append((f"str{i}", "bridge", 0.2))           # ходит под мостом
+    touch.append((f"g{i}", f"str{i}"))                 # лапка на бобышке
+    touch.append((f"g{i}", "rama"))                    # лапка на стойке
     if i:
         clear.append((f"str{i}", f"str{i-1}", 4.0))    # соседки: место щипку
 asm.check(clearances=clear, touching=touch, verbose=False)
