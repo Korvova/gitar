@@ -57,7 +57,7 @@ for kx, ky in ((-40, POT_Y), (40, POT_Y)):               # каналы приж
 # на столе, узел ставится на раму 2 винтами М2 сверху; в раме — каналы
 for sx in SX:
     for dy in (-6, 6):
-        rama -= Pos(sx, POST_Y + dy, 1.6) * Cylinder(0.9, 2.9)
+        rama -= Pos(sx + 2.2, POST_Y + dy, 1.6) * Cylinder(0.9, 2.9)
 # крепёж к крышке: 4 × М3 по углам (Ø3.2; в крышке — слепые каналы Ø2.6)
 FRAME_SCREWS = [(sx, sy) for sx in (-RX + 5, RX - 5)
                 for sy in (POT_Y - 6, POST_Y + 4)]
@@ -103,8 +103,8 @@ for i in range(3):                                     # колена зигза
     g += BB(min(0, dx) - 0.4, max(0, dx) + 0.4, yy + 3.04, yy + 3.8, 0, 6)
     yy += 3.8
 g += BB(-0.6, 0.6, yy, 23.5, 0, 6)                    # полоса
-g += BB(-3, 3, 23.5, 26.5, 0, 6)      # южная лапка 3 мм — винт нарезается в неё
-g -= Pos(0, 25, 3) * Rot(90, 0, 0) * Cylinder(0.8, 3.2)
+g += BB(-0.6, 5.0, 23.5, 26.5, 0, 6)  # южное плечо БУКВОЙ Г (юзер), винт в него
+g -= Pos(2.2, 25, 3) * Rot(90, 0, 0) * Cylinder(0.8, 3.2)
 garm = g
 
 # ============ СТОЛБИК гармошки (съёмный, 6 шт) ============
@@ -148,7 +148,8 @@ for i, sx in enumerate(SX):
             loc=(sx, POT_Y + STR_L - 12, 26 + 3 + STR_Z))
     clear.append((f"str{i}", "rama", 0.3))             # рычаг ничего не задевает
     clear.append((f"str{i}", "klamp", 0.2))            # и прижим-планку
-    asm.add(f"st{i}", rf"{OUT}\gst_stolb.stl", loc=(sx, POST_Y, 26 + 3))
+    asm.add(f"st{i}", rf"{OUT}\gst_stolb.stl",
+            loc=(sx + 2.2, POST_Y, 26 + 3))
     touch.append((f"g{i}", f"str{i}"))                 # лапка к боку прилива
     touch.append((f"g{i}", f"st{i}"))                  # лапка к столбику
     touch.append((f"st{i}", "rama"))                   # подошва на раме
