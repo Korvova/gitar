@@ -126,47 +126,55 @@ TOP_SCREWS = [(sx, y) for y in (520, 580, 615, 715, 760) for sx in (-24, 24)]
 dno = Pos(0, 0, Z_BOT0) * extrude(F1, Z_BOT1 - Z_BOT0)
 dno += Pos(0, 0, Z_BOT1) * extrude(F1 - F11, 10)                   # бортик 10x10
 for y in (600, 760, 840, 900):                                     # рёбра
-    dno += ((BB(-160, 160, y - 1.25, y + 1.25, Z_BOT1, Z_BOT1 + 6)
-             & Pos(0, 0, Z_BOT1 + 3) * extrude(F11, 8, both=True))
-            - BB(-24, 24, 770, 960, Z_BOT1 - 1, Z_BOT1 + 7))   # проём планки
+    dno += (BB(-160, 160, y - 1.25, y + 1.25, Z_BOT1, Z_BOT1 + 6)
+            & Pos(0, 0, Z_BOT1 + 3) * extrude(F11, 8, both=True))
 for x, y in TUMBA:                                                 # тумбы хребта
     dno += BB(x - 8, x + 8, y - 8, y + 8, Z_BOT1, 0)
     dno -= Pos(x, y, -7) * Cylinder(1.3, 14.2)                     # канал М3
 dno = radial_holes(dno, HOLES_S, Z_BOT1 + 5)                       # винты ленты
 
-# стыки кусков БЕЗ встречных полок (нависали при печати — юзер) — плоские
-# торцы + ПЛАНКИ-накладки изнутри на винтах М3х4 (каналы Ø2.6 не насквозь)
-JD_Y = [(sx * x, y) for sx in (-1, 1) for x in (50, 78, 100) for y in (710, 730)]
-JD_X = [(sx * 10, y) for sx in (-1, 1) for y in (785, 835, 885, 920)]
-for x, y in JD_Y + JD_X:
-    dno -= Pos(x, y, -67.25) * Cylinder(1.3, 2.7)
-dno_nw = dno & BB(-190, 0, 475, 720, -80, 5)
-dno_ne = dno & BB(0, 190, 475, 720, -80, 5)
-dno_sw = dno & BB(-190, 0, 720, 965, -80, 5)
-dno_se = dno & BB(0, 190, 720, 965, -80, 5)
+# стыки кусков: встречные полки 1+2 мм («бутерброд», как секции грифа —
+# решение юзера, без планок). Винт М3х4 снизу сквозь полку Ø3.2, канал Ø2.6
+# в теле соседа НЕ насквозь. Печать: кусок с вырезом — поддержка от стола.
+JD_Y = [(sx * x, 729) for sx in (-1, 1) for x in (45, 90, 130)]
+JD_X = [(9, y) for y in (785, 835, 885, 920)]
+slab1 = Pos(0, 0, Z_BOT0) * extrude(F1, 1.0)           # нижний 1 мм в контуре
 
 def drill(part, pts, r, z0, z1):
     for x, y in pts:
         part -= Pos(x, y, (z0 + z1) / 2) * Cylinder(r, z1 - z0)
     return part
 
-def plank(x0, x1, y0, y1, z0, holes):
-    pl = BB(x0, x1, y0, y1, z0, z0 + 1.5)
-    for hx, hy in holes:
-        pl -= Pos(hx, hy, z0 + 0.75) * Cylinder(1.6, 1.7)
-    return pl
-
-pl_dy_w = plank(-105, -40, 700, 740, Z_BOT1, [q for q in JD_Y if q[0] < 0])
-pl_dy_e = plank(40, 105, 700, 740, Z_BOT1, [q for q in JD_Y if q[0] > 0])
-pl_dx = plank(-20, 20, 772, 935, Z_BOT1, JD_X)
+# запад несёт полку x-стыка (юг), северные — полки y-стыка
+dno_w = dno & BB(-190, 0, 475, 965, -80, 5)
+dno_w += (slab1 & BB(0, 18, 738, 960, -80, 5))
+dno_e = dno & BB(0, 190, 475, 965, -80, 5)
+dno_e -= BB(-0.1, 18, 738, 960.1, Z_BOT0 - 0.1, Z_BOT0 + 1)
+dno_e = drill(dno_e, JD_X, 1.3, Z_BOT0 + 1, Z_BOT1 - 0.2)      # канал Ø2.6
+dno_w = drill(dno_w, JD_X, 1.6, Z_BOT0 - 0.1, Z_BOT0 + 1.1)    # сквозь полку
+dno_nw = dno_w & BB(-190, 20, 475, 720, -80, 5)
+dno_nw += (slab1 & BB(-190, 0, 720, 738, -80, 5))
+dno_nw = drill(dno_nw, [q for q in JD_Y if q[0] < 0], 1.6,
+               Z_BOT0 - 0.1, Z_BOT0 + 1.1)
+dno_ne = dno_e & BB(0, 190, 475, 720, -80, 5)
+dno_ne += (slab1 & BB(0, 190, 720, 738, -80, 5))
+dno_ne = drill(dno_ne, [q for q in JD_Y if q[0] > 0], 1.6,
+               Z_BOT0 - 0.1, Z_BOT0 + 1.1)
+dno_sw = dno_w & BB(-190, 20, 720, 965, -80, 5)
+dno_sw -= BB(-185.1, 0.1, 720, 738, Z_BOT0 - 0.1, Z_BOT0 + 1)
+dno_sw = drill(dno_sw, [q for q in JD_Y if q[0] < 0], 1.3,
+               Z_BOT0 + 1, Z_BOT1 - 0.2)
+dno_se = dno_e & BB(0, 190, 720, 965, -80, 5)
+dno_se -= BB(-0.1, 185.1, 720, 738, Z_BOT0 - 0.1, Z_BOT0 + 1)
+dno_se = drill(dno_se, [q for q in JD_Y if q[0] > 0], 1.3,
+               Z_BOT0 + 1, Z_BOT1 - 0.2)
 
 # ================== КРЫШКА ==================
 top_p = slab_t = Pos(0, 0, Z_TOP0) * extrude(F1, Z_TOP1 - Z_TOP0)
 top_p -= Pos(0, ROZ_Y, Z_TOP0 + 1.5) * Cylinder(ROZ_R, 3.2)        # розетка
 ring = Pos(0, ROZ_Y, Z_TOP0 - 3) * (Cylinder(ROZ_R + 5.5, 6) -
                                     Cylinder(ROZ_R + 2.5, 6.2))    # кольцо-ребро
-top_p += (ring - BB(-27.2, 27.2, 478, 801, Z_TOP0 - 10, Z_TOP0)    # мимо хребта
-          - BB(38, 82, 478, 960, Z_TOP0 - 10, Z_TOP0))             # проём планки
+top_p += ring - BB(-27.2, 27.2, 478, 801, Z_TOP0 - 10, Z_TOP0)     # мимо хребта
 # окно под язык фретборда сек-3 (идея юзера) + бобышки-утолщения снизу:
 # язык 480..506 ложится на бобышки (верх 23), винты (+-24, 490) сквозь язык
 # и бобышку идут в пониженные стенки хребта
@@ -182,25 +190,37 @@ for y in (680, 800, 880):                                          # рёбра 
     top_p += ((BB(-160, 160, y - 1.25, y + 1.25, Z_TOP0 - 6, Z_TOP0)
                & Pos(0, 0, Z_TOP0 - 3) * extrude(F11, 8, both=True))
               - BB(-27.2, 27.2, 478, 801, Z_TOP0 - 10, Z_TOP0)     # мимо хребта
-              - BB(38, 82, 478, 960, Z_TOP0 - 10, Z_TOP0))         # проём планки
+              - BB(59, 79, 478, 960, Z_TOP0 - 10, Z_TOP0))   # зона выреза стыка
 top_p = drill(top_p, TOP_SCREWS, 1.6, Z_TOP0 - 0.1, Z_TOP1 + 0.1)  # к хребту
 top_p = radial_holes(top_p, HOLES_S, Z_TOP0 - 5)                   # винты ленты
 
-JT_Y = [(sx * x, y) for sx in (-1, 1) for x in (50, 78, 100) for y in (710, 730)]
-JT_XN = [(x, y) for x in (50, 70) for y in (510, 565, 625, 685)]
-JT_XS = [(x, y) for x in (50, 70) for y in (755, 810, 865, 915)]
-for x, y in JT_Y + JT_XN + JT_XS:                      # каналы снизу, не насквозь
-    top_p -= Pos(x, y, 24.2) * Cylinder(1.3, 2.6)
-top_wn = top_p & BB(-190, 60, 475, 720, 0, 30)
-top_ws = top_p & BB(-190, 60, 720, 965, 0, 30)
-top_en = top_p & BB(60, 190, 475, 720, 0, 30)
-top_es = top_p & BB(60, 190, 720, 965, 0, 30)
+JT_Y = [(-130, 729), (-85, 729), (-40, 729), (15, 729), (85, 729), (125, 729)]
+JT_X = [(69, y) for y in (510, 570, 630, 690, 750, 810, 870, 915)]
+slab_t1 = Pos(0, 0, Z_TOP0) * extrude(F1, 1.0)         # нижний 1 мм крышки
 
-pl_ty_w = plank(-105, -40, 700, 740, Z_TOP0 - 1.5, [q for q in JT_Y if q[0] < 0])
-pl_ty_e = plank(40, 105, 700, 740, Z_TOP0 - 1.5, [q for q in JT_Y if q[0] > 0])
-pl_tx_n = plank(40, 80, 500, 695, Z_TOP0 - 1.5, JT_XN)
-pl_tx_n -= Pos(0, ROZ_Y, Z_TOP0 - 0.75) * Cylinder(ROZ_R + 2, 1.7)  # дуга розетки
-pl_tx_s = plank(40, 80, 745, 940, Z_TOP0 - 1.5, JT_XS)
+# запад несёт полку x-стыка, северные — полки y-стыка (винты снизу, изнутри)
+top_w = top_p & BB(-190, 60, 475, 965, 0, 30)
+top_w += (slab_t1 & BB(60, 78, 475, 965, 0, 30))
+top_e = top_p & BB(60, 190, 475, 965, 0, 30)
+top_e -= BB(59.9, 78, 479.9, 960.1, Z_TOP0 - 0.1, Z_TOP0 + 1)
+top_e = drill(top_e, JT_X, 1.3, Z_TOP0 + 1, Z_TOP1 - 0.2)      # канал Ø2.6
+top_w = drill(top_w, JT_X, 1.6, Z_TOP0 - 0.1, Z_TOP0 + 1.1)    # сквозь полку
+top_wn = top_w & BB(-190, 80, 475, 720, 0, 30)
+top_wn += (slab_t1 & BB(-190, 60, 720, 738, 0, 30))
+top_wn = drill(top_wn, [q for q in JT_Y if q[0] < 58], 1.6,
+               Z_TOP0 - 0.1, Z_TOP0 + 1.1)
+top_ws = top_w & BB(-190, 80, 720, 965, 0, 30)
+top_ws -= BB(-185.1, 60.1, 720, 738, Z_TOP0 - 0.1, Z_TOP0 + 1)
+top_ws = drill(top_ws, [q for q in JT_Y if q[0] < 58], 1.3,
+               Z_TOP0 + 1, Z_TOP1 - 0.2)
+top_en = top_e & BB(60, 190, 475, 720, 0, 30)
+top_en += (slab_t1 & BB(78, 190, 720, 738, 0, 30))
+top_en = drill(top_en, [q for q in JT_Y if q[0] > 58], 1.6,
+               Z_TOP0 - 0.1, Z_TOP0 + 1.1)
+top_es = top_e & BB(60, 190, 720, 965, 0, 30)
+top_es -= BB(59.9, 185.1, 720, 738, Z_TOP0 - 0.1, Z_TOP0 + 1)
+top_es = drill(top_es, [q for q in JT_Y if q[0] > 58], 1.3,
+               Z_TOP0 + 1, Z_TOP1 - 0.2)
 
 # ================== ЛЕНТА ОБЕЧАЙКИ (плоские сегменты + гнутая для сцены) ====
 H_BAND = 95.0                                          # z -69..26
@@ -232,9 +252,6 @@ parts = [("gk_dno_ne", dno_ne), ("gk_dno_nw", dno_nw),
          ("gk_dno_se", dno_se), ("gk_dno_sw", dno_sw),
          ("gk_top_wn", top_wn), ("gk_top_ws", top_ws),
          ("gk_top_en", top_en), ("gk_top_es", top_es),
-         ("gk_pl_dy_w", pl_dy_w), ("gk_pl_dy_e", pl_dy_e), ("gk_pl_dx", pl_dx),
-         ("gk_pl_ty_w", pl_ty_w), ("gk_pl_ty_e", pl_ty_e),
-         ("gk_pl_tx_n", pl_tx_n), ("gk_pl_tx_s", pl_tx_s),
          ("gk_band_bent", bent)]
 parts += [(f"gk_band{i}", bands[i]) for i in range(N_SEG)]
 for name, part in parts:
@@ -262,21 +279,16 @@ touch = [("dno_ne", "dno_se"), ("dno_nw", "dno_sw"), ("dno_se", "dno_sw"),
          ("top_wn", "dk1"), ("top_ws", "dk2"),          # крышка на стенках хребта
          ("bent", "dno_ne"), ("bent", "top_ws")]        # лента у бортиков
 clear = [("dno_ne", "top_en", 5), ("bent", "dk1", 0.0)]
-for nm in ("pl_dy_w", "pl_dy_e", "pl_dx", "pl_ty_w", "pl_ty_e",
-           "pl_tx_n", "pl_tx_s"):
-    asm.add(nm, rf"{OUT}\gk_{nm}.stl")
-touch += [("pl_dy_w", "dno_nw"), ("pl_dy_e", "dno_se"), ("pl_dx", "dno_sw"),
-          ("pl_ty_w", "top_wn"), ("pl_ty_e", "top_es"),
-          ("pl_tx_n", "top_en"), ("pl_tx_s", "top_ws")]
-clear += [("pl_ty_w", "dk1", 0.0), ("pl_ty_e", "dk2", 0.0)]
 asm.add("fret3", rf"{OUT}\gs3_fret.stl", loc=(0, 320, 23))
 asm.add("ex3", rf"{OUT}\gdk_ext.stl", loc=(10, 320, 19.25))   # этаж 3
 touch += [("fret3", "top_wn")]                 # язык на бобышках крышки
 clear += [("fret3", "ex3", 0.1)]   # язык/язычок над лентой и штырьком
 asm.check(clearances=clear, touching=touch, verbose=False)
-asm.check_holes("pl_dy_w", [(x, y, Z_BOT1 + 0.7, 1.6)
-                            for x, y in JD_Y if x < 0], verbose=False)
-asm.check_holes("pl_tx_n", [(x, y, Z_TOP0 - 0.7, 1.6) for x, y in JT_XN],
+asm.check_holes("dno_nw", [(x, y, Z_BOT0 + 0.5, 1.6)
+                           for x, y in JD_Y if x < 0], verbose=False)
+asm.check_holes("top_wn", [(x, y, Z_TOP0 + 0.5, 1.6)
+                           for x, y in JT_Y if x < 58]
+                + [(x, y, Z_TOP0 + 0.5, 1.6) for x, y in JT_X if y < 718],
                 verbose=False)
 # тумбы: каналы соосны дыркам в дне хребта (Ø3.4 в деке, мир TUMBA)
 import numpy as _np
