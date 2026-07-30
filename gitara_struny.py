@@ -17,8 +17,9 @@ N_STR = 6
 PITCH = 12.0                           # шаг струн по x
 SX = [(i - (N_STR - 1) / 2) * PITCH for i in range(N_STR)]   # -30..30
 
-# --- потенциометр ALPS (джойстиковый, запчасть PS4) --- TODO: замерить!
-POT_W, POT_L, POT_H = 9.7, 11.2, 4.5   # корпус (x, y, высота)
+# --- потенциометр ALPS (джойстиковый, запчасть PS4) ---
+# корпус 13x10x4 по данным продавца (юзер); ротор и прорезь — TODO замерить!
+POT_W, POT_L, POT_H = 10.0, 13.0, 4.0  # корпус (x, y=сторона пинов, высота)
 ROT_D, ROT_H = 8.6, 2.0                # белый РОТОР-диск сверху корпуса
 BLADE_W, BLADE_T = 3.6, 1.4            # прямоуг. ПРОРЕЗЬ ротора — СКВОЗНАЯ!
 PODIUM = 4.0                           # подиум ряда: полость под замок-болтик
@@ -49,8 +50,9 @@ for sx in SX:
                3 + PODIUM - 0.1, 3 + PODIUM + POT_H + 0.1)
     rama -= BB(sx - 6, sx + 6, POT_Y - 4, POT_Y + 4,     # окно замка (насквозь)
                -0.1, 3 + PODIUM + 0.1)
-    rama -= BB(sx - 2, sx + 2, POT_Y - POT_L / 2 - 3, POT_Y + POT_L / 2,
-               -0.1, 3.1)                                # щель проводов вниз
+    rama -= BB(sx - 4, sx + 4, POT_Y + POT_L / 2 - 1, POT_Y + POT_L / 2 + 3.5,
+               -0.1, 3 + PODIUM + POT_H + 0.2)   # проём ПИНОВ: на юг (к розетке)
+                                                 # и насквозь вниз — провода в окно
 for kx, ky in ((-38.6, POT_Y), (38.6, POT_Y)):           # каналы прижим-планки
     rama -= Pos(kx, ky, 3 + PODIUM + POT_H - 2) * Cylinder(0.9, 4.2)
 # столбики гармошек — СЪЁМНЫЕ (юзер): гармошка прикручивается к столбику
@@ -120,6 +122,9 @@ pot = BB(-POT_W / 2, POT_W / 2, -POT_L / 2, POT_L / 2, 0, POT_H)
 pot += Pos(0, 0, POT_H + ROT_H / 2) * Cylinder(ROT_D / 2, ROT_H)   # ротор-диск
 pot -= BB(-BLADE_T / 2 - 0.1, BLADE_T / 2 + 0.1, -BLADE_W / 2 - 0.1,
           BLADE_W / 2 + 0.1, -0.1, POT_H + ROT_H + 0.1)   # прорезь СКВОЗНАЯ (вдоль y)
+for px in (-2.5, 0, 2.5):                                 # 3 ножки-пина (юг, вниз)
+    pot += BB(px - 0.35, px + 0.35, POT_L / 2, POT_L / 2 + 2.5, 0.8, 1.4)
+    pot += BB(px - 0.35, px + 0.35, POT_L / 2 + 1.9, POT_L / 2 + 2.5, -3.5, 1.4)
 
 parts = [("gst_rama", rama), ("gst_struna", struna),
          ("gst_garm", garm), ("gst_klamp", klamp), ("gst_stolb", stolb),
