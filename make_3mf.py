@@ -115,6 +115,7 @@ def prep(name, transform=None, copies=1, tag=""):
 FLIP = trimesh.transformations.rotation_matrix(math.pi, [1, 0, 0])      # вверх ногами
 ID = np.eye(4)                                          # только положить на стол
 LAY = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])  # лёжа (Y->Z)
+LAYY = trimesh.transformations.rotation_matrix(math.pi / 2, [0, 1, 0])  # на бок (X->Z)
 
 plates = [
     ("01_grif_L1-L5", p020_j, sum([prep(f"neckL{i}_v9") for i in range(1, 6)], [])),
@@ -194,6 +195,10 @@ plates = [
     ("45_korpus_lenty_b", p020_j, sum([prep(f"gk_band{i}", ID) for i in (2, 3)], [])),
     ("46_korpus_lenty_c", p020_j,
      sum([prep(f"gk_band{i}", ID) for i in (4, 5, 6)], [])),
+    ("48_struna_test", p020_j,             # ТЕСТ-СТЕНД струны: плита + прижим +
+     prep("gst_test_plate") + prep("gst_test_klamp") +   # струна лёжа + столбик +
+     prep("gst_struna", LAYY) + prep("gst_stolb") +      # 4 гармошки (2 жёсткости)
+     prep("gst_garm", copies=2) + prep("gst_garm_soft", copies=2)),
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
