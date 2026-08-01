@@ -143,11 +143,13 @@ let armed = true;
 function detectPluck(d) {
   const thr = +document.getElementById('thr').value;
   const a = Math.abs(d);
-  if (armed && a > thr) {              // фронт: один щипок = один звук
+  const now = performance.now();
+  if (armed && a > thr && now - lastPluck > 70) {   // фронт + антидребезг
     armed = false;
+    lastPluck = now;
     playPluck(a / (thr * 4));
-  } else if (!armed && a < thr * 0.4) {
-    armed = true;                      // перевзвод у нуля
+  } else if (!armed && a < thr * 0.85) {
+    armed = true;                      // быстрый перевзвод чуть ниже порога
   }
 }
 
