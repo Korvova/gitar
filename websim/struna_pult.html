@@ -94,19 +94,21 @@ async function readLoop() {
 }
 
 // ---------- данные ----------
-let lastRaw = 0;
+let lastRaw = 0, fastZero = null;
 function pushSample(v) {
   rxCount++;
   lastRaw = v;
-  if (zero === null) zero = v;
-  zero += (v - zero) / 4000;           // медленный дрейф нуля
+  if (zero === null) { zero = v; fastZero = v; }
+  zero += (v - zero) / 1000;           // ноль графика (тау ~1 с)
+  fastZero += (v - fastZero) / 60;     // быстрый ноль детекта (тау ~60 мс)
   const d = v - zero;
+  const hp = v - fastZero;             // видит только БЫСТРОЕ движение
   buf.push(d);
   const maxLen = SR * 12;
   if (buf.length > maxLen) buf.splice(0, buf.length - maxLen);
   const a = Math.abs(d);
   if (a > ampPeak) ampPeak = a;
-  detectPluck(d);
+  detectPluck(hp);
 }
 
 // ---------- детект щипка + звук ----------
