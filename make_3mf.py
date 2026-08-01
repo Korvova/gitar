@@ -207,6 +207,16 @@ plates = [
     ("50_skoba6_test", p020_j,             # обойма с ХВОСТОМ (вынос магнита) +
      prep("gst_skoba6", ID, copies=2) +    # подставка платы: прикрутить к
      prep("gst_podstavka", ID)),           # текущему стенду 49 и проверить
+    ("51_struny6_rama", p020_j,            # ШЕСТИСТРУНКА: рама v3 (финал)
+     prep("gst_rama6", ID)),
+    ("52_struny6_detali", p020_j,          # вся мелочь шестиструнки:
+     prep("gst_struna2", LAYY, copies=6) +           # 6 струн лёжа
+     prep("gst_stolb", copies=12) +                  # 12 столбиков
+     prep("gst_garm", copies=14) +                   # 12 пружин + запас
+     prep("gst_garm_soft", copies=4) +               # мягкие на подбор
+     prep("gst_skoba", ID, copies=3) +               # обоймы центр (2+1)
+     prep("gst_skoba6", ID, copies=5) +              # обоймы с хвостом (4+1)
+     prep("gst_shayba", copies=6)),                  # проставки рамы
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
