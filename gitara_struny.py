@@ -128,15 +128,13 @@ for i, sx in enumerate(SX):
     # (конус с прорезью, как заводские клипсы плат — рисунок юзера)
     for px in (-8, 8):
         for py in (-8, 8):
-            rama += Pos(mx + px, my + py, 7.1) * Cylinder(1.35, 2.0)
+            post = Pos(mx + px, my + py, 7.1) * Cylinder(1.35, 2.0)
             if px * py < 0:                            # диагональ: защёлки
-                snap = Pos(mx + px, my + py, 8.8) * Cone(1.8, 1.05, 1.4)
-                snap -= BB(mx + px - 2, mx + px + 2,
-                           my + py - 0.55, my + py + 0.55, 7.0, 9.6)
-                head = Pos(mx + px, my + py, 8.5) * Cylinder(1.8, 0.8)
-                head -= BB(mx + px - 2, mx + px + 2,
-                           my + py - 0.55, my + py + 0.55, 7.0, 9.6)
-                rama += snap + head
+                post += Pos(mx + px, my + py, 8.5) * Cylinder(1.8, 0.8)
+                post += Pos(mx + px, my + py, 8.8) * Cone(1.8, 1.05, 1.4)
+                post -= BB(mx + px - 2, mx + px + 2,   # щель до пола кармана:
+                           my + py - 0.55, my + py + 0.55, 6.0, 9.6)
+            rama += post                               # два полуцилиндра+шляпа
 # крепёж к крышке: 6 x М3 сквозь раму и шайбу-проставку
 FRAME_SCREWS = [(sx, sy) for sx in (-46, 46) for sy in (-87, 0, 87)]
 for fx, fy in FRAME_SCREWS:
@@ -172,13 +170,12 @@ cell -= BB(-7.5, -3, -5.5, 5.5, -0.1, 6.2)             # прорези пино
 cell -= BB(3, 7.5, -5.5, 5.5, -0.1, 6.2)
 for px in (-8, 8):
     for py in (-8, 8):
-        cell += Pos(px, py, 7.1) * Cylinder(1.35, 2.0)
+        post = Pos(px, py, 7.1) * Cylinder(1.35, 2.0)
         if px * py < 0:
-            snap = Pos(px, py, 8.8) * Cone(1.8, 1.05, 1.4)
-            snap -= BB(px - 2, px + 2, py - 0.55, py + 0.55, 7.0, 9.6)
-            head = Pos(px, py, 8.5) * Cylinder(1.8, 0.8)
-            head -= BB(px - 2, px + 2, py - 0.55, py + 0.55, 7.0, 9.6)
-            cell += snap + head
+            post += Pos(px, py, 8.5) * Cylinder(1.8, 0.8)
+            post += Pos(px, py, 8.8) * Cone(1.8, 1.05, 1.4)
+            post -= BB(px - 2, px + 2, py - 0.55, py + 0.55, 6.0, 9.6)
+        cell += post
 
 parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_test_cell", cell),
