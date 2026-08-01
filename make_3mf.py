@@ -204,6 +204,9 @@ plates = [
      prep("gst_stolb") + prep("gst_skoba", LAY, copies=2) +  # Г-обойма (+запас)
      prep("gst_garm", copies=2) + prep("gst_garm_soft", copies=2) +  # пружины!
      prep("gst_nozhka", copies=4)),        # ножки: снизу место дюпон-разъёмам
+    ("50_skoba6_test", p020_j,             # обойма с ХВОСТОМ (вынос магнита) +
+     prep("gst_skoba6", ID, copies=2) +    # подставка платы: прикрутить к
+     prep("gst_podstavka", ID)),           # текущему стенду 49 и проверить
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
