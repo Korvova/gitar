@@ -139,12 +139,15 @@ function playPluck(strength) {
   src.connect(g).connect(audioCtx.destination);
   src.start();
 }
+let armed = true;
 function detectPluck(d) {
   const thr = +document.getElementById('thr').value;
-  const now = performance.now();
-  if (Math.abs(d) > thr && now - lastPluck > 180) {
-    lastPluck = now;
-    playPluck(Math.abs(d) / (thr * 4));
+  const a = Math.abs(d);
+  if (armed && a > thr) {              // фронт: один щипок = один звук
+    armed = false;
+    playPluck(a / (thr * 4));
+  } else if (!armed && a < thr * 0.4) {
+    armed = true;                      // перевзвод у нуля
   }
 }
 
