@@ -82,8 +82,9 @@ def magnet_pocket(part, cx, cy, teeth=False):
     if teeth:
         f = make_face(Plane.XZ * Polyline(*_TOOTH, _TOOTH[0]))
         tooth = extrude(f, 0.7, both=True)                 # клин шириной 1.4
-        for ang in (90, 210, 330):
-            part += Pos(cx, cy, 0) * Rot(0, 0, ang) * tooth
+        for ang in (135, 180, 225):    # зубцы ТОЛЬКО с дальней от струны
+            part += Pos(cx, cy, 0) * Rot(0, 0, ang) * tooth   # стороны: восток
+                                       # в сборе запирает сама струна (0.05)
     return part
 
 # ============ Г-ОБОЙМА магнита (струны 2,5 — плата под струной) ========
