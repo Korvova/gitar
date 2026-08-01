@@ -178,10 +178,7 @@ sk = BB(-3, 3, -4, 4, -2.6, 0)                         # дно с ямкой м
 sk -= Pos(0, 0, -1.075) * Cylinder(2.13, 2.25)         # ямка Ø4.25 x 2.2
 sk += BB(1.15, 3, -4, 4, 0, 6)                         # единственная стенка
 sk -= Pos(0, 0, 4.4) * Rot(0, 90, 0) * Cylinder(0.85, 8)   # шплинт сквозь
-skoba = sk
-
-plastina = BB(-2.15, -1, -4, 4, 0, 6)                  # вторая щека (на дно Г)
-plastina -= Pos(0, 0, 4.4) * Rot(0, 90, 0) * Cylinder(0.85, 4)
+skoba = sk    # щека не нужна (юзер): магнит заперт ямкой + струной сверху
 
 tp2 = BB(-20, 20, -95, 95, 0, 3)                       # плита v2
 for sy, sxs in ((-81.5, -2.2), (81.5, 2.2)):           # каналы 2 столбиков
@@ -192,7 +189,7 @@ tp2 -= BB(-11.4, 11.4, -11.4, 11.4, 6.1, 7.9)          # карман: чип н
 tp2 -= BB(-20.1, -9, -3, 3, 6.0, 7.9)                  # зазор до магнита ~2.7
 
 parts = [("gst_struna2", struna2), ("gst_test2_plate", tp2),
-         ("gst_skoba", skoba), ("gst_plastina", plastina),
+         ("gst_skoba", skoba),
          ("gst_test_plate", tp), ("gst_test_klamp", tk),
          ("gst_garm_soft", garm_soft),
 ("gst_rama", rama), ("gst_struna", struna),
