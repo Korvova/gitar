@@ -217,11 +217,12 @@ plates = [
      prep("gst_skoba", ID, copies=3) +               # обоймы центр (2+1)
      prep("gst_skoba6", ID, copies=5) +              # обоймы с хвостом (4+1)
      prep("gst_kryshka_mag", ID, copies=5) +         # крышечки магнитов
-     prep("gst_kryshka_pcb", FLIP, copies=6) +       # крышки плат (бобышки вверх)
+     prep("gst_kryshka_pcb", ID, copies=6) +         # крышки плат (с окном)
      prep("gst_shayba", copies=6)),                  # проставки рамы
     ("53_cell_test", p020_j,               # тест-ячейка платы AS5600: карман,
      prep("gst_test_cell", ID) +           # штырьки, винты М3, прорези пинов
-     prep("gst_kryshka_pcb", FLIP)),       # + крышка платы (примерка)
+     prep("gst_kryshka_pcb", ID) +         # + крышка с окном и глухая —
+     prep("gst_kryshka_pcb2", ID)),        # примерка, выбрать какая лучше
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
