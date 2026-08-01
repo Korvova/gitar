@@ -187,9 +187,18 @@ for sy, sxs in ((-75.5, -2.2), (75.5, 2.2)):   # каналы 2 столбико
 tp2 += BB(-12.8, 12.8, -12.8, 12.8, 3, 7.8)            # подиум платы AS5600
 tp2 -= BB(-11.4, 11.4, -11.4, 11.4, 6.1, 7.9)          # карман: чип на ~8.6,
 tp2 -= BB(-20.1, -9, -3, 3, 6.0, 7.9)                  # зазор до магнита ~2.7
+for px in (-1, 1):                                     # СКВОЗНЫЕ прорези под
+    tp2 -= BB(px * 11.4 - (2 if px > 0 else -2) * 2,   # штырьки платы (юзер):
+              px * 11.4, -9, 9, -0.1, 6.2)             # пины вниз, дюпоны снизу
+for cx in (-15, 15):                                   # дырки ножек (по углам)
+    for cy in (-88, 88):
+        tp2 -= Pos(cx, cy, 1.5) * Cylinder(2.1, 3.2)
+
+nozhka = Pos(0, 0, 6) * Cylinder(5, 12)                # ножка: стенд выше стола
+nozhka += Pos(0, 0, 13.5) * Cylinder(1.95, 3)          # шип в дырку плиты
 
 parts = [("gst_struna2", struna2), ("gst_test2_plate", tp2),
-         ("gst_skoba", skoba),
+         ("gst_skoba", skoba), ("gst_nozhka", nozhka),
          ("gst_test_plate", tp), ("gst_test_klamp", tk),
          ("gst_garm_soft", garm_soft),
 ("gst_rama", rama), ("gst_struna", struna),
