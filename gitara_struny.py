@@ -101,24 +101,16 @@ kryshka = BB(-3.4, 1.2, TAIL_Y - 7, TAIL_Y + 7, 0, 0.8)
 for wy in (TAIL_Y - 4.5, TAIL_Y + 4.5):
     kryshka -= Pos(-1.1, wy, 0.4) * Cylinder(1.1, 1.0)
 
-# КРЫШКА-ВКЛАДЫШ платы (юзер): вставляется в карман (22.9 при кармане 23.1),
-# карман углублён до 4: плата+чип 3 + крышка 1 = верх крышки ЗАПОДЛИЦО с
-# подиумом, всё закрыто. Глухая — основная (магнит читает сквозь 1 мм
-# пластика); чтобы зазор чип-магнит остался ~2.8 как на стенде, ВСЯ струна
-# опущена на 1 (столбики 16.5, канал 12.5). Вариант с окном — запасной.
-# лок: z0 = НИЗ крышки (7.5 в раме: пол 4.5 + плата с чипом 3.0)
-def make_kr_pcb(okno):
-    kr = BB(-11.45, 11.45, -11.45, 11.45, 0, 1.0)
-    if okno:
-        kr -= BB(-5, 5, -5, 5, -1.5, 1.5)              # окно над чипом 10x10
-    for px in (-8, 8):
-        for py in (-8, 8):
-            if px * py < 0:                            # диагональ винтов М3
-                kr -= Pos(px, py, 0.5) * Cylinder(1.7, 1.2)    # дырка Ø3.4
-    return kr
-
-kr_pcb = make_kr_pcb(True)
-kr_pcb2 = make_kr_pcb(False)
+# БОЛЬШАЯ КРЫШКА (юзер, 02.08): вместо 6 крышек-вкладышей — ОДНА пластина
+# 94x80x0.8 поверх всех подиумов, 4 винта М3 по углам в бобышки рамы.
+# Эстетика: снаружи гладкая поверхность и 4 болтика. Платы держатся в
+# карманах щелчком штырьков (проверено печатью), крышка страхует сверху.
+# Магнит читает чип сквозь 0.8 пластика; хвост идёт на 9.9, верх крышки
+# 9.3 — зазор 0.6. лок: z0 = верх подиумов (8.5 в раме)
+KR_SCREWS = [(px, py) for px in (-45, 45) for py in (-35, 35)]
+kr_big = BB(-47, 47, -40, 40, 0, 0.8)
+for px, py in KR_SCREWS:
+    kr_big -= Pos(px, py, 0.4) * Cylinder(1.7, 1.0)    # дырки Ø3.4 под М3
 
 # ================== РАМА v3 (на крышке wn, вокруг розетки) =============
 # лок: (0,0) = центр розетки; струны вдоль y (тела -50..50), шаг 12.
@@ -150,6 +142,10 @@ for i, sx in enumerate(SX):
                 rama -= Pos(mx + px, my + py, 3) * Cylinder(1.35, 6.6)
             else:                                      # диагональ: штырьки
                 rama += Pos(mx + px, my + py, 5.5) * Cylinder(1.8, 2.0)
+# бобышки большой крышки: 4 колонны Ø8 до уровня подиумов, канал М3
+for px, py in KR_SCREWS:
+    rama += Pos(px, py, 5.75) * Cylinder(4.0, 5.5)
+    rama -= Pos(px, py, 5.8) * Cylinder(1.35, 5.6)
 # крепёж к крышке: 6 x М3 сквозь раму и шайбу-проставку
 FRAME_SCREWS = [(sx, sy) for sx in (-46, 46) for sy in (-87, 0, 87)]
 for fx, fy in FRAME_SCREWS:
@@ -197,8 +193,7 @@ parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_struna2", struna), ("gst_garm", garm),
          ("gst_garm_soft", garm_soft), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
-         ("gst_kryshka_mag", kryshka), ("gst_kryshka_pcb", kr_pcb),
-         ("gst_kryshka_pcb2", kr_pcb2),
+         ("gst_kryshka_mag", kryshka), ("gst_kryshka_big", kr_big),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),
          ("gst_test2_plate", tp2)]
 for name, part in parts:
@@ -212,6 +207,7 @@ from clearance import Assembly
 
 asm = Assembly()
 asm.add("rama", rf"{OUT}\gst_rama6.stl")
+asm.add("kbig", rf"{OUT}\gst_kryshka_big.stl", loc=(0, 0, 8.5))
 clear, touch = [], []
 for i, sx in enumerate(SX):
     k = KIND[i]
@@ -224,12 +220,8 @@ for i, sx in enumerate(SX):
                 rz=(180 if k == "N" else 0))
     touch.append((f"sk{i}", f"str{i}"))
     clear.append((f"sk{i}", "rama", 0.5))              # хвост НАД подиумом
-    mx = sx + (1.1 if k == "N" else -1.1)
-    my = {"N": -TAIL_Y, "C": 0.0, "S": TAIL_Y}[k]
-    asm.add(f"kp{i}", rf"{OUT}\gst_kryshka_pcb2.stl", loc=(mx, my, 7.5))
-    clear.append((f"kp{i}", "rama", 0.05))             # вкладыш: зазор к стенкам
-    clear.append((f"kp{i}", f"sk{i}", 0.5))            # хвост и магнит выше
-    clear.append((f"kp{i}", f"str{i}", 0.5))
+    clear.append((f"sk{i}", "kbig", 0.4))              # хвост над крышкой
+    clear.append((f"str{i}", "kbig", 0.5))
     for sgn, tag in ((1, "s"), (-1, "n")):
         asm.add(f"st{i}{tag}", rf"{OUT}\gst_stolb.stl",
                 loc=(sx + 2.2 * sgn, sgn * POST_DY, 3),
@@ -239,6 +231,7 @@ for i, sx in enumerate(SX):
                 loc=(sx, sgn * 46, 12.5), rz=(0 if sgn > 0 else 180))
         touch.append((f"g{i}{tag}", f"str{i}"))
         touch.append((f"g{i}{tag}", f"st{i}{tag}"))
+touch.append(("kbig", "rama"))                         # лежит на подиумах
 asm.check(clearances=clear, touching=touch, verbose=False)
 asm.check_holes("rama", [(fx, fy, 1.5, 1.6) for fx, fy in FRAME_SCREWS],
                 verbose=False)
