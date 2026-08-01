@@ -66,10 +66,10 @@ garm_soft = make_garm(0.6)
 
 # ================== СТОЛБИК (съёмный, 12 шт) ==================
 stolb = BB(-4, 4, -8, 8, 0, 3)                        # подошва, 2 винта М2
-stolb += BB(-4, 4, -3, 3, 3, 17.5)
+stolb += BB(-4, 4, -3, 3, 3, 16.5)
 for dy in (-6, 6):
     stolb -= Pos(0, dy, 1.5) * Cylinder(1.1, 3.2)
-stolb -= Pos(0, 0, 13.5) * Rot(90, 0, 0) * Cylinder(1.1, 6.4)   # винт с торца
+stolb -= Pos(0, 0, 12.5) * Rot(90, 0, 0) * Cylinder(1.1, 6.4)   # винт с торца
 
 # ---- ямка магнита: простая тугая Ø4.25; на хвосте сверху КРЫШЕЧКА на
 # 2 болтиках М2 (решение юзера), в струне под неё вырез ------------------
@@ -101,12 +101,12 @@ kryshka = BB(-3.4, 1.2, TAIL_Y - 7, TAIL_Y + 7, 0, 0.8)
 for wy in (TAIL_Y - 4.5, TAIL_Y + 4.5):
     kryshka -= Pos(-1.1, wy, 0.4) * Cylinder(1.1, 1.0)
 
-# КРЫШКА-ВКЛАДЫШ платы (юзер): НЕ накрывает подиум, а ВСТАВЛЯЕТСЯ в карман
-# (22.9 при кармане 23.1) и ложится прямо на плату — два М3 прижимают её
-# вместе с платой, сверху всё заподлицо (верх крышки утоплен на 0.4).
-# Окно над чипом 10x10 (чип с колодками — 3 мм, выше крышки); глухой
-# вариант — ляжет на чип, скорее не пойдёт, но пусть будет на пробу.
-# лок: z0 = ВЕРХ ПЛАТЫ (7.1 в раме: пол 5.5 + плата 1.6)
+# КРЫШКА-ВКЛАДЫШ платы (юзер): вставляется в карман (22.9 при кармане 23.1),
+# карман углублён до 4: плата+чип 3 + крышка 1 = верх крышки ЗАПОДЛИЦО с
+# подиумом, всё закрыто. Глухая — основная (магнит читает сквозь 1 мм
+# пластика); чтобы зазор чип-магнит остался ~2.8 как на стенде, ВСЯ струна
+# опущена на 1 (столбики 16.5, канал 12.5). Вариант с окном — запасной.
+# лок: z0 = НИЗ крышки (7.5 в раме: пол 4.5 + плата с чипом 3.0)
 def make_kr_pcb(okno):
     kr = BB(-11.45, 11.45, -11.45, 11.45, 0, 1.0)
     if okno:
@@ -115,8 +115,6 @@ def make_kr_pcb(okno):
         for py in (-8, 8):
             if px * py < 0:                            # диагональ винтов М3
                 kr -= Pos(px, py, 0.5) * Cylinder(1.7, 1.2)    # дырка Ø3.4
-            else:                                      # кончики штырьков
-                kr -= Pos(px, py, 0.5) * Cylinder(2.1, 1.2)    # дырка Ø4.2
     return kr
 
 kr_pcb = make_kr_pcb(True)
@@ -140,18 +138,18 @@ for i, sx in enumerate(SX):
     my = {"N": -TAIL_Y, "C": 0.0, "S": TAIL_Y}[k]
     PCB.append((mx, my))
     rama += BB(mx - 13.0, mx + 13.0, my - 13.0, my + 13.0, 3, 8.5)
-    rama -= BB(mx - 11.55, mx + 11.55, my - 11.55, my + 11.55, 5.5, 8.6)
-             # карман 23.1 (в 23.6 болталась); глубина 3 — плата утопает
+    rama -= BB(mx - 11.55, mx + 11.55, my - 11.55, my + 11.55, 4.5, 8.6)
+        # карман 23.1 (в 23.6 болталась); глубина 4 — плата+чип+крышка
     rama -= BB(mx - 9.5, mx - 4, my - 5.5, my + 5.5, -0.1, 6.2)  # пины: 5.5 шир,
     rama -= BB(mx + 4, mx + 9.5, my - 5.5, my + 5.5, -0.1, 6.2)  # ближе к краю
-    # крепление платы: дырки Ø3.5 сетка 16x16 (замер юзера); печатные защёлки
-    # хрупкие -> ДВА штырька Ø3.4 (направляйки) + ДВА винта М3 по диагонали
+    # крепление платы: дырки сетка 16x16 (замер юзера); печатные защёлки
+    # хрупкие -> ДВА штырька Ø3.6 (направляйки) + ДВА винта М3 по диагонали
     for px in (-8, 8):
         for py in (-8, 8):
             if px * py < 0:                            # диагональ: каналы М3
                 rama -= Pos(mx + px, my + py, 3) * Cylinder(1.35, 6.6)
             else:                                      # диагональ: штырьки
-                rama += Pos(mx + px, my + py, 6.5) * Cylinder(1.7, 2.0)
+                rama += Pos(mx + px, my + py, 5.5) * Cylinder(1.8, 2.0)
 # крепёж к крышке: 6 x М3 сквозь раму и шайбу-проставку
 FRAME_SCREWS = [(sx, sy) for sx in (-46, 46) for sy in (-87, 0, 87)]
 for fx, fy in FRAME_SCREWS:
@@ -182,7 +180,7 @@ for cx in (-15, 15):
 # отточим посадку на ней — потом размеры переносятся на раму
 cell = BB(-16, 16, -16, 16, 0, 3)
 cell += BB(-13.0, 13.0, -13.0, 13.0, 3, 8.5)
-cell -= BB(-11.55, 11.55, -11.55, 11.55, 5.5, 8.6)     # карман 23.1 гл.3
+cell -= BB(-11.55, 11.55, -11.55, 11.55, 4.5, 8.6)     # карман 23.1 гл.4
 cell -= BB(-9.5, -4, -5.5, 5.5, -0.1, 6.2)             # прорези пинов 5.5
 cell -= BB(4, 9.5, -5.5, 5.5, -0.1, 6.2)               # ближе к краю
 for px in (-8, 8):
@@ -190,7 +188,7 @@ for px in (-8, 8):
         if px * py < 0:                                # диагональ: каналы М3
             cell -= Pos(px, py, 3) * Cylinder(1.35, 6.6)
         else:                                          # диагональ: штырьки
-            cell += Pos(px, py, 6.5) * Cylinder(1.7, 2.0)
+            cell += Pos(px, py, 5.5) * Cylinder(1.8, 2.0)
 
 parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_test_cell", cell),
@@ -215,18 +213,18 @@ asm.add("rama", rf"{OUT}\gst_rama6.stl")
 clear, touch = [], []
 for i, sx in enumerate(SX):
     k = KIND[i]
-    asm.add(f"str{i}", rf"{OUT}\gst_struna2.stl", loc=(sx, -50, 13.5))
+    asm.add(f"str{i}", rf"{OUT}\gst_struna2.stl", loc=(sx, -50, 12.5))
     clear.append((f"str{i}", "rama", 0.3))
     if k == "C":
-        asm.add(f"sk{i}", rf"{OUT}\gst_skoba.stl", loc=(sx, 0, 13.5))
+        asm.add(f"sk{i}", rf"{OUT}\gst_skoba.stl", loc=(sx, 0, 12.5))
     else:
-        asm.add(f"sk{i}", rf"{OUT}\gst_skoba6.stl", loc=(sx, 0, 13.5),
+        asm.add(f"sk{i}", rf"{OUT}\gst_skoba6.stl", loc=(sx, 0, 12.5),
                 rz=(180 if k == "N" else 0))
     touch.append((f"sk{i}", f"str{i}"))
     clear.append((f"sk{i}", "rama", 0.5))              # хвост НАД подиумом
     mx = sx + (1.1 if k == "N" else -1.1)
     my = {"N": -TAIL_Y, "C": 0.0, "S": TAIL_Y}[k]
-    asm.add(f"kp{i}", rf"{OUT}\gst_kryshka_pcb.stl", loc=(mx, my, 7.1))
+    asm.add(f"kp{i}", rf"{OUT}\gst_kryshka_pcb2.stl", loc=(mx, my, 7.5))
     clear.append((f"kp{i}", "rama", 0.05))             # вкладыш: зазор к стенкам
     clear.append((f"kp{i}", f"sk{i}", 0.5))            # хвост и магнит выше
     clear.append((f"kp{i}", f"str{i}", 0.5))
@@ -236,7 +234,7 @@ for i, sx in enumerate(SX):
                 rz=(0 if sgn > 0 else 180))
         touch.append((f"st{i}{tag}", "rama"))
         asm.add(f"g{i}{tag}", rf"{OUT}\gst_garm.stl",
-                loc=(sx, sgn * 46, 13.5), rz=(0 if sgn > 0 else 180))
+                loc=(sx, sgn * 46, 12.5), rz=(0 if sgn > 0 else 180))
         touch.append((f"g{i}{tag}", f"str{i}"))
         touch.append((f"g{i}{tag}", f"st{i}{tag}"))
 asm.check(clearances=clear, touching=touch, verbose=False)
