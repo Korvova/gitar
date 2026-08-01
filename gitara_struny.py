@@ -163,7 +163,25 @@ for cx in (-15, 15):
     for cy in (-88, 88):
         tp2 -= Pos(cx, cy, 1.5) * Cylinder(2.1, 3.2)
 
+# ==== ТЕСТ-ЯЧЕЙКА платы (юзер): один карман со штырьками-защёлками ======
+# отточим посадку на ней — потом размеры переносятся на раму
+cell = BB(-16, 16, -16, 16, 0, 3)
+cell += BB(-13.0, 13.0, -13.0, 13.0, 3, 8.5)
+cell -= BB(-11.8, 11.8, -11.8, 11.8, 6.1, 8.6)         # карман 23.6
+cell -= BB(-7.5, -3, -5.5, 5.5, -0.1, 6.2)             # прорези пинов
+cell -= BB(3, 7.5, -5.5, 5.5, -0.1, 6.2)
+for px in (-8, 8):
+    for py in (-8, 8):
+        cell += Pos(px, py, 7.1) * Cylinder(1.35, 2.0)
+        if px * py < 0:
+            snap = Pos(px, py, 8.8) * Cone(1.8, 1.05, 1.4)
+            snap -= BB(px - 2, px + 2, py - 0.55, py + 0.55, 7.0, 9.6)
+            head = Pos(px, py, 8.5) * Cylinder(1.8, 0.8)
+            head -= BB(px - 2, px + 2, py - 0.55, py + 0.55, 7.0, 9.6)
+            cell += snap + head
+
 parts = [("gst_rama6", rama), ("gst_shayba", shayba),
+         ("gst_test_cell", cell),
          ("gst_struna2", struna), ("gst_garm", garm),
          ("gst_garm_soft", garm_soft), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),

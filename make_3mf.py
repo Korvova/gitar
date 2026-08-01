@@ -218,6 +218,8 @@ plates = [
      prep("gst_skoba6", ID, copies=5) +              # обоймы с хвостом (4+1)
      prep("gst_kryshka_mag", ID, copies=5) +         # крышечки магнитов
      prep("gst_shayba", copies=6)),                  # проставки рамы
+    ("53_cell_test", p020_j,               # тест-ячейка платы AS5600: карман,
+     prep("gst_test_cell", ID)),           # штырьки, защёлки, прорези пинов
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
      sum([prep(f"liner_b{i}_v1") for i in range(1, 5)], []), "cool"),
