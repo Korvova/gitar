@@ -51,13 +51,31 @@ const SR = 1000;                       // выборок/сек с прошив�
 
 // ---------- Web Serial ----------
 async function connect() {
+  const st = document.getElementById('status');
   try {
     port = await navigator.serial.requestPort();
     await port.open({baudRate: 115200});
-    document.getElementById('status').textContent = 'подключено';
+    try {   // ESP32: не держать плату в ресете сигналами DTR/RTS
+      await port.setSignals({dataTerminalReady: false, requestToSend: false});
+    } catch (e) {}
+    st.textContent = 'подключено, жду данные…';
+    st.style.color = '#2fb344';
     readLoop();
-  } catch (e) { document.getElementById('status').textContent = 'ошибка: ' + e; }
+  } catch (e) {
+    st.textContent = 'ОШИБКА: ' + e.message +
+      ' (закрой Arduino IDE / Serial Plotter — порт занят!)';
+    st.style.color = '#e03535';
+  }
 }
+let rxCount = 0;
+setInterval(() => {
+  if (rxCount > 0) {
+    const st = document.getElementById('status');
+    st.textContent = 'поток: ' + rxCount + ' выб/с';
+    st.style.color = '#2fb344';
+  }
+  rxCount = 0;
+}, 1000);
 async function readLoop() {
   const dec = new TextDecoder();
   let carry = '';
@@ -76,6 +94,7 @@ async function readLoop() {
 
 // ---------- данные ----------
 function pushSample(v) {
+  rxCount++;
   if (zero === null) zero = v;
   zero += (v - zero) / 4000;           // медленный дрейф нуля
   const d = v - zero;
