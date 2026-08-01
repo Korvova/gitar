@@ -112,9 +112,9 @@ function pushSample(v) {
 }
 
 // ---------- детект щипка + звук ----------
-let audioCtx = null, pluckBuf = null;
-function makePluck() {                 // Карплус-Стронг: сэмпл щипка ~1.2 c
-  const sr = audioCtx.sampleRate, f0 = 196;          // соль
+let audioCtx = null, pluckUp = null, pluckDown = null;
+function makePluck(f0) {               // Карплус-Стронг: сэмпл щипка ~1.2 c
+  const sr = audioCtx.sampleRate;
   const N = Math.round(sr / f0), len = Math.round(sr * 1.2);
   const data = new Float32Array(len), d = new Float32Array(N);
   for (let i = 0; i < N; i++) d[i] = Math.random() * 2 - 1;
@@ -129,12 +129,16 @@ function makePluck() {                 // Карплус-Стронг: сэмп�
   b.copyToChannel(data, 0);
   return b;
 }
-function playPluck(strength) {
+function playPluck(strength, dirUp) {
   if (!sound) return;
-  if (!audioCtx) { audioCtx = new AudioContext(); pluckBuf = makePluck(); }
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+    pluckDown = makePluck(196);        // вниз — соль (ниже)
+    pluckUp = makePluck(294);          // вверх — ре (выше)
+  }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const src = audioCtx.createBufferSource();
-  src.buffer = pluckBuf;
+  src.buffer = dirUp ? pluckUp : pluckDown;
   const g = audioCtx.createGain();
   const vol = document.getElementById('vol').value / 100;
   g.gain.value = Math.min(1, strength) * vol;
@@ -149,7 +153,7 @@ function detectPluck(d) {
   if (armed && a > thr && now - lastPluck > 70) {   // фронт + антидребезг
     armed = false;
     lastPluck = now;
-    playPluck(a / (thr * 4));
+    playPluck(a / (thr * 4), d > 0);   // направление рывка = разный звук
   } else if (!armed && a < thr * 0.85) {
     armed = true;                      // быстрый перевзвод чуть ниже порога
   }
