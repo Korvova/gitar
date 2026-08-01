@@ -101,6 +101,18 @@ kryshka = BB(-3.4, 1.2, TAIL_Y - 7, TAIL_Y + 7, 0, 0.8)
 for wy in (TAIL_Y - 4.5, TAIL_Y + 4.5):
     kryshka -= Pos(-1.1, wy, 0.4) * Cylinder(1.1, 1.0)
 
+# КРЫШКА ПЛАТЫ (юзер): плата не торчит голой — пластинка 26x26x0.8 поверх
+# кармана на тех же двух М3; окно над чипом (чип выше рима, магнит читает
+# сквозь окно); бобышки Ø5 снизу доносят прижим винта до платы.
+# лок: z0 = верх подиума (8.5 в раме); хвост обоймы идёт на 10.9 — не задевает
+kr_pcb = BB(-13, 13, -13, 13, 0, 0.8)
+kr_pcb -= BB(-5, 5, -5, 5, -1.5, 1.5)                  # окно над чипом 10x10
+for px in (-8, 8):
+    for py in (-8, 8):
+        if px * py < 0:                                # диагональ винтов М3
+            kr_pcb += Pos(px, py, -0.4) * Cylinder(2.5, 0.8)   # бобышка-прижим
+            kr_pcb -= Pos(px, py, 0) * Cylinder(1.7, 3.2)      # дырка Ø3.4
+
 # ================== РАМА v3 (на крышке wn, вокруг розетки) =============
 # лок: (0,0) = центр розетки; струны вдоль y (тела -50..50), шаг 12.
 # Рама стоит на 6 шайбах 4 мм — под ней ход проводам к розетке.
@@ -176,7 +188,7 @@ parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_struna2", struna), ("gst_garm", garm),
          ("gst_garm_soft", garm_soft), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
-         ("gst_kryshka_mag", kryshka),
+         ("gst_kryshka_mag", kryshka), ("gst_kryshka_pcb", kr_pcb),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),
          ("gst_test2_plate", tp2)]
 for name, part in parts:
@@ -202,6 +214,12 @@ for i, sx in enumerate(SX):
                 rz=(180 if k == "N" else 0))
     touch.append((f"sk{i}", f"str{i}"))
     clear.append((f"sk{i}", "rama", 0.5))              # хвост НАД подиумом
+    mx = sx + (1.1 if k == "N" else -1.1)
+    my = {"N": -TAIL_Y, "C": 0.0, "S": TAIL_Y}[k]
+    asm.add(f"kp{i}", rf"{OUT}\gst_kryshka_pcb.stl", loc=(mx, my, 8.5))
+    touch.append((f"kp{i}", "rama"))                   # лежит на риме подиума
+    clear.append((f"kp{i}", f"sk{i}", 0.5))            # хвост и магнит выше
+    clear.append((f"kp{i}", f"str{i}", 0.5))
     for sgn, tag in ((1, "s"), (-1, "n")):
         asm.add(f"st{i}{tag}", rf"{OUT}\gst_stolb.stl",
                 loc=(sx + 2.2 * sgn, sgn * POST_DY, 3),
