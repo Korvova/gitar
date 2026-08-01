@@ -28,6 +28,7 @@
   <button id="btnConnect">Подключить COM</button>
   <button id="btnZero" class="sec">Ноль</button>
   <button id="btnSound" class="sec">🔊 Звук: вкл</button>
+  <span class="box">сырое <span class="val" id="vRaw">—</span></span>
   <span class="box">сигнал <span class="val" id="vNow">—</span></span>
   <span class="box">амплитуда <span class="val" id="vAmp">0</span></span>
   <div id="meter"><div id="meterFill"></div></div>
@@ -93,8 +94,10 @@ async function readLoop() {
 }
 
 // ---------- данные ----------
+let lastRaw = 0;
 function pushSample(v) {
   rxCount++;
+  lastRaw = v;
   if (zero === null) zero = v;
   zero += (v - zero) / 4000;           // медленный дрейф нуля
   const d = v - zero;
@@ -177,6 +180,7 @@ function draw() {
   ctx.setLineDash([]);
   // индикаторы
   const last = buf[buf.length - 1] | 0;
+  document.getElementById('vRaw').textContent = lastRaw;
   document.getElementById('vNow').textContent = last;
   document.getElementById('vAmp').textContent = ampPeak | 0;
   document.getElementById('meterFill').style.width =
