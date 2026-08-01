@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Струна: осциллограф + звук</title>
+<style>
+  body{background:#14161a;color:#e8e8ea;font-family:"Segoe UI",system-ui,sans-serif;
+       margin:0;padding:16px}
+  h1{font-size:1.2em;margin:0 0 10px}
+  button{background:#ff7a1a;color:#14161a;border:0;border-radius:8px;
+         padding:10px 18px;font-size:1em;font-weight:700;cursor:pointer;margin-right:8px}
+  button.sec{background:#2a2f38;color:#e8e8ea}
+  #scope{width:100%;height:320px;background:#0b0d10;border-radius:10px;
+         border:1px solid #2a2f38;display:block;margin:12px 0}
+  .row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .box{background:#1d2026;border-radius:10px;padding:10px 14px}
+  .val{font-size:1.5em;font-weight:700;color:#7fb0ff}
+  input[type=range]{width:160px;vertical-align:middle}
+  #meter{height:14px;background:#0b0d10;border-radius:7px;overflow:hidden;
+         flex:1;min-width:150px;border:1px solid #2a2f38}
+  #meterFill{height:100%;width:0%;background:linear-gradient(90deg,#2fb344,#ffd23a,#e03535)}
+  .dim{color:#9aa0aa;font-size:.9em}
+</style>
+</head>
+<body>
+<h1>🎸 Тест струны — AS5600</h1>
+<div class="row">
+  <button id="btnConnect">Подключить COM</button>
+  <button id="btnZero" class="sec">Ноль</button>
+  <button id="btnSound" class="sec">🔊 Звук: вкл</button>
+  <span class="box">сигнал <span class="val" id="vNow">—</span></span>
+  <span class="box">амплитуда <span class="val" id="vAmp">0</span></span>
+  <div id="meter"><div id="meterFill"></div></div>
+</div>
+<canvas id="scope"></canvas>
+<div class="row">
+  <label>Порог щипка <input type="range" id="thr" min="10" max="600" value="80">
+    <span id="thrV" class="dim">80</span></label>
+  <label>Громкость <input type="range" id="vol" min="0" max="100" value="60"></label>
+  <label>Окно (сек) <input type="range" id="win" min="1" max="10" value="3"></label>
+  <span class="dim" id="status">не подключено</span>
+</div>
+<p class="dim">Прошивка: <code>struna_test/struna_test.ino</code> (115200).
+Дёргай струну: график покажет колебания, при превышении порога прозвучит
+щипок (сила = громкость). «Ноль» — нажать при струне в покое.</p>
+
+<script>
+let port, reader, zero = null, sound = true;
+let buf = [], lastPluck = 0, ampPeak = 0;
+const SR = 1000;                       // выборок/сек с прошивки
+
+// ---------- Web Serial ----------
+async function connect() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate: 115200});
+    document.getElementById('status').textContent = 'подключено';
+    readLoop();
+  } catch (e) { document.getElementById('status').textContent = 'ошибка: ' + e; }
+}
+async function readLoop() {
+  const dec = new TextDecoder();
+  let carry = '';
+  reader = port.readable.getReader();
+  while (true) {
+    const {value, done} = await reader.read();
+    if (done) break;
+    const lines = (carry + dec.decode(value)).split('\n');
+    carry = lines.pop();
+    for (const ln of lines) {
+      const v = parseInt(ln);
+      if (!isNaN(v)) pushSample(v);
+    }
+  }
+}
+
+// ---------- данные ----------
+function pushSample(v) {
+  if (zero === null) zero = v;
+  zero += (v - zero) / 4000;           // медленный дрейф нуля
+  const d = v - zero;
+  buf.push(d);
+  const maxLen = SR * 12;
+  if (buf.length > maxLen) buf.splice(0, buf.length - maxLen);
+  const a = Math.abs(d);
+  if (a > ampPeak) ampPeak = a;
+  detectPluck(d);
+}
+
+// ---------- детект щипка + звук ----------
+let audioCtx = null, pluckBuf = null;
+function makePluck() {                 // Карплус-Стронг: сэмпл щипка ~1.2 c
+  const sr = audioCtx.sampleRate, f0 = 196;          // соль
+  const N = Math.round(sr / f0), len = Math.round(sr * 1.2);
+  const data = new Float32Array(len), d = new Float32Array(N);
+  for (let i = 0; i < N; i++) d[i] = Math.random() * 2 - 1;
+  let idx = 0;
+  for (let i = 0; i < len; i++) {
+    const nxt = (idx + 1) % N;
+    d[idx] = (d[idx] + d[nxt]) * 0.498;              // затухание
+    data[i] = d[idx];
+    idx = nxt;
+  }
+  const b = audioCtx.createBuffer(1, len, sr);
+  b.copyToChannel(data, 0);
+  return b;
+}
+function playPluck(strength) {
+  if (!sound) return;
+  if (!audioCtx) { audioCtx = new AudioContext(); pluckBuf = makePluck(); }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const src = audioCtx.createBufferSource();
+  src.buffer = pluckBuf;
+  const g = audioCtx.createGain();
+  const vol = document.getElementById('vol').value / 100;
+  g.gain.value = Math.min(1, strength) * vol;
+  src.connect(g).connect(audioCtx.destination);
+  src.start();
+}
+function detectPluck(d) {
+  const thr = +document.getElementById('thr').value;
+  const now = performance.now();
+  if (Math.abs(d) > thr && now - lastPluck > 180) {
+    lastPluck = now;
+    playPluck(Math.abs(d) / (thr * 4));
+  }
+}
+
+// ---------- осциллограф ----------
+const cv = document.getElementById('scope'), ctx = cv.getContext('2d');
+function draw() {
+  requestAnimationFrame(draw);
+  const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
+  ctx.fillStyle = '#0b0d10'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#2a2f38';
+  ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+  const winSec = +document.getElementById('win').value;
+  const n = Math.min(buf.length, SR * winSec);
+  if (n < 2) return;
+  const start = buf.length - n;
+  let maxA = 60;
+  for (let i = start; i < buf.length; i++)
+    maxA = Math.max(maxA, Math.abs(buf[i]));
+  ctx.strokeStyle = '#7fb0ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = i / n * W;
+    const y = H / 2 - (buf[start + i] / maxA) * (H / 2 - 8);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.stroke();
+  // порог
+  const thr = +document.getElementById('thr').value;
+  ctx.strokeStyle = '#e0353555'; ctx.setLineDash([5, 5]);
+  for (const s of [1, -1]) {
+    const y = H / 2 - s * (thr / maxA) * (H / 2 - 8);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // индикаторы
+  const last = buf[buf.length - 1] | 0;
+  document.getElementById('vNow').textContent = last;
+  document.getElementById('vAmp').textContent = ampPeak | 0;
+  document.getElementById('meterFill').style.width =
+      Math.min(100, ampPeak / 6) + '%';
+  ampPeak *= 0.97;                     // плавный спад пика
+  document.getElementById('thrV').textContent = thr;
+}
+draw();
+
+// ---------- кнопки ----------
+document.getElementById('btnConnect').onclick = connect;
+document.getElementById('btnZero').onclick = () => { zero = null; buf = []; };
+document.getElementById('btnSound').onclick = (e) => {
+  sound = !sound;
+  e.target.textContent = sound ? '🔊 Звук: вкл' : '🔇 Звук: выкл';
+};
+document.getElementById('thr').oninput = () =>
+  document.getElementById('thrV').textContent = document.getElementById('thr').value;
+</script>
+</body>
+</html>
