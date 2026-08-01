@@ -200,8 +200,9 @@ plates = [
      prep("gst_struna", LAYY) + prep("gst_stolb") +      # 4 гармошки (2 жёсткости)
      prep("gst_garm", copies=2) + prep("gst_garm_soft", copies=2)),
     ("49_struna_test2", p020_j,            # ТЕСТ v2 «как струна»: без потенца —
-     prep("gst_test2_plate") + prep("gst_struna2", LAYY, copies=2) +  # +запас
+     prep("gst_test2_plate") + prep("gst_struna2", LAYY) +
      prep("gst_stolb") + prep("gst_skoba", LAY, copies=2) +  # Г-обойма (+запас)
+     prep("gst_garm", copies=2) + prep("gst_garm_soft", copies=2) +  # пружины!
      prep("gst_nozhka", copies=4)),        # ножки: снизу место дюпон-разъёмам
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
