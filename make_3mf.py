@@ -216,6 +216,7 @@ plates = [
      prep("gst_garm_soft", copies=4) +               # мягкие на подбор
      prep("gst_skoba", ID, copies=3) +               # обоймы центр (2+1)
      prep("gst_skoba6", ID, copies=5) +              # обоймы с хвостом (4+1)
+     prep("gst_kryshka_mag", ID, copies=5) +         # крышечки магнитов
      prep("gst_shayba", copies=6)),                  # проставки рамы
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
      sum([prep(f"liner_f{i}_v1") for i in range(1, 5)], []) +       # печать КАК ЕСТЬ
