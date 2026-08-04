@@ -23,5 +23,7 @@ void loop() {
   uint32_t now = micros();
   if (now < next_us) return;
   next_us = now + 1000;                // 1000 выборок/сек
-  Serial.println(analogRead(PIN));
+  uint32_t s = 0;                      // усреднение 16 замеров:
+  for (int i = 0; i < 16; i++) s += analogRead(PIN);   // шум ADC вниз ~4x
+  Serial.println(s >> 4);
 }
