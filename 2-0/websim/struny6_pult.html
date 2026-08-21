@@ -34,6 +34,8 @@
   <button id="btnSound" class="sec">🔊 Звук: вкл</button>
   <label>Порог щипка <input type="range" id="thr" min="10" max="600" value="80">
     <span id="thrV" class="dim">80</span></label>
+  <label>Развязка <input type="range" id="xtalk" min="0" max="100" value="70">
+    <span id="xtalkV" class="dim">70</span>%</label>
   <label>Громкость <input type="range" id="vol" min="0" max="100" value="60"></label>
   <label>Окно (сек) <input type="range" id="win" min="1" max="10" value="3"></label>
   <span class="dim" id="status">не подключено</span>
@@ -68,7 +70,7 @@ for (let i = 0; i < N; i++) {
      <span class="raw val" id="raw${i}">—</span>`;
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
-          lastPluck: 0, dead: false, buffers: {},
+          lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
           cv: div.querySelector('canvas'), div});
 }
 
@@ -114,6 +116,7 @@ async function readLoop() {
       if (parts.length !== N) continue;
       rxCount++;
       for (let i = 0; i < N; i++) pushSample(i, parseInt(parts[i]));
+      resolvePending();                // решаем щипки, видя все 6 струн разом
     }
   }
 }
@@ -179,13 +182,29 @@ function detectPluck(i, d) {
   const s = S[i];
   const thr = +document.getElementById('thr').value;
   const a = Math.abs(d);
+  s.peak = Math.max(a, s.peak * 0.93); // бегущий пик |hp|, память ~40 мс
   const now = performance.now();
   if (s.armed && a > thr && now - s.lastPluck > 70) { // фронт + антидребезг
     s.armed = false;
     s.lastPluck = now;
-    playPluck(i, a / (thr * 4));
+    s.pending = now;                   // не играем сразу — ждём 18 мс
   } else if (!s.armed && a < thr * 0.85) {
     s.armed = true;                    // быстрый перевзвод чуть ниже порога
+  }
+}
+// Развязка: щипок засчитывается, только если пик струны не сильно меньше
+// максимального по всем струнам в этот момент (иначе это дрожь от соседа)
+function resolvePending() {
+  const now = performance.now();
+  const k = +document.getElementById('xtalk').value / 100;
+  let gmax = 0;
+  for (const s of S) gmax = Math.max(gmax, s.peak);
+  for (let i = 0; i < N; i++) {
+    const s = S[i];
+    if (!s.pending || now - s.pending < 18) continue;
+    const thr = +document.getElementById('thr').value;
+    if (s.peak >= k * gmax) playPluck(i, s.peak / (thr * 4));
+    s.pending = 0;                     // иначе — молча подавили
   }
 }
 
@@ -234,6 +253,8 @@ document.getElementById('btnSound').onclick = (e) => {
   sound = !sound;
   e.target.textContent = sound ? '🔊 Звук: вкл' : '🔇 Звук: выкл';
 };
+document.getElementById('xtalk').oninput = (e) =>
+  document.getElementById('xtalkV').textContent = e.target.value;
 </script>
 </body>
 </html>
