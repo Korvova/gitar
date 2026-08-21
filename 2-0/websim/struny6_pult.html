@@ -76,7 +76,7 @@ for (let i = 0; i < N; i++) {
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
           lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
-          gate: 0, gateT: 0,
+          gate: 0, gateT: 0, env: 0,
           cv: div.querySelector('canvas'), div});
 }
 
@@ -193,10 +193,12 @@ function detectPluck(i, d) {
   const thr = +document.getElementById('thr').value;
   const a = Math.abs(d);
   s.peak = Math.max(a, s.peak * 0.93); // бегущий пик |hp|, память ~40 мс
-  const now = performance.now();
+  const envPrev = s.env;               // огибающая СОБСТВЕННОГО звона:
+  s.env = Math.max(a, s.env * 0.997);  // затухающий звон не перевзводит сам
+  const now = performance.now();       // себя — нужен скачок выше звона +25%
   // занавес после чужого щипка: порог поднят, спадает с тау 250 мс
   const gateNow = s.gate * Math.exp(-(now - s.gateT) / 250);
-  const effThr = Math.max(thr, gateNow);
+  const effThr = Math.max(thr, gateNow, envPrev * 1.25);
   if (s.armed && a > effThr && now - s.lastPluck > 70) { // фронт + антидребезг
     s.armed = false;
     s.lastPluck = now;
