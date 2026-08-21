@@ -38,6 +38,7 @@
     <span id="xtalkV" class="dim">70</span>%</label>
   <label>Громкость <input type="range" id="vol" min="0" max="100" value="60"></label>
   <label>Окно (сек) <input type="range" id="win" min="1" max="10" value="3"></label>
+  <label><input type="checkbox" id="gscale" checked> общий масштаб</label>
   <span class="dim" id="status">не подключено</span>
 </div>
 <div id="strings"></div>
@@ -67,7 +68,8 @@ for (let i = 0; i < N; i++) {
       (n[1] === NOTES[i][1] ? ' selected' : '') + `>${n[0]}</option>`).join('') +
     `</select>
      <canvas id="cv${i}"></canvas>
-     <span class="raw val" id="raw${i}">—</span>`;
+     <span class="raw val" id="raw${i}">—</span>
+     <span class="raw dim" id="amp${i}" title="размах">0</span>`;
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
           lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
@@ -225,6 +227,14 @@ function draw() {
   requestAnimationFrame(draw);
   const winSec = +document.getElementById('win').value;
   const thr = +document.getElementById('thr').value;
+  const gscale = document.getElementById('gscale').checked;
+  let gMaxA = Math.max(60, thr * 1.2);           // общий масштаб всех дорожек
+  if (gscale)
+    for (const s of S) {
+      const n = Math.min(s.buf.length, SR * winSec);
+      for (let j = s.buf.length - n; j < s.buf.length; j++)
+        gMaxA = Math.max(gMaxA, Math.abs(s.buf[j]));
+    }
   for (let i = 0; i < N; i++) {
     const s = S[i], cv = s.cv, ctx = cv.getContext('2d');
     const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
@@ -232,12 +242,14 @@ function draw() {
     ctx.strokeStyle = '#2a2f38';
     ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
     document.getElementById('raw' + i).textContent = s.dead ? 'нет' : s.raw;
+    document.getElementById('amp' + i).textContent = s.peak | 0;
     const n = Math.min(s.buf.length, SR * winSec);
     if (n < 2) continue;
     const start = s.buf.length - n;
-    let maxA = Math.max(60, thr * 1.2);
-    for (let j = start; j < s.buf.length; j++)
-      maxA = Math.max(maxA, Math.abs(s.buf[j]));
+    let maxA = gMaxA;
+    if (!gscale)
+      for (let j = start; j < s.buf.length; j++)
+        maxA = Math.max(maxA, Math.abs(s.buf[j]));
     // порог
     ctx.strokeStyle = '#e0353555'; ctx.setLineDash([4, 4]);
     for (const sg of [1, -1]) {
