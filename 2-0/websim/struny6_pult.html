@@ -2,198 +2,154 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<title>Шестиструнка: 6 x AS5600</title>
+<title>Шестиструнка: осциллографы + звук</title>
 <style>
   body{background:#14161a;color:#e8e8ea;font-family:"Segoe UI",system-ui,sans-serif;
-       margin:0;padding:14px}
-  h1{font-size:1.15em;margin:0 0 10px}
+       margin:0;padding:16px}
+  h1{font-size:1.2em;margin:0 0 10px}
   button{background:#ff7a1a;color:#14161a;border:0;border-radius:8px;
-         padding:9px 16px;font-size:1em;font-weight:700;cursor:pointer;margin-right:8px}
+         padding:10px 18px;font-size:1em;font-weight:700;cursor:pointer;margin-right:8px}
   button.sec{background:#2a2f38;color:#e8e8ea}
-  .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:8px 0}
-  input[type=range]{width:150px;vertical-align:middle}
+  .row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .box{background:#1d2026;border-radius:10px;padding:8px 12px}
+  .val{font-weight:700;color:#7fb0ff}
+  input[type=range]{width:160px;vertical-align:middle}
+  select{background:#2a2f38;color:#e8e8ea;border:0;border-radius:6px;padding:4px 6px}
   .dim{color:#9aa0aa;font-size:.9em}
   .str{display:flex;gap:10px;align-items:center;margin:6px 0}
-  .tag{width:86px;text-align:right}
-  .tag b{font-size:1.05em}
-  .tag .note{color:#7fb0ff;font-weight:700}
-  .tag .raw{color:#9aa0aa;font-size:.85em}
-  .led{width:14px;height:14px;border-radius:50%;background:#2a2f38;flex:none;
-       transition:background .25s}
-  .led.on{background:#2fb344;transition:none}
-  .led.sup{background:#e0a03a;transition:none}
-  canvas{flex:1;height:62px;background:#0b0d10;border:1px solid #2a2f38;
-         border-radius:8px;display:block;min-width:200px}
-  .dead .note{color:#555}
+  .str .lbl{width:74px;font-weight:700}
+  .str canvas{flex:1;height:72px;background:#0b0d10;border-radius:8px;
+              border:1px solid #2a2f38;display:block;min-width:200px}
+  .str .raw{width:56px;text-align:right;font-variant-numeric:tabular-nums}
+  .str.dead .lbl{color:#e03535}
+  .led{width:14px;height:14px;border-radius:50%;background:#2a2f38;
+       transition:background .05s}
 </style>
 </head>
 <body>
-<h1>🎸 Шестиструнка — 6 x AS5600 через TCA9548A</h1>
+<h1>🎸 Шестиструнка — 6 × AS5600 через TCA9548A</h1>
 <div class="row">
   <button id="btnConnect">Подключить COM</button>
   <button id="btnZero" class="sec">Ноль</button>
   <button id="btnSound" class="sec">🔊 Звук: вкл</button>
-  <label class="dim"><input type="checkbox" id="flip"> обратный порядок нот</label>
+  <label>Порог щипка <input type="range" id="thr" min="10" max="600" value="80">
+    <span id="thrV" class="dim">80</span></label>
+  <label>Громкость <input type="range" id="vol" min="0" max="100" value="60"></label>
+  <label>Окно (сек) <input type="range" id="win" min="1" max="10" value="3"></label>
   <span class="dim" id="status">не подключено</span>
 </div>
 <div id="strings"></div>
-<div class="row">
-  <label>Порог щипка <input type="range" id="thr" min="10" max="600" value="80">
-    <span id="thrV" class="dim">80</span></label>
-  <label>Подавление наводок <input type="range" id="sup" min="0" max="90" value="50">
-    <span id="supV" class="dim">50%</span></label>
-  <label>Громкость <input type="range" id="vol" min="0" max="100" value="60"></label>
-  <label>Окно (сек) <input type="range" id="win" min="1" max="10" value="3"></label>
-</div>
-<p class="dim">Прошивка: <code>struny6_test/struny6_test.ino</code> (460800).
-Строка потока = 6 углов. Серые струны — датчик не найден. «Ноль» — нажать,
-когда все струны в покое.</p>
+<p class="dim">Прошивка: <code>struny6_test/struny6_test.ino</code> (460800, ~650 строк/с
+«v0 … v5», −1 = датчика нет на канале). Канал 0 = струна 1 … канал 5 = струна 6.
+«Ноль» — нажать при струнах в покое. Нота каждой струны — селектором слева.</p>
 
 <script>
-const NOTES = [
-  {n: "E2", f: 82.41}, {n: "A2", f: 110.00}, {n: "D3", f: 146.83},
-  {n: "G3", f: 196.00}, {n: "B3", f: 246.94}, {n: "E4", f: 329.63}
-];
-const SR = 650;                        // полных опросов/сек с прошивки
-const S = [];
-const wrap = document.getElementById("strings");
-for (let i = 0; i < 6; i++) {
-  const div = document.createElement("div");
-  div.className = "str";
+const N = 6, SR = 650;                 // струн, выборок/с с прошивки
+// Дефолт: струна 1 = высокая E (стандартный строй сверху вниз)
+const NOTES = [['E4',329.6],['B3',246.9],['G3',196.0],['D3',146.8],
+               ['A2',110.0],['E2',82.4]];
+const ALL_NOTES = [['E2',82.4],['A2',110.0],['D3',146.8],['G3',196.0],
+                   ['B3',246.9],['E4',329.6]];
+
+// ---------- разметка 6 строк ----------
+const S = [];                          // состояние струн
+const host = document.getElementById('strings');
+for (let i = 0; i < N; i++) {
+  const div = document.createElement('div');
+  div.className = 'str';
   div.innerHTML =
-    '<div class="tag"><b>' + (i + 1) + '</b> <span class="note"></span>' +
-    '<div class="raw">—</div></div>' +
-    '<div class="led"></div><canvas></canvas>';
-  wrap.appendChild(div);
-  S.push({
-    div: div, led: div.querySelector(".led"),
-    noteEl: div.querySelector(".note"), rawEl: div.querySelector(".raw"),
-    cv: div.querySelector("canvas"), buf: [], raw: -1, env: 0,
-    zero: null, fast: null, armed: true, lastPluck: 0, dead: true
-  });
+    `<span class="led" id="led${i}"></span>
+     <span class="lbl">Струна ${i + 1}</span>
+     <select id="note${i}">` +
+    ALL_NOTES.map(n => `<option value="${n[1]}"` +
+      (n[1] === NOTES[i][1] ? ' selected' : '') + `>${n[0]}</option>`).join('') +
+    `</select>
+     <canvas id="cv${i}"></canvas>
+     <span class="raw val" id="raw${i}">—</span>`;
+  host.appendChild(div);
+  S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
+          lastPluck: 0, dead: false, buffers: {},
+          cv: div.querySelector('canvas'), div});
 }
-function noteOf(i) {
-  return document.getElementById("flip").checked ? NOTES[5 - i] : NOTES[i];
-}
-function labelNotes() {
-  for (let i = 0; i < 6; i++) S[i].noteEl.textContent = noteOf(i).n;
-}
-labelNotes();
-document.getElementById("flip").onchange = labelNotes;
 
 // ---------- Web Serial ----------
-let port, reader, rxCount = 0;
+let port, reader, sound = true, rxCount = 0;
 async function connect() {
-  const st = document.getElementById("status");
+  const st = document.getElementById('status');
   try {
     port = await navigator.serial.requestPort();
     await port.open({baudRate: 460800});
-    try {
+    try {   // ESP32: не держать плату в ресете сигналами DTR/RTS
       await port.setSignals({dataTerminalReady: false, requestToSend: false});
     } catch (e) {}
-    st.textContent = "подключено, жду данные…";
-    st.style.color = "#2fb344";
+    st.textContent = 'подключено, жду данные…';
+    st.style.color = '#2fb344';
     readLoop();
   } catch (e) {
-    st.textContent = "ОШИБКА: " + e.message + " (порт занят? закрой Arduino IDE)";
-    st.style.color = "#e03535";
+    st.textContent = 'ОШИБКА: ' + e.message +
+      ' (закрой другие вкладки/IDE — порт занят!)';
+    st.style.color = '#e03535';
   }
 }
 setInterval(() => {
   if (rxCount > 0) {
-    const st = document.getElementById("status");
-    st.textContent = "поток: " + rxCount + " строк/с";
-    st.style.color = "#2fb344";
-    rxCount = 0;
+    const st = document.getElementById('status');
+    st.textContent = 'поток: ' + rxCount + ' строк/с';
+    st.style.color = '#2fb344';
   }
+  rxCount = 0;
 }, 1000);
 async function readLoop() {
   const dec = new TextDecoder();
-  let carry = "";
+  let carry = '';
   reader = port.readable.getReader();
   while (true) {
-    const r = await reader.read();
-    if (r.done) break;
-    const lines = (carry + dec.decode(r.value)).split("\n");
+    const {value, done} = await reader.read();
+    if (done) break;
+    const lines = (carry + dec.decode(value)).split('\n');
     carry = lines.pop();
     for (const ln of lines) {
-      if (ln[0] === "#") {               // лог прошивки (скан чипов)
-        const st = document.getElementById("status");
-        st.textContent = ln.slice(1).trim();
-        continue;
-      }
-      const p = ln.trim().split(" ");
-      if (p.length !== 6) continue;
+      if (ln[0] === '#') continue;     // стартовый отчёт прошивки
+      const parts = ln.trim().split(/\s+/);
+      if (parts.length !== N) continue;
       rxCount++;
-      for (let i = 0; i < 6; i++) pushSample(i, parseInt(p[i]));
+      for (let i = 0; i < N; i++) pushSample(i, parseInt(parts[i]));
     }
   }
 }
 
-// ---------- данные + детект ----------
+// ---------- данные ----------
 function pushSample(i, v) {
   const s = S[i];
   if (isNaN(v)) return;
-  if (v < 0) {                           // датчика нет
-    if (!s.dead) { s.dead = true; s.div.classList.add("dead"); }
-    s.buf.push(0);
-    trim(s);
+  if (v < 0) {                         // -1 = датчика нет
+    if (!s.dead) { s.dead = true; s.div.classList.add('dead'); }
     return;
   }
-  if (s.dead) { s.dead = false; s.div.classList.remove("dead"); }
+  if (s.dead) { s.dead = false; s.div.classList.remove('dead'); }
   s.raw = v;
-  if (s.zero === null) { s.zero = v; s.fast = v; }
-  s.zero += (v - s.zero) / 1000;
-  s.fast += (v - s.fast) / 40;           // тау ~60 мс при 650 Гц
+  if (s.zero === null) { s.zero = v; s.fastZero = v; }
+  s.zero += (v - s.zero) / 1000;       // ноль графика (тау ~1.5 с)
+  s.fastZero += (v - s.fastZero) / 40; // быстрый ноль детекта (тау ~60 мс)
   const d = v - s.zero;
-  const hp = v - s.fast;
-  s.env = Math.max(s.env * 0.995, Math.abs(hp));   // огибающая (тау ~300 мс)
+  const hp = v - s.fastZero;           // видит только БЫСТРОЕ движение
   s.buf.push(d);
-  trim(s);
-  detect(i, hp);
-}
-function trim(s) {
   const maxLen = SR * 12;
   if (s.buf.length > maxLen) s.buf.splice(0, s.buf.length - maxLen);
-}
-function detect(i, d) {
-  const s = S[i];
-  const thr = +document.getElementById("thr").value;
-  const a = Math.abs(d);
-  const now = performance.now();
-  if (s.armed && a > thr && now - s.lastPluck > 70) {
-    s.armed = false;
-    s.lastPluck = now;
-    // подавление наводок: соседи звенят от рамы — играем, только если наша
-    // громкость сопоставима с самой громкой струной (как в электробарабанах)
-    let m = 0;
-    for (let j = 0; j < 6; j++) if (j !== i) m = Math.max(m, S[j].env);
-    const ratio = +document.getElementById("sup").value / 100;
-    if (a < ratio * m) {
-      s.led.classList.add("sup");        // жёлтый = подавлено как наводка
-      setTimeout(() => s.led.classList.remove("sup"), 120);
-      return;
-    }
-    pluck(i, a / (thr * 4));
-    s.led.classList.add("on");
-    setTimeout(() => s.led.classList.remove("on"), 120);
-  } else if (!s.armed && a < thr * 0.85) {
-    s.armed = true;
-  }
+  detectPluck(i, hp);
 }
 
-// ---------- звук: Карплус-Стронг, 6 голосов ----------
-let audioCtx = null, bufs = {};
-let sound = true;
-function makePluck(f0) {
+// ---------- детект щипка + звук (Карплус-Стронг) ----------
+let audioCtx = null;
+function makePluck(f0) {               // сэмпл щипка ~1.2 c
   const sr = audioCtx.sampleRate;
-  const N = Math.round(sr / f0), len = Math.round(sr * 1.6);
-  const data = new Float32Array(len), d = new Float32Array(N);
-  for (let i = 0; i < N; i++) d[i] = Math.random() * 2 - 1;
+  const M = Math.round(sr / f0), len = Math.round(sr * 1.2);
+  const data = new Float32Array(len), d = new Float32Array(M);
+  for (let i = 0; i < M; i++) d[i] = Math.random() * 2 - 1;
   let idx = 0;
   for (let i = 0; i < len; i++) {
-    const nxt = (idx + 1) % N;
-    d[idx] = (d[idx] + d[nxt]) * 0.4985;
+    const nxt = (idx + 1) % M;
+    d[idx] = (d[idx] + d[nxt]) * 0.498;              // затухание
     data[i] = d[idx];
     idx = nxt;
   }
@@ -201,68 +157,82 @@ function makePluck(f0) {
   b.copyToChannel(data, 0);
   return b;
 }
-function pluck(i, strength) {
+function playPluck(i, strength) {
   if (!sound) return;
   if (!audioCtx) audioCtx = new AudioContext();
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  const f = noteOf(i).f;
-  if (!bufs[f]) bufs[f] = makePluck(f);
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const f0 = +document.getElementById('note' + i).value;
+  const s = S[i];
+  if (!s.buffers[f0]) s.buffers[f0] = makePluck(f0);
   const src = audioCtx.createBufferSource();
-  src.buffer = bufs[f];
+  src.buffer = s.buffers[f0];
   const g = audioCtx.createGain();
-  const vol = document.getElementById("vol").value / 100;
+  const vol = document.getElementById('vol').value / 100;
   g.gain.value = Math.min(1, strength) * vol;
   src.connect(g).connect(audioCtx.destination);
   src.start();
+  const led = document.getElementById('led' + i);
+  led.style.background = '#2fb344';
+  setTimeout(() => led.style.background = '#2a2f38', 120);
+}
+function detectPluck(i, d) {
+  const s = S[i];
+  const thr = +document.getElementById('thr').value;
+  const a = Math.abs(d);
+  const now = performance.now();
+  if (s.armed && a > thr && now - s.lastPluck > 70) { // фронт + антидребезг
+    s.armed = false;
+    s.lastPluck = now;
+    playPluck(i, a / (thr * 4));
+  } else if (!s.armed && a < thr * 0.85) {
+    s.armed = true;                    // быстрый перевзвод чуть ниже порога
+  }
 }
 
-// ---------- отрисовка ----------
+// ---------- осциллографы ----------
 function draw() {
   requestAnimationFrame(draw);
-  const winSec = +document.getElementById("win").value;
-  const thr = +document.getElementById("thr").value;
-  for (const s of S) {
-    const cv = s.cv, ctx = cv.getContext("2d");
+  const winSec = +document.getElementById('win').value;
+  const thr = +document.getElementById('thr').value;
+  for (let i = 0; i < N; i++) {
+    const s = S[i], cv = s.cv, ctx = cv.getContext('2d');
     const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
-    ctx.fillStyle = "#0b0d10"; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "#232830";
+    ctx.fillStyle = '#0b0d10'; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = '#2a2f38';
     ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+    document.getElementById('raw' + i).textContent = s.dead ? 'нет' : s.raw;
     const n = Math.min(s.buf.length, SR * winSec);
-    s.rawEl.textContent = s.dead ? "нет датчика" : s.raw;
     if (n < 2) continue;
-    let maxA = Math.max(60, thr * 1.3);
     const start = s.buf.length - n;
-    for (let i = start; i < s.buf.length; i++)
-      maxA = Math.max(maxA, Math.abs(s.buf[i]));
-    ctx.strokeStyle = "#e0353544"; ctx.setLineDash([4, 4]);
+    let maxA = Math.max(60, thr * 1.2);
+    for (let j = start; j < s.buf.length; j++)
+      maxA = Math.max(maxA, Math.abs(s.buf[j]));
+    // порог
+    ctx.strokeStyle = '#e0353555'; ctx.setLineDash([4, 4]);
     for (const sg of [1, -1]) {
       const y = H / 2 - sg * (thr / maxA) * (H / 2 - 4);
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
     ctx.setLineDash([]);
-    ctx.strokeStyle = s.dead ? "#444" : "#7fb0ff";
-    ctx.lineWidth = 1.4; ctx.beginPath();
-    for (let i = 0; i < n; i++) {
-      const x = i / n * W;
-      const y = H / 2 - (s.buf[start + i] / maxA) * (H / 2 - 4);
-      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    ctx.strokeStyle = '#7fb0ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let j = 0; j < n; j++) {
+      const x = j / n * W;
+      const y = H / 2 - (s.buf[start + j] / maxA) * (H / 2 - 4);
+      j ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
     }
     ctx.stroke();
   }
-  document.getElementById("thrV").textContent = thr;
-  document.getElementById("supV").textContent =
-      document.getElementById("sup").value + "%";
+  document.getElementById('thrV').textContent = thr;
 }
 draw();
 
 // ---------- кнопки ----------
-document.getElementById("btnConnect").onclick = connect;
-document.getElementById("btnZero").onclick = () => {
-  for (const s of S) { s.zero = null; s.buf = []; }
-};
-document.getElementById("btnSound").onclick = (e) => {
+document.getElementById('btnConnect').onclick = connect;
+document.getElementById('btnZero').onclick = () =>
+  S.forEach(s => { s.zero = null; s.buf = []; });
+document.getElementById('btnSound').onclick = (e) => {
   sound = !sound;
-  e.target.textContent = sound ? "🔊 Звук: вкл" : "🔇 Звук: выкл";
+  e.target.textContent = sound ? '🔊 Звук: вкл' : '🔇 Звук: выкл';
 };
 </script>
 </body>
