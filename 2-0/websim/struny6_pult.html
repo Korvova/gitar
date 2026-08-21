@@ -76,7 +76,7 @@ for (let i = 0; i < N; i++) {
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
           lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
-          gate: 0, gateT: 0, env: 0,
+          gate: 0, gateT: 0, env: 0, prevRaw: null, acc: 0,
           cv: div.querySelector('canvas'), div});
 }
 
@@ -137,10 +137,17 @@ function pushSample(i, v) {
   }
   if (s.dead) { s.dead = false; s.div.classList.remove('dead'); }
   s.raw = v;
-  if (s.zero === null) { s.zero = v; s.fastZero = v; }
-  s.zero += (v - s.zero) / 1000;       // ноль графика (тау ~1.5 с)
-  s.fastZero += (v - s.fastZero) / 40; // быстрый ноль детекта (тау ~60 мс)
-  const hp = v - s.fastZero;           // видит только БЫСТРОЕ движение
+  // шкала AS5600 круговая (4095→0): разворачиваем в непрерывную, иначе
+  // магнит у границы даёт ложные иглы ±4096 на каждом колебании
+  if (s.prevRaw === null) { s.prevRaw = v; s.acc = v; }
+  let dv = v - s.prevRaw;
+  if (dv > 2048) dv -= 4096; else if (dv < -2048) dv += 4096;
+  s.acc += dv; s.prevRaw = v;
+  const u = s.acc;
+  if (s.zero === null) { s.zero = u; s.fastZero = u; }
+  s.zero += (u - s.zero) / 1000;       // ноль графика (тау ~1.5 с)
+  s.fastZero += (u - s.fastZero) / 40; // быстрый ноль детекта (тау ~60 мс)
+  const hp = u - s.fastZero;           // видит только БЫСТРОЕ движение
   s.buf.push(hp);                      // на графике ТО ЖЕ, что видит детект:
                                        // выше красной линии = щипок
   if (!document.getElementById('en' + i).checked) {
