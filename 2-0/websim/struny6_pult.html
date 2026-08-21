@@ -71,6 +71,7 @@ for (let i = 0; i < N; i++) {
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
           lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
+          gate: 0, gateT: 0,
           cv: div.querySelector('canvas'), div});
 }
 
@@ -184,7 +185,10 @@ function detectPluck(i, d) {
   const a = Math.abs(d);
   s.peak = Math.max(a, s.peak * 0.93); // бегущий пик |hp|, память ~40 мс
   const now = performance.now();
-  if (s.armed && a > thr && now - s.lastPluck > 70) { // фронт + антидребезг
+  // занавес после чужого щипка: порог поднят, спадает с тау 250 мс
+  const gateNow = s.gate * Math.exp(-(now - s.gateT) / 250);
+  const effThr = Math.max(thr, gateNow);
+  if (s.armed && a > effThr && now - s.lastPluck > 70) { // фронт + антидребезг
     s.armed = false;
     s.lastPluck = now;
     s.pending = now;                   // не играем сразу — ждём 18 мс
@@ -203,7 +207,15 @@ function resolvePending() {
     const s = S[i];
     if (!s.pending || now - s.pending < 18) continue;
     const thr = +document.getElementById('thr').value;
-    if (s.peak >= k * gmax) playPluck(i, s.peak / (thr * 4));
+    if (s.peak >= k * gmax) {
+      playPluck(i, s.peak / (thr * 4));
+      for (let j = 0; j < N; j++)      // соседям — занавес по силе щипка
+        if (j !== i && s.peak * k > S[j].gate *
+            Math.exp(-(now - S[j].gateT) / 250)) {
+          S[j].gate = s.peak * k * 1.5;
+          S[j].gateT = now;
+        }
+    }
     s.pending = 0;                     // иначе — молча подавили
   }
 }
