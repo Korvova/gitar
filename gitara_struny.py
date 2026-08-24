@@ -67,6 +67,26 @@ garm_mid = make_garm(0.7)              # против резонанса сос�
                                        # 0.8/0.6/0.7 - частоты врозь, рама не
                                        # перекачивает энергию между струнами
 
+# ========== ПАЛКА-МОНОБЛОК: гармошка + струна + гармошка (юзер) =========
+# цельная деталь, печать стоя как в сборке; винты к струне не нужны,
+# остаются только винты плеч к столбикам. Жёсткость зашита в деталь;
+# метки-канавки на южном плече: 1 риска = 0.6, 2 = 0.7, 3 = 0.8
+def make_palka(t, marks):
+    g = make_garm(t)
+    pk = struna
+    pk += Pos(0, 96, 0) * g                            # юг (плечо к y130)
+    pk += Pos(0, 4, 0) * Rot(0, 0, 180) * g            # север (зеркало)
+    pk += BB(-2.6, 0.6, 92, 99.5, 0, 6)                # мост лапка-струна юг
+    pk += BB(-0.6, 2.6, 0.5, 8, 0, 6)                  # мост север
+    for k in range(marks):                             # метки жёсткости
+        xk = 4.5 + (k - (marks - 1) / 2) * 2.4
+        pk -= BB(xk - 0.4, xk + 0.4, 128.6, 129.9, 5.4, 6.05)
+    return pk
+
+palka06 = make_palka(0.6, 1)
+palka07 = make_palka(0.7, 2)
+palka08 = make_palka(0.8, 3)
+
 # ================== СТОЛБИК (съёмный, 12 шт) ==================
 stolb = BB(-4, 4, -8, 8, 0, 3)                        # подошва, 2 винта М2
 stolb += BB(-4, 4, -3, 3, 3, 16.5)
@@ -196,7 +216,9 @@ for px in (-8, 8):
 parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_test_cell", cell),
          ("gst_struna2", struna), ("gst_garm", garm),
-         ("gst_garm_soft", garm_soft), ("gst_garm_mid", garm_mid), ("gst_stolb", stolb),
+         ("gst_garm_soft", garm_soft), ("gst_garm_mid", garm_mid),
+         ("gst_palka06", palka06), ("gst_palka07", palka07),
+         ("gst_palka08", palka08), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
          ("gst_kryshka_mag", kryshka), ("gst_kryshka_big", kr_big),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),
