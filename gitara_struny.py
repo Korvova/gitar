@@ -63,6 +63,9 @@ def make_garm(t):
 
 garm = make_garm(0.8)
 garm_soft = make_garm(0.6)
+garm_mid = make_garm(0.7)              # против резонанса соседей: чередовать
+                                       # 0.8/0.6/0.7 - частоты врозь, рама не
+                                       # перекачивает энергию между струнами
 
 # ================== СТОЛБИК (съёмный, 12 шт) ==================
 stolb = BB(-4, 4, -8, 8, 0, 3)                        # подошва, 2 винта М2
@@ -193,7 +196,7 @@ for px in (-8, 8):
 parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_test_cell", cell),
          ("gst_struna2", struna), ("gst_garm", garm),
-         ("gst_garm_soft", garm_soft), ("gst_stolb", stolb),
+         ("gst_garm_soft", garm_soft), ("gst_garm_mid", garm_mid), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
          ("gst_kryshka_mag", kryshka), ("gst_kryshka_big", kr_big),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),

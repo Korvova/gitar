@@ -219,6 +219,8 @@ plates = [
      prep("gst_kryshka_mag", ID, copies=5) +         # крышечки магнитов
      prep("gst_kryshka_big", ID) +                   # общая крышка плат
      prep("gst_shayba", copies=6)),                  # проставки рамы
+    ("54_garm_mid", p020_j,                # гармошки 0.7: чередование жёсткостей
+     prep("gst_garm_mid", copies=5)),      # против звона соседних струн
     ("53_cell_test", p020_j,               # тест-ячейка платы AS5600: карман,
      prep("gst_test_cell", ID)),           # посадка платы: ПРОВЕРЕН 02.08
     ("17_liners", p012fin_j,               # вкладыши: A/B зеркальные, с башмаком —
