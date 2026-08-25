@@ -27,7 +27,7 @@
 </style>
 </head>
 <body>
-<h1>🎸 Шестиструнка — 6 × AS5600 через TCA9548A</h1>
+<h1>🎸 Шестиструнка — 6 датчиков (AS5600 или 49E)</h1>
 <div class="row">
   <button id="btnConnect">Подключить COM</button>
   <button id="btnZero" class="sec">Ноль</button>
@@ -42,12 +42,13 @@
   <span class="dim" id="status">не подключено</span>
 </div>
 <div id="strings"></div>
-<p class="dim">Прошивка: <code>struny6_test/struny6_test.ino</code> (460800, ~650 строк/с
+<p class="dim">Прошивка: <code>struny6_hall</code> (6×49E на ADC) или <code>struny6_test</code> (6×AS5600+TCA), 460800, строка
 «v0 … v5», −1 = датчика нет на канале). Канал 0 = струна 1 … канал 5 = струна 6.
 «Ноль» — нажать при струнах в покое. Нота каждой струны — селектором слева.</p>
 
 <script>
-const N = 6, SR = 650;                 // струн, выборок/с с прошивки
+const N = 6;
+let SR = 250;                          // строк/с, уточняется по факту потока
 // Дефолт: контрастная лесенка (до-мажор через 2 октавы) — струны легко
 // различать на слух; гитарный строй EADGBE доступен в селекторах
 const NOTES = [['C3',130.8],['E3',164.8],['G3',196.0],
@@ -76,7 +77,7 @@ for (let i = 0; i < N; i++) {
   host.appendChild(div);
   S.push({buf: [], zero: null, fastZero: null, raw: 0, armed: true,
           lastPluck: 0, dead: false, buffers: {}, peak: 0, pending: 0,
-          gate: 0, gateT: 0, env: 0, prevRaw: null, acc: 0,
+          gate: 0, gateT: 0, env: 0, envT: 0, prevRaw: null, acc: 0,
           cv: div.querySelector('canvas'), div});
 }
 
@@ -102,7 +103,8 @@ async function connect() {
 setInterval(() => {
   if (rxCount > 0) {
     const st = document.getElementById('status');
-    st.textContent = 'поток: ' + rxCount + ' строк/с';
+    st.textContent = "поток: " + rxCount + " строк/с";
+    SR = Math.max(50, rxCount);
     st.style.color = '#2fb344';
   }
   rxCount = 0;
@@ -200,12 +202,15 @@ function detectPluck(i, d) {
   const thr = +document.getElementById('thr').value;
   const a = Math.abs(d);
   s.peak = Math.max(a, s.peak * 0.93); // бегущий пик |hp|, память ~40 мс
-  const envPrev = s.env;               // огибающая СОБСТВЕННОГО звона:
-  s.env = Math.max(a, s.env * 0.997);  // затухающий звон не перевзводит сам
-  const now = performance.now();       // себя — нужен скачок выше звона +25%
+  const now = performance.now();
+  // огибающая СОБСТВЕННОГО звона: забывается за ~150 мс, иначе тремоло
+  // (частые щипки поверх звона) глохнет
+  const envPrev = s.env * Math.exp(-(now - s.envT) / 150);
+  s.env = Math.max(a, envPrev);
+  s.envT = now;
   // занавес после чужого щипка: порог поднят, спадает с тау 250 мс
   const gateNow = s.gate * Math.exp(-(now - s.gateT) / 250);
-  const effThr = Math.max(thr, gateNow, envPrev * 1.25);
+  const effThr = Math.max(thr, gateNow, envPrev * 1.15);
   if (s.armed && a > effThr && now - s.lastPluck > 70) { // фронт + антидребезг
     s.armed = false;
     s.lastPluck = now;
