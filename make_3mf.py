@@ -224,7 +224,19 @@ plates = [
     ("56_modul1", p020_j,                  # МОДУЛЬ-картридж струны на 49E:
      prep("gst_modul", ID) +               # планка со столбиками и гнездом
      prep("gst_palka07", ID) +             # + палка 0.7 + обойма магнита
-     prep("gst_skoba", LAY)),              # (примерка одной струны)
+     prep("gst_skoba", LAY)),              # НАПЕЧАТАН, работает = СТРУНА 3
+    # остальные 5 картриджей по одному на стол; жёсткости чередуются
+    # против резонанса: струны 1,4 = 0.8 (3 риски), 2,5 = 0.6 (1), 6 = 0.7 (2)
+    ("57_modul_str1", p020_j,
+     prep("gst_modul", ID) + prep("gst_palka08", ID) + prep("gst_skoba", LAY)),
+    ("58_modul_str2", p020_j,
+     prep("gst_modul", ID) + prep("gst_palka06", ID) + prep("gst_skoba", LAY)),
+    ("59_modul_str4", p020_j,
+     prep("gst_modul", ID) + prep("gst_palka08", ID) + prep("gst_skoba", LAY)),
+    ("60_modul_str5", p020_j,
+     prep("gst_modul", ID) + prep("gst_palka06", ID) + prep("gst_skoba", LAY)),
+    ("61_modul_str6", p020_j,
+     prep("gst_modul", ID) + prep("gst_palka07", ID) + prep("gst_skoba", LAY)),
     ("55_palki6", p020_j,                  # ПАЛКИ-моноблоки на все 6 струн:
      prep("gst_palka08", ID, copies=2) +   # 3 риски - струны 1,4
      prep("gst_palka06", ID, copies=2) +   # 1 риска - струны 2,5
