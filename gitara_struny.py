@@ -176,6 +176,16 @@ mod += BB(-4.6, 2.4, -4, 4, 3, 5.2)                    # прилив гнезд
 mod -= BB(-3.3, 1.1, -4.1, 2.4, 3.5, 5.05)             # туннель TO-92 плашмя
 mod -= BB(-3.3, 1.1, -8.7, -3.5, -0.1, 3.6)            # прорезь ножек вниз
 
+# ---- ВСТАВКА-фиксатор проводов в прорезь ножек датчика (юзер) ----------
+# вдвигается СНИЗУ в прорезь модуля, буртик упирается в плиту; провода
+# проходят сквозь окно СВОБОДНО (не пережимаются), но пучок не выдернуть.
+# Два бугорка по бокам держат вставку трением.
+vstavka = BB(-4.2, 2.0, -9.7, -2.5, -1, 0)             # буртик
+vstavka += BB(-3.2, 1.0, -8.6, -3.6, -1, 3)            # тело в прорезь 4.4x5.2
+vstavka -= BB(-2.5, 0.3, -7.9, -4.3, -1.1, 3.1)        # окно проводов 2.8x3.6
+for bx in (-3.5, 1.0):                                 # бугорки-фиксаторы
+    vstavka += BB(bx, bx + 0.3, -7.6, -4.6, 1.0, 2.2)
+
 # ====== ОСНОВАНИЕ под 6 модулей-картриджей + площадка электроники ======
 # Модули (12x175) ложатся на две поперечные балки h10 — под ними канал
 # 10 мм для ножек датчиков и проводки; середина открыта окном.
@@ -303,7 +313,8 @@ parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_garm_soft", garm_soft), ("gst_garm_mid", garm_mid),
          ("gst_palka06", palka06), ("gst_palka07", palka07),
          ("gst_palka08", palka08), ("gst_modul", mod),
-         ("gst_baza6", baza), ("gst_stoyka", stoyka), ("gst_elektro", elek), ("gst_stolb", stolb),
+         ("gst_baza6", baza), ("gst_stoyka", stoyka), ("gst_elektro", elek),
+         ("gst_vstavka", vstavka), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
          ("gst_kryshka_mag", kryshka), ("gst_kryshka_big", kr_big),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),
