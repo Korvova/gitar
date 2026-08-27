@@ -225,6 +225,10 @@ plates = [
      prep("gst_modul", ID) +               # планка со столбиками и гнездом
      prep("gst_palka07", ID) +             # + палка 0.7 + обойма магнита
      prep("gst_skoba", LAY)),              # НАПЕЧАТАН, работает = СТРУНА 3
+    ("63_baza_elektro", p020_j,            # ОСНОВАНИЕ на 6 картриджей: гребёнка
+     prep("gst_baza6", ID) +               # с балками и окном проводки,
+     prep("gst_elektro", ID) +             # площадка ESP32 + клеммники,
+     prep("gst_stoyka", copies=4)),        # 4 ножки Ø12
     ("62_moduli5_vse", p020_j,             # ВСЕ 5 оставшихся картриджей разом:
      prep("gst_modul", ID, copies=5) +     # модули 12x175 стоят рядом по X
      prep("gst_palka08", ID, copies=2) +   # струны 1,4

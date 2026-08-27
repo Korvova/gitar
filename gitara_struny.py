@@ -176,6 +176,50 @@ mod += BB(-4.6, 2.4, -4, 4, 3, 5.2)                    # прилив гнезд
 mod -= BB(-3.3, 1.1, -4.1, 2.4, 3.5, 5.05)             # туннель TO-92 плашмя
 mod -= BB(-3.3, 1.1, -8.7, -3.5, -0.1, 3.6)            # прорезь ножек вниз
 
+# ====== ОСНОВАНИЕ под 6 модулей-картриджей + площадка электроники ======
+# Модули (12x175) ложатся на две поперечные балки h10 — под ними канал
+# 10 мм для ножек датчиков и проводки; середина открыта окном.
+# Шаг струн 12 (как на классике), крепёж каждого модуля 2 x М3 в балки.
+# Стоит на 4 стойках Ø12 — под основанием ход проводам к электронике.
+BZ_X, BZ_Y = 54.0, 95.0
+baza = BB(-BZ_X, BZ_X, -BZ_Y, BZ_Y, 0, 3)
+baza -= BB(-46, 46, -64, 64, -0.1, 3.1)                # окно проводки
+for sgn in (1, -1):                                    # балки под концы модулей
+    baza += BB(-BZ_X, BZ_X, sgn * 74, sgn * 90, 0, 10)
+baza += BB(-BZ_X, -50, -BZ_Y, BZ_Y, 0, 10)             # боковые рёбра жёсткости
+baza += BB(50, BZ_X, -BZ_Y, BZ_Y, 0, 10)
+for sx in SX:                                          # 12 каналов М3 модулей
+    for sy in (82, -82):
+        baza -= Pos(sx, sy, 5) * Cylinder(1.35, 10.4)
+for px in (-44, 44):                                   # стыковка с электроникой
+    baza -= Pos(px, -84, 5) * Cylinder(1.35, 10.4)
+for px in (-45, 45):                                   # ножки-стойки по углам
+    for py in (-88, 88):
+        baza -= Pos(px, py, 1.5) * Cylinder(1.7, 3.2)
+
+stoyka = Pos(0, 0, 6) * Cylinder(6, 12)                # ножка основания
+stoyka -= Pos(0, 0, 6) * Cylinder(1.45, 12.2)
+
+# площадка ESP32 (терминал-адаптер 30pin) + клеммники WAGO;
+# ложится южнее основания, два уха накрывают его балку (винты М3 сверху)
+elek = BB(-BZ_X, BZ_X, -86, 0, 0, 3)
+elek += BB(-BZ_X, -50, -86, 0, 0, 8)                   # бортики-рёбра
+elek += BB(50, BZ_X, -86, 0, 0, 8)
+elek += BB(-BZ_X, BZ_X, -86, -80, 0, 8)
+for px in (-44, 44):                                   # уши стыковки
+    elek += BB(px - 6, px + 6, -6, 4, 3, 10)
+    elek += BB(px - 6, px + 6, -8, 4, 10, 13)
+    elek -= Pos(px, 0, 11.5) * Cylinder(1.7, 3.2)
+for cx in (-36.3, 36.3):                               # уголки под плату 72x56
+    for cy in (-73.3, -16.7):
+        sxn = 1 if cx < 0 else -1
+        syn = 1 if cy < 0 else -1
+        elek += BB(cx, cx + sxn * 9, cy, cy + syn * 2.5, 3, 9)
+        elek += BB(cx, cx + sxn * 2.5, cy, cy + syn * 9, 3, 9)
+for ty in (-78, -60, -30, -12):                        # прорези под стяжки
+    for tx in (-30, 30):
+        elek -= BB(tx - 1.6, tx + 1.6, ty - 6, ty + 6, -0.1, 3.1)
+
 # ================== РАМА v3 (на крышке wn, вокруг розетки) =============
 # лок: (0,0) = центр розетки; струны вдоль y (тела -50..50), шаг 12.
 # Рама стоит на 6 шайбах 4 мм — под ней ход проводам к розетке.
@@ -258,7 +302,8 @@ parts = [("gst_rama6", rama), ("gst_shayba", shayba),
          ("gst_struna2", struna), ("gst_garm", garm),
          ("gst_garm_soft", garm_soft), ("gst_garm_mid", garm_mid),
          ("gst_palka06", palka06), ("gst_palka07", palka07),
-         ("gst_palka08", palka08), ("gst_modul", mod), ("gst_stolb", stolb),
+         ("gst_palka08", palka08), ("gst_modul", mod),
+         ("gst_baza6", baza), ("gst_stoyka", stoyka), ("gst_elektro", elek), ("gst_stolb", stolb),
          ("gst_skoba", skoba), ("gst_skoba6", skoba6),
          ("gst_kryshka_mag", kryshka), ("gst_kryshka_big", kr_big),
          ("gst_podstavka", podstavka), ("gst_nozhka", nozhka),
