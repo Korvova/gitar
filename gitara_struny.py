@@ -194,8 +194,8 @@ for sx in SX:                                          # 12 каналов М3 �
 for px in (-44, 44):                                   # стыковка с электроникой
     baza -= Pos(px, -84, 5) * Cylinder(1.35, 10.4)
 for px in (-45, 45):                                   # ножки-стойки по углам
-    for py in (-88, 88):
-        baza -= Pos(px, py, 1.5) * Cylinder(1.7, 3.2)
+    for py in (-88, 88):                               # (винт сверху сквозь
+        baza -= Pos(px, py, 5) * Cylinder(1.7, 10.4)   # балку в стойку)
 
 stoyka = Pos(0, 0, 6) * Cylinder(6, 12)                # ножка основания
 stoyka -= Pos(0, 0, 6) * Cylinder(1.45, 12.2)
