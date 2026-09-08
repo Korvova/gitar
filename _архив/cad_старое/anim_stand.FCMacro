@@ -1,0 +1,102 @@
+# -*- coding: utf-8 -*-
+# Аниматор стенда v3. Открой C:\App\gitar\Stand_v3_anim.FCStd и запусти этот макрос.
+# Появится окошко с кнопкой Пуск/Стоп.
+import FreeCAD, FreeCADGui, math
+from PySide import QtCore, QtGui
+
+doc = FreeCAD.ActiveDocument
+if doc is None or doc.Name != "Stand_v3_anim":
+    doc = FreeCAD.openDocument(r"C:\App\gitar\Stand_v3_anim.FCStd")
+    FreeCAD.setActiveDocument(doc.Name)
+
+R_BELT = 8.65          # средняя линия ленты
+R_PIN = 8.30
+IX = 53.0              # центр ролика
+L = IX                 # длина прямой ветки
+ARC = math.pi * R_BELT
+PERIM = 2 * L + 2 * ARC
+X0, X1 = 1.0, 35.0     # ход тележки (левый край корпуса)
+SPEED = 18.0           # мм/с ленты
+
+def path(s):
+    """точка и угол касательной на петле; s=0 в начале верхней ветки, ход +X"""
+    s = s % PERIM
+    if s < L:
+        return Vector(s, R_BELT, 0), 0.0
+    s -= L
+    if s < ARC:
+        th = math.pi / 2 - s / R_BELT
+        return (Vector(IX + R_BELT * math.cos(th), R_BELT * math.sin(th), 0),
+                math.degrees(th) - 90.0)
+    s -= ARC
+    if s < L:
+        return Vector(IX - s, -R_BELT, 0), 180.0
+    s -= L
+    th = -math.pi / 2 - s / R_BELT
+    return (Vector(R_BELT * math.cos(th), R_BELT * math.sin(th), 0),
+            math.degrees(th) - 90.0)
+
+from FreeCAD import Vector, Rotation, Placement
+
+class Anim(QtGui.QDialog):
+    def __init__(self):
+        super(Anim, self).__init__()
+        self.setWindowTitle(u"Стенд v3")
+        self.btn = QtGui.QPushButton(u"▶ Пуск")
+        lay = QtGui.QVBoxLayout(self)
+        lay.addWidget(self.btn)
+        self.btn.clicked.connect(self.toggle)
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.tick)
+        self.t = 0.0
+        self.phase = 1
+        self.carx = X0
+        self.belt_s = 0.0
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+
+    def toggle(self):
+        if self.timer.isActive():
+            self.timer.stop()
+            self.btn.setText(u"▶ Пуск")
+        else:
+            self.timer.start(33)
+            self.btn.setText(u"⏸ Стоп")
+
+    def tick(self):
+        dt = 0.033
+        dx = SPEED * dt * self.phase
+        self.carx += dx
+        if self.carx >= X1: self.carx = X1; self.phase = -1
+        if self.carx <= X0: self.carx = X0; self.phase = 1
+        self.belt_s += dx
+
+        # тележка
+        for n in ("CarriageOuter", "CarriageInner"):
+            doc.getObject(n).Placement = Placement(Vector(self.carx, 0, 0), Rotation())
+        # шестерня и ролик
+        ang = math.degrees(self.belt_s / R_PIN)
+        doc.getObject("BeltPinion").Placement = Placement(Vector(0, 0, 0), Rotation(Vector(0, 0, 1), ang))
+        doc.getObject("Idler").Placement = Placement(
+            Vector(0, 0, 0), Rotation(Vector(0, 0, 1), ang), Vector(IX, 0, 0))
+        # метки на ленте
+        for i in range(4):
+            p, a = path(self.belt_s + i * PERIM / 4.0)
+            doc.getObject("Mark%d" % (i + 1)).Placement = Placement(p, Rotation(Vector(0, 0, 1), a))
+        FreeCADGui.updateGui()
+
+dlg = Anim()
+dlg.show()
+
+# раскраска
+cols = {"Base": (0.75, 0.75, 0.75), "BeltPinion": (0.9, 0.3, 0.3),
+        "Idler": (0.85, 0.6, 0.25), "Motor_improv": (0.35, 0.35, 0.4),
+        "CarriageOuter": (0.25, 0.55, 0.85), "CarriageInner": (0.2, 0.4, 0.65),
+        "Rail": (0.85, 0.7, 0.2), "Belt": (0.12, 0.12, 0.12)}
+for n, c in cols.items():
+    o = doc.getObject(n)
+    if o: o.ViewObject.ShapeColor = c
+for i in range(4):
+    doc.getObject("Mark%d" % (i + 1)).ViewObject.ShapeColor = (0.95, 0.85, 0.2)
+doc.getObject("Belt").ViewObject.Transparency = 55
+FreeCADGui.activeDocument().activeView().viewAxonometric()
+FreeCADGui.SendMsgToActiveView("ViewFit")

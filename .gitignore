@@ -1,4 +1,18 @@
-.venv-b123d/
-Print3mf/_tmp/
+# окружения и кеши
+2-0/.venv-b123d/
 __pycache__/
+*.pyc
+
+# сборочный мусор
+build/
+drive_web/build/
+2-0/Print3mf/_tmp/
+
+# архивы и бэкапы
+*.zip
+*.FCBak
 *.blend1
+
+# временное
+переписка_тренажёр.md
+.claude/settings.local.json
