@@ -32,6 +32,9 @@ TITLES = {
     "arxitektura": "Архитектура и стек",
     "pechat-sborka": "Печать и сборка",
     "proshivka-esp32": "❓Прошивка ESP32: заливка без BOOT",
+    "t-marketing": "⌛Т. маркетинг",
+    "t-3d-modeli": "⌛Т. 3д модели",
+    "t-plata": "⌛Т. Плата",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
