@@ -27,4 +27,4 @@
 * Инструкция сборки: [2-0/manual/deka.html](https://github.com/Korvova/gitar/blob/main/2-0/manual/deka.html)
 * Столы печати: 31–47 в [2-0/Print3mf](https://github.com/Korvova/gitar/tree/main/2-0/Print3mf)
 * Картинки выше — `wiki/img/`, пересобираются без открытия Blender:
-  `blender -b 2-0\Гитара_корпус.blend -P toolsender_scene.py -- wiki\img\korpus.jpg`
+  `blender -b 2-0\Гитара_корпус.blend -P tools\render_scene.py -- wiki\img\korpus.jpg`
