@@ -31,6 +31,7 @@ TITLES = {
     "t-taktilka": "💤Т. Тактильная обратная связь",
     "arxitektura": "Архитектура и стек",
     "pechat-sborka": "Печать и сборка",
+    "proshivka-esp32": "❓Прошивка ESP32: заливка без BOOT",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
