@@ -22,5 +22,5 @@
   `2-0/finger_module.py`, `2-0/odnoetazhnik.py`
 * Прошивки: `drive_test/drive_test.ino` (стенд мотора), `drive_web/drive_web.ino`
   (управление из браузера), `ota_base/ota_base.ino`
-* Инструкция сборки: `2-0/manual/grif.html`
+* Инструкция сборки с картинками: [grif.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/grif.html), узлы троса — [tie.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/tie.html), привод «палка» — [palka.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/palka.html); оглавление — [manual/index.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/index.html)
 * Столы печати: 01–30

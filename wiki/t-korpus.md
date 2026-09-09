@@ -24,7 +24,7 @@
 * Модели: [gitara_korpus.py](https://github.com/Korvova/gitar/blob/main/2-0/gitara_korpus.py), [gitara_deka.py](https://github.com/Korvova/gitar/blob/main/2-0/gitara_deka.py), [gitara_sec1.py](https://github.com/Korvova/gitar/blob/main/2-0/gitara_sec1.py),
   [gitara_sec2.py](https://github.com/Korvova/gitar/blob/main/2-0/gitara_sec2.py), [gitara_joints.py](https://github.com/Korvova/gitar/blob/main/2-0/gitara_joints.py)
 * Сцены Blender: [Гитара_корпус.blend](https://github.com/Korvova/gitar/blob/main/2-0/%D0%93%D0%B8%D1%82%D0%B0%D1%80%D0%B0_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81.blend), [Гитара_дека.blend](https://github.com/Korvova/gitar/blob/main/2-0/%D0%93%D0%B8%D1%82%D0%B0%D1%80%D0%B0_%D0%B4%D0%B5%D0%BA%D0%B0.blend), [Гитара_стыки.blend](https://github.com/Korvova/gitar/blob/main/2-0/%D0%93%D0%B8%D1%82%D0%B0%D1%80%D0%B0_%D1%81%D1%82%D1%8B%D0%BA%D0%B8.blend)
-* Инструкция сборки: [2-0/manual/deka.html](https://github.com/Korvova/gitar/blob/main/2-0/manual/deka.html)
+* Инструкция сборки с картинками: [deka.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/deka.html) (оглавление всех инструкций — [manual/index.html](https://raw.githack.com/Korvova/gitar/main/2-0/manual/index.html); на GitHub .html показывается исходником, поэтому ссылки через raw.githack)
 * Столы печати: 31–47 в [2-0/Print3mf](https://github.com/Korvova/gitar/tree/main/2-0/Print3mf)
 * Картинки выше — `wiki/img/`, пересобираются без открытия Blender:
   `blender -b 2-0\Гитара_корпус.blend -P tools\render_scene.py -- wiki\img\korpus.jpg`
