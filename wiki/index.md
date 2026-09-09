@@ -31,8 +31,10 @@
 
 ## Оглавление
 
+* [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) — дорожная карта до производства, сделанное зачёркиваем
 * [Т. Струны](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-struny) — узел щипка правой руки
-* [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, тросы, моторы
+* [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, привод «палка», моторы
+* [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif) — пошаговый чек-лист сборки грифа, деки и корпуса
 * [Т. Корпус и дека](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-korpus) — форма классической гитары
 * [Т. Электроника и звук](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-elektronika) — датчики, прошивки, MIDI
 * [Т. Тактильная обратная связь](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-taktilka) — браслет, вибро, LED

@@ -35,6 +35,8 @@ TITLES = {
     "t-marketing": "⌛Т. маркетинг",
     "t-3d-modeli": "⌛Т. 3д модели",
     "t-plata": "⌛Т. Плата",
+    "t-sborka-grif": "⌛Т. Сборка гриф",
+    "t-plan": "⌛Т. План",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
