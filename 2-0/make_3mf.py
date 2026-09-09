@@ -271,8 +271,11 @@ plates = [
 ]
 
 # ---------- сборка 3mf ----------
+ONLY = sys.argv[1:]          # python make_3mf.py 31 32  -> только эти столы
 for plate in plates:
     name, proc_j, stls = plate[0], plate[1], plate[2]
+    if ONLY and not any(name.startswith(o) for o in ONLY):
+        continue
     fj = fila_cool_j if (len(plate) > 3 and plate[3] == "cool") else fila_j
     out = os.path.join(OUT, name + ".3mf")
     if os.path.exists(out):

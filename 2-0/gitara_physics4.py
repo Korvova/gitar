@@ -24,6 +24,7 @@ from mathutils import Vector
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 FORK = argv[0] if argv else "south"
 LIVE = "live" in argv                 # ручная сцена: без ключей, без запекания
+NOCARTS = "nocarts" in argv           # без тележек: штыри плеч ходят свободно
 NFR = int(argv[1]) if len(argv) > 1 and argv[1].isdigit() else (100000 if LIVE else 440)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "2-0", "Print", "Print")
@@ -210,6 +211,15 @@ for k in range(4):
     # --- тележка: 12×14×6 с вилкой (паз 6 по X, глубина: юг 7.1 / север 3) ---
     cy = CARTS_Y[k]
     zc = Z_DECK + DECK_T + 0.15          # зазор к палубе: ноль = взрыв
+    if NOCARTS:
+        CART.append(None)
+        dz0 = Z_FLOOR[k] + 1.8 + 0.25
+        r = body(f"кривошип{k}", (LANE, MY[k], dz0 + 1.25), "crank")
+        c_cyl(r, LANE, MY[k], dz0, dz0 + 2.5, 7.0)
+        c_cyl(r, LANE + R_PIN, MY[k], dz0 - 1.7, dz0, 2.5)
+        r.rigid_body.kinematic = True
+        CRANK.append(r)
+        continue
     c = body(f"тележка{k}", (0, cy, zc + 3), "cart", mass=0.05)
     sgn = 1 if FORK == "south" else -1        # север = вилка развёрнута на 180°
     c_box(c, -6, -3, cy - 7, cy + 7, zc, zc + 6)
@@ -228,7 +238,9 @@ for k in range(4):
     CRANK.append(r)
 
 # ---- узлы: GENERIC-люфты (контакты остаются) ----
-def slop(name, x, y, z, a, b, zlo, zhi, lin=0.5):
+PLAY = next((float(a[4:]) for a in argv if a.startswith('play')), 0.5)   # люфт узлов Ø5/Ø6 = ±0.5
+def slop(name, x, y, z, a, b, zlo, zhi, lin=None):
+    lin = PLAY if lin is None else lin
     e = bpy.data.objects.new(name, None)
     e.empty_display_size = 3
     e.location = (x, y, z)
@@ -263,6 +275,8 @@ for k in range(4):
     p = slop(f"j_палец{k}", LANE + R_PIN, MY[k], Z_FLOOR[k] + 0.9, BAND[k], CRANK[k], -2.5, 0.5)
     p.limit_lin_x_lower, p.limit_lin_x_upper = -(SLOTX - 2), SLOTX - 2   # паз вилки ленты минус палец
     p.limit_lin_y_lower, p.limit_lin_y_upper = -0.6, 0.6      # ширина паза 6 минус палец 5
+    if NOCARTS:
+        continue
     s = slop(f"j_вилка{k}", 0, CARTS_Y[k], Z_DECK + DECK_T + 3, CART[k], ARM[k], -6.0, 0.5)
     s.limit_lin_x_lower, s.limit_lin_x_upper = -0.6, 0.6      # паз тележки 6 минус штырь 5
     if FORK == "south":            # паз открыт на юг: на север стенка (+3 минус штырь)
@@ -285,7 +299,7 @@ if LIVE:
     for r in CRANK:
         r.rotation_euler = (0, 0, 0)
     bpy.ops.object.select_all(action='DESELECT')
-    tag = FORK + ("_r%.1f" % R_PIN if R_PIN != 4.3 else "")
+    tag = FORK + ("_r%.1f" % R_PIN if R_PIN != 4.3 else "") + ("_bezteleg" if NOCARTS else "")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "2-0", "Гитара_физика4_ручная_%s.blend" % tag))
     print("PHYS4 LIVE OK", FORK)
     sys.exit(0)
@@ -305,17 +319,23 @@ rep = {k: {"x": [], "y": [], "yaw": [], "bz": [], "az": []} for k in range(4)}
 for fr in range(SETTLE, NFR + 1):
     sc.frame_set(fr)
     for k in range(4):
-        m = CART[k].matrix_world
-        rep[k]["x"].append(m.translation.x)
-        rep[k]["y"].append(m.translation.y - CARTS_Y[k])
+        if NOCARTS:
+            tip = ARM[k].matrix_world @ Vector((0, -26, 0))   # штырь = конец плеча
+            m = ARM[k].matrix_world
+            rep[k]["x"].append(tip.x)
+            rep[k]["y"].append(tip.y - CARTS_Y[k])
+        else:
+            m = CART[k].matrix_world
+            rep[k]["x"].append(m.translation.x)
+            rep[k]["y"].append(m.translation.y - CARTS_Y[k])
         ax = m.to_3x3().col[0]
         rep[k]["yaw"].append(math.degrees(math.atan2(ax.y, ax.x)))
         rep[k].setdefault("tilt", []).append(math.degrees(math.acos(max(-1, min(1, m.to_3x3().col[2].z)))))
         rep[k]["bz"].append(BAND[k].matrix_world.translation.z - (Z_FLOOR[k] + 1.0))
         rep[k]["az"].append(ARM[k].matrix_world.translation.z - (Z_FLOOR[k] + 1.0))
 print("=" * 70)
-print("ОТЧЁТ вилки=%s, сектор ±%.0f°, палец r%.1f, паз ленты ±%.1f, кадров %d" % (FORK, math.degrees(AMP), R_PIN, SLOTX, NFR))
-print("ст  ход X мм (min..max)  дрейф Y мм (min..max)  yaw° max  наклон° max  лента dz  плечо dz")
+print("ОТЧЁТ вилки=%s, сектор ±%.0f°, палец r%.1f, паз ленты ±%.1f, люфт ±%.2f, кадров %d" % (FORK, math.degrees(AMP), R_PIN, SLOTX, PLAY, NFR))
+print(("ШТЫРЬ" if NOCARTS else "ТЕЛЕЖКА") + ": ст  ход X мм (min..max)  дрейф/дуга Y мм  yaw° max  наклон° max  лента dz  плечо dz")
 for k in range(4):
     R = rep[k]
     print("%d   %6.1f .. %5.1f  = %4.1f   %5.1f .. %4.1f   %5.1f   %5.1f   %+.2f/%+.2f  %+.2f/%+.2f" % (
@@ -363,5 +383,5 @@ shot(os.path.join(IMG, "sim4_%s_carts.jpg" % FORK), Vector((-30, 0, 0)), Vector(
 shot(os.path.join(IMG, "sim4_%s_deka.jpg" % FORK), Vector((-30, 480, 0)), Vector((30, 690, 30)), SETTLE + PERIOD // 4, "iso")
 ST["deck"].hide_render = False; ST["gs2f"].hide_render = False; ST["gs3f"].hide_render = False
 
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "2-0", "Гитара_физика4_%s.blend" % FORK))
+bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT, "2-0", "Гитара_физика4_%s.blend" % (FORK + ("_bezteleg" if NOCARTS else ""))))
 print("PHYS4 OK", FORK)
