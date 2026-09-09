@@ -32,6 +32,8 @@
   <button id="btnConnect">Подключить COM</button>
   <button id="btnZero" class="sec">Ноль</button>
   <button id="btnSound" class="sec">🔊 Звук: вкл</button>
+  <button id="btnFlip" class="sec" title="перевернуть порядок нот">⇅ Ноты</button>
+  <button id="btnLadder" class="sec" title="C3..G4 — различать струны на слух">🪜 Лесенка</button>
   <label>Порог щипка <input type="range" id="thr" min="10" max="600" value="80">
     <span id="thrV" class="dim">80</span></label>
   <label>Развязка <input type="range" id="xtalk" min="0" max="100" value="70">
@@ -44,15 +46,19 @@
 <div id="strings"></div>
 <p class="dim">Прошивка: <code>struny6_hall</code> (6×49E на ADC) или <code>struny6_test</code> (6×AS5600+TCA), 460800, строка
 «v0 … v5», −1 = датчика нет на канале). Канал 0 = струна 1 … канал 5 = струна 6.
-«Ноль» — нажать при струнах в покое. Нота каждой струны — селектором слева.</p>
+«Ноль» — нажать при струнах в покое. Ноты: селектор у струны, «⇅» переворачивает
+порядок, «Лесенка» — C3..G4 для отладки на слух. Вспышка у струны: зелёная — сыграла,
+жёлтая — щипок подавлен как наводка от соседа.</p>
 
 <script>
 const N = 6;
 let SR = 250;                          // строк/с, уточняется по факту потока
-// Дефолт: контрастная лесенка (до-мажор через 2 октавы) — струны легко
-// различать на слух; гитарный строй EADGBE доступен в селекторах
-const NOTES = [['C3',130.8],['E3',164.8],['G3',196.0],
-               ['C4',261.6],['E4',329.6],['G4',392.0]];
+// Дефолт: гитарный строй E2..E4 (струна 1 = толстая); «⇅» переворачивает,
+// «Лесенка» — до-мажор через 2 октавы, струны легко различать на слух
+const NOTES = [['E2',82.4],['A2',110.0],['D3',146.8],
+               ['G3',196.0],['B3',246.9],['E4',329.6]];
+const LADDER = [['C3',130.8],['E3',164.8],['G3',196.0],
+                ['C4',261.6],['E4',329.6],['G4',392.0]];
 const ALL_NOTES = [['E2',82.4],['A2',110.0],['C3',130.8],['D3',146.8],
                    ['E3',164.8],['G3',196.0],['B3',246.9],['C4',261.6],
                    ['E4',329.6],['G4',392.0],['C5',523.3]];
@@ -119,7 +125,11 @@ async function readLoop() {
     const lines = (carry + dec.decode(value)).split('\n');
     carry = lines.pop();
     for (const ln of lines) {
-      if (ln[0] === '#') continue;     // стартовый отчёт прошивки
+      if (ln[0] === '#') {             // лог прошивки — в строку статуса
+        const st = document.getElementById('status');
+        st.textContent = ln.slice(1).trim(); st.style.color = '#9aa0aa';
+        continue;
+      }
       const parts = ln.trim().split(/\s+/);
       if (parts.length !== N) continue;
       rxCount++;
@@ -179,7 +189,13 @@ function makePluck(f0) {               // сэмпл щипка ~1.2 c
   b.copyToChannel(data, 0);
   return b;
 }
+function flashLed(i, color) {          // зелёный = сыграли, жёлтый = подавили
+  const led = document.getElementById('led' + i);
+  led.style.background = color;
+  setTimeout(() => led.style.background = '#2a2f38', 120);
+}
 function playPluck(i, strength) {
+  flashLed(i, '#2fb344');
   if (!sound) return;
   if (!audioCtx) audioCtx = new AudioContext();
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -193,9 +209,6 @@ function playPluck(i, strength) {
   g.gain.value = Math.min(1, strength) * vol;
   src.connect(g).connect(audioCtx.destination);
   src.start();
-  const led = document.getElementById('led' + i);
-  led.style.background = '#2fb344';
-  setTimeout(() => led.style.background = '#2a2f38', 120);
 }
 function detectPluck(i, d) {
   const s = S[i];
@@ -238,8 +251,8 @@ function resolvePending() {
           S[j].gate = s.peak * k * 1.5;
           S[j].gateT = now;
         }
-    }
-    s.pending = 0;                     // иначе — молча подавили
+    } else flashLed(i, '#e0a03a');     // жёлтый = подавлено как наводка
+    s.pending = 0;
   }
 }
 
@@ -301,6 +314,14 @@ document.getElementById('btnSound').onclick = (e) => {
   sound = !sound;
   e.target.textContent = sound ? '🔊 Звук: вкл' : '🔇 Звук: выкл';
 };
+function setNotes(list) {
+  for (let i = 0; i < N; i++)
+    document.getElementById('note' + i).value = list[i][1];
+}
+document.getElementById('btnFlip').onclick = () =>
+  setNotes([...Array(N)].map((_, i) =>
+    [null, +document.getElementById('note' + i).value]).reverse());
+document.getElementById('btnLadder').onclick = () => setNotes(LADDER);
 document.getElementById('xtalk').oninput = (e) =>
   document.getElementById('xtalkV').textContent = e.target.value;
 </script>
