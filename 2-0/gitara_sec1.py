@@ -184,12 +184,14 @@ for i, d in enumerate((5.0, 5.1, 5.2, 5.3)):                 # ряд под с�
     kupon -= Pos(7 + i * 12, 6, 1.5) * Cylinder(d / 2, 3.2)
 for i, d in enumerate((5.8, 5.9, 6.0, 6.1)):                 # ряд под подшипник MR63 (нар. Ø6)
     kupon -= Pos(7 + i * 12, 16, 1.5) * Cylinder(d / 2, 3.2)
-kupon += Pos(56, 6, 4.5) * Cylinder(2.5, 3)                  # свой стад Ø5 для примерки колец
+# щуп: стад Ø5 на шайбе-ручке Ø12 — отдельная деталь, как стад на плите (печатный в печатное)
+kupon_stud = Pos(0, 0, 1) * Cylinder(6, 2) + Pos(0, 0, 2 + 1.8) * Cylinder(2.5, 3.6)
 for i in range(4):                                            # риски-метки: 1..4 = порядок размеров
     for j in range(i + 1):
         kupon -= BB(3 + i * 12 + j * 2, 4 + i * 12 + j * 2, 20.5, 22.1, 2.4, 3.1)
 
-parts = [("gs1_p0_base", p0), ("gs1_p4_deck", deck), ("gs1_cart", carts), ("gs1_kupon", kupon)]
+parts = [("gs1_p0_base", p0), ("gs1_p4_deck", deck), ("gs1_cart", carts),
+         ("gs1_kupon", kupon), ("gs1_kupon_stud", kupon_stud)]
 parts += [(f"gs1_p{k}_mid", mids[k - 1]) for k in (1, 2, 3)]
 parts += [(f"gs1_arm{k}", arms[k]) for k in range(4)]
 parts += [(f"gs1_spica{k}", spicas[k]) for k in range(4)]
