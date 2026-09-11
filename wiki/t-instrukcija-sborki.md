@@ -29,7 +29,7 @@
 вылезет снизу на 15 мм. Резьбу винт нарезает сам в дне P0 (отверстия Ø2.6), в P1 и
 палубе отверстия проходные Ø3.2.
 
-![Детали этапа А](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_0_detali.png)
+![Детали этапа А](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_0_detali.png?v=20260911b)
 
 Как отличить плечи и спицы: у плеча 0 штырь длиннее (он идёт с самого нижнего этажа
 до тележки), у спицы 0 тело длиннее (её ось дальше от деки). Если сомневаешься —
@@ -41,7 +41,7 @@
 секцией-2). Плечо 0 диском на стад оси (столбик Ø5 на дне у Y = 70), длинным плечом
 на север, штырём вверх. Короткое плечо со стадом смотрит в жёлоб, к борту X = +10.
 
-![Шаг 1: плечо 0 на дне](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_1_plecho0.png)
+![Шаг 1: плечо 0 на дне](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_1_plecho0.png?v=20260911b)
 
 Проверка: плечо крутится на стаде пальцем без усилия, диск лежит на дне плоско.
 
@@ -51,7 +51,7 @@
 поверх плеча, а тело спицы ложится на пол жёлоба и уходит на юг. Хвост с защёлкой
 выходит за южную стенку наружу — за него потом будем двигать.
 
-![Шаг 2: спица 0 на стаде плеча](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_2_spica0.png)
+![Шаг 2: спица 0 на стаде плеча](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_2_spica0.png?v=20260911b)
 
 **Если плиты напечатаны до 11.09.2026** (первый стол 31): южная стенка P0 и P1 перекрывает
 жёлоб на 4 мм — проход в стенке был x 10…22 от старого жёлоба, а спица идёт по x 6…14.
@@ -70,7 +70,7 @@ Y = 18. Плита должна лечь на стенки P0 плоско; ес
 в плиту рядом с прорезью, чуть повернуть плечо. На стад P1 (Y = 86) ставим плечо 1,
 на его стад — спицу 1, всё точно так же, как на этаже 0.
 
-![Шаг 3: P1 со своей станцией](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_3_p1.png)
+![Шаг 3: P1 со своей станцией](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_3_p1.png?v=20260911b)
 
 Проверка: оба хвоста двигаются независимо, штырь плеча 0 ходит в прорези P1 от края
 до края, не задевая её концов.
@@ -82,7 +82,7 @@ Y = 18. Плита должна лечь на стенки P0 плоско; ес
 по дуге на 4 мм к северу, и с вилкой на юг ему не хватает места (урок физики 09.09).
 Тележка 0 — на штырь у Y = 18, тележка 1 — у Y = 34.
 
-![Шаг 4: палуба и тележки](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_4_paluba.png)
+![Шаг 4: палуба и тележки](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_4_paluba.png?v=20260911b)
 
 ### Шаг 5. Стянуть стопку
 
@@ -90,14 +90,14 @@ Y = 18. Плита должна лечь на стенки P0 плоско; ес
 Закручивать по кругу, не до упора сразу: после всех шести — дотянуть. Стопка должна
 остаться плоской, а хвосты спиц — свободными.
 
-![Шаг 5: шесть винтов М3](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_5_vinty.png)
+![Шаг 5: шесть винтов М3](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_5_vinty.png?v=20260911b)
 
 ### Шаг 6. Проверка руками
 
 Двигаем хвост спицы 0 на ±4 мм. Плечо качается на ±22°, тележка 0 едет поперёк грифа
 примерно на ±20 мм. То же для станции 1.
 
-![Шаг 6: ход тележки](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_6_proverka.png)
+![Шаг 6: ход тележки](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/sborka_a_6_proverka.png?v=20260911b)
 
 Что записать в [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) (результат этапа А):
 
