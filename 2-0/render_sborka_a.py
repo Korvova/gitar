@@ -95,7 +95,7 @@ carts = [load("gs1_cart", (0, CARTS_Y[k], Z_DECK_A + DECK_T), rz=180) for k in (
 lay = [("gs1_p0_base", (0, 0, 0), 0, C["plate"], "P0 дно (полка на юг)"),
        ("gs1_p1_mid", (70, 0, 0), 0, C["plate"], "P1 межэтажка"),
        ("gs1_p4_deck", (140, 0, 0), 0, C["plate"], "P4 палуба"),
-       ("gs1_arm0", (-45, 60, 0), 0, C["arm"], "плечо 0 (штырь короче)"),
+       ("gs1_arm0", (-45, 60, 0), 0, C["arm"], "плечо 0 (штырь длиннее)"),
        ("gs1_arm1", (-70, 60, 0), 0, C["arm"], "плечо 1"),
        ("gs1_spica0", (-95, 0, 0), 0, C["spica"], "спица 0"),
        ("gs1_spica1", (-113, 0, 0), 0, C["spica"], "спица 1 (короче)"),
@@ -107,7 +107,7 @@ for name, loc, rz, col, lab in lay:
     parts.append((m, col, 1.0))
     if lab:
         b = m.bounds
-        labels.append((((b[0] + b[1]) / 2, (b[2] + b[3]) / 2, b[5] + 6), lab))
+        labels.append((((b[0] + b[1]) / 2, (b[2] + b[3]) / 2, b[4] + 3), lab))   # подпись у основания, не у верха штыря
 scene(parts, os.path.join(OUT, "sborka_a_0_detali.png"), view="iso", labels=labels, zoom=0.85,
       focus=(-10, 90, 0))
 
