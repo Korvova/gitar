@@ -165,6 +165,8 @@ plates = [
     ("31_gitara_sec1_plity", p020_j,       # ГИТАРА секция-1: 5 плит стопки
      prep("gs1_p0_base") + prep("gs1_p1_mid") +
      prep("gs1_p2_mid") + prep("gs1_p3_mid")),
+    ("65_kupon_posadok", p020_j,           # купон посадок Ø5 (стад) и Ø6 (MR63): 15 минут печати
+     prep("gs1_kupon")),
     ("32_gitara_sec1_meh", p012_j,         # палуба + механика (штыри с бримом)
      prep("gs1_p4_deck") + prep("gs1_cart", copies=4) +
      prep("gs1_arm0") + prep("gs1_arm1") + prep("gs1_arm2") + prep("gs1_arm3") +
