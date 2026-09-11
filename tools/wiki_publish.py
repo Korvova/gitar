@@ -37,6 +37,7 @@ TITLES = {
     "t-plata": "⌛Т. Плата",
     "t-sborka-grif": "⌛Т. Сборка гриф",
     "t-plan": "⌛Т. План",
+    "t-instrukcija-sborki": "⌛Т. Инструкция по сборке",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
