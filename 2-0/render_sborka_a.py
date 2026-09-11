@@ -108,25 +108,25 @@ for name, loc, rz, col, lab in lay:
     if lab:
         b = m.bounds
         labels.append((((b[0] + b[1]) / 2, (b[2] + b[3]) / 2, b[4] + 3), lab))   # подпись у основания, не у верха штыря
-scene(parts, os.path.join(OUT, "sborka_a_0_detali.png"), view="iso", labels=labels, zoom=0.85,
+scene(parts, os.path.join(OUT, "sborka_a_0_detali_v2.png"), view="iso", labels=labels, zoom=0.85,
       focus=(-10, 90, 0))
 
 # 1. P0 + плечо 0
 scene([(p0, C["plate"], 1), (arm[0], C["arm"], 1)],
-      os.path.join(OUT, "sborka_a_1_plecho0.png"), view="iso",
+      os.path.join(OUT, "sborka_a_1_plecho0_v2.png"), view="iso",
       labels=[((0, AXES_Y[0], 8), "ось плеча: стад P0"), ((0, CARTS_Y[0], 32), "штырь вверх"),
               ((LANE_X, AXES_Y[0], 8), "стад под спицу"), ((0, 172, 4), "полка на юг")], zoom=1.3)
 
 # 2. + спица 0
 scene([(p0, C["plate"], 1), (arm[0], C["arm"], 1), (spica[0], C["spica"], 1)],
-      os.path.join(OUT, "sborka_a_2_spica0.png"), view="iso",
+      os.path.join(OUT, "sborka_a_2_spica0_v2.png"), view="iso",
       labels=[((LANE_X, AXES_Y[0], 8), "кольцо на стад"), ((LANE_X, 120, 8), "тело в жёлоб"),
               ((LANE_X, 178, 6), "хвост наружу")], zoom=1.3)
 
 # 3. + P1, плечо 1, спица 1
 scene([(p0, C["ghost"], 1), (arm[0], C["arm"], 0.35), (spica[0], C["spica"], 0.35),
        (p1, C["new_plate"], 0.55), (arm[1], C["arm"], 1), (spica[1], C["spica"], 1)],
-      os.path.join(OUT, "sborka_a_3_p1.png"), view="iso",
+      os.path.join(OUT, "sborka_a_3_p1_v2.png"), view="iso",
       labels=[((0, CARTS_Y[0] + 2, 14), "штырь плеча 0 в прорезь P1"), ((0, AXES_Y[1], 13), "плечо 1 на стад P1"),
               ((LANE_X, 130, 13), "спица 1")], zoom=1.3)
 
@@ -134,14 +134,14 @@ scene([(p0, C["ghost"], 1), (arm[0], C["arm"], 0.35), (spica[0], C["spica"], 0.3
 scene([(p0, C["ghost"], 1), (arm[0], C["arm"], 0.35), (spica[0], C["spica"], 0.35), (p1, C["ghost"], 0.5),
        (arm[1], C["arm"], 0.35), (spica[1], C["spica"], 0.35),
        (deck, C["new_plate"], 0.5), (carts[0], C["cart"], 1), (carts[1], C["cart"], 1)],
-      os.path.join(OUT, "sborka_a_4_paluba.png"), view="iso",
+      os.path.join(OUT, "sborka_a_4_paluba_v2.png"), view="iso",
       labels=[((0, CARTS_Y[0], 24), "тележка 0 вилкой на север"), ((0, CARTS_Y[1], 24), "тележка 1"),
               ((0, 120, 18), "палуба P4 ладами вверх")], zoom=1.3)
 
 # 5. Винты: 6 × М3 сверху через приливы
 scene([(p0, C["plate"], 1), (p1, C["plate"], 1), (deck, C["plate"], 1),
        (carts[0], C["cart"], 1), (carts[1], C["cart"], 1), (arm[0], C["arm"], 1), (arm[1], C["arm"], 1)],
-      os.path.join(OUT, "sborka_a_5_vinty.png"), view="iso", screws=True,
+      os.path.join(OUT, "sborka_a_5_vinty_v2.png"), view="iso", screws=True,
       labels=[((x, y, 17), "М3×20") for x, y in TIE], zoom=1.3)
 
 # 6. Проверка: спицу тянем за хвост — плечо ±22°, тележка ходит ±20
@@ -160,7 +160,7 @@ parts = [(p0, C["ghost"], 1), (p1, C["ghost"], 0.4), (deck, C["ghost"], 0.35)]
 for sgn, op in ((1, 1.0), (-1, 0.35)):
     parts += [(arm_at(0, sgn * phi), C["arm"], op), (spica_at(0, sgn * dy), C["spica"], op), (cart_at(0, -sgn * dx), C["cart"], op)]
 parts += [(arm_at(1, 0), C["arm"], 0.25), (spica_at(1, 0), C["spica"], 0.25), (cart_at(1, 0), C["cart"], 0.25)]
-scene(parts, os.path.join(OUT, "sborka_a_6_proverka.png"), view="top",
+scene(parts, os.path.join(OUT, "sborka_a_6_proverka_v2.png"), view="top",
       labels=[((LANE_X, 190, 6), "хвост спицы: ±4 мм"), ((-dx, CARTS_Y[0], 24), "тележка: ±20 мм"),
               ((0, AXES_Y[0], 8), "плечо ±22°")], zoom=1.25, focus=(0, 90, 10))
 print("done")
