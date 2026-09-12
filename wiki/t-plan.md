@@ -33,9 +33,9 @@
 ### Заметки по этапу 1 — шаг за шагом
 
 * **09.09.2026 — печать под ручной тест цепочки (к 1.3).** На печать уходят шесть столов, файлы
-  в репозитории: [31_gitara_sec1_plity](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) (4 плиты P0–P3), [32_gitara_sec1_meh](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) (палуба, 4 плеча, 4 спицы, 4 тележки; слой 0.12, брим на
-  штыри), [33_gitara_sec2](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/33_gitara_sec2.3mf) и [34_gitara_sec3](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/34_gitara_sec3.3mf) (дно, 4 П-рейки, фретборд каждой секции), [35_gitara_deka1](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/35_gitara_deka1.3mf) (хребет Д1, 3 кривошипа, 3 втулки,
-  3 гребёнки), [36_gitara_deka2](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/36_gitara_deka2.3mf) (хребет Д2, 8 лент ext, 4 хвоста). Столы 33–36 — поддержки только от стола.
+  в репозитории: [31_gitara_sec1_plity](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) (4 плиты P0–P3), [32_gitara_sec1_meh](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) (палуба, 4 плеча, 4 спицы, 4 тележки; слой 0.12, брим на
+  штыри), [33_gitara_sec2](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/33_gitara_sec2.3mf) и [34_gitara_sec3](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/34_gitara_sec3.3mf) (дно, 4 П-рейки, фретборд каждой секции), [35_gitara_deka1](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/35_gitara_deka1.3mf) (хребет Д1, 3 кривошипа, 3 втулки,
+  3 гребёнки), [36_gitara_deka2](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/36_gitara_deka2.3mf) (хребет Д2, 8 лент ext, 4 хвоста). Столы 33–36 — поддержки только от стола.
   Все STL — в [2-0/Print/Print](https://github.com/Korvova/gitar/tree/main/2-0/Print/Print), 55 деталей.
   Цель теста: собрать по чек-листу «Т. Сборка гриф» до шага Д7 и **крутить кривошипы пальцем** —
   все четыре тележки должны ездить на 40 мм. Моторы не нужны: вместо вала — болт М5 в колодец.

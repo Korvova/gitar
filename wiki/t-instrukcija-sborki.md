@@ -171,11 +171,11 @@ P3 со станцией 3 (Y = 118), и только потом палуба с
 
 | Стол | Что на нём | Настройки |
 |---|---|---|
-| [65_kupon_posadok.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/65_kupon_posadok.3mf) | купон посадок Ø5 и Ø6 | 0.2 мм, печатать первым |
-| [31_gitara_sec1_plity.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) | P0, P1, P2, P3 | 0.2 мм, без поддержек |
-| [32_gitara_sec1_meh.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) | палуба P4, 4 плеча, 4 спицы, 4 тележки | 0.12 мм, брим на штыри плеч |
-| [33_gitara_sec2.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/33_gitara_sec2.3mf), [34_gitara_sec3.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/34_gitara_sec3.3mf) | секции 2 и 3: дно, П-рейки, фретборд | поддержки только от стола |
-| [35_gitara_deka1.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/35_gitara_deka1.3mf), [36_gitara_deka2.3mf](https://github.com/Korvova/gitar/blob/main/2-0/Print3mf/36_gitara_deka2.3mf) | хребет деки, кривошипы, гребёнки, ленты | ждут решения по мотору (колодцы под NEMA14) |
+| [65_kupon_posadok.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/65_kupon_posadok.3mf) | купон посадок Ø5 и Ø6 | 0.2 мм, печатать первым |
+| [31_gitara_sec1_plity.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) | P0, P1, P2, P3 | 0.2 мм, без поддержек |
+| [32_gitara_sec1_meh.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) | палуба P4, 4 плеча, 4 спицы, 4 тележки | 0.12 мм, брим на штыри плеч |
+| [33_gitara_sec2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/33_gitara_sec2.3mf), [34_gitara_sec3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/34_gitara_sec3.3mf) | секции 2 и 3: дно, П-рейки, фретборд | поддержки только от стола |
+| [35_gitara_deka1.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/35_gitara_deka1.3mf), [36_gitara_deka2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/36_gitara_deka2.3mf) | хребет деки, кривошипы, гребёнки, ленты | ждут решения по мотору (колодцы под NEMA14) |
 
 Все STL по отдельности — в [2-0/Print/Print](https://github.com/Korvova/gitar/tree/main/2-0/Print/Print).
 Столы открывать в Bambu Studio «как проект». Пластик PETG HF.
