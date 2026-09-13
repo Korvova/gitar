@@ -191,6 +191,10 @@ plates = [
      prep("gdk_crank0_v3", FLIP) + prep("gdk_crank1_v3", FLIP) + prep("gdk_crank2_v3", FLIP) +
      prep("gdk_spacer0_v3", FLIP) + prep("gdk_comb_v3", LAY, copies=3) +
      prep("gdk_comb_key_v3", ID, copies=3)),   # фиксаторы гребёнок
+    ("69_deka_proba1", p020_j,             # ПРОБА одного узла: Д1 под мотор 1,
+     prep("gdk1_base_v3", ID) +            # кривошип 1, лента 1, гребёнка, фиксатор
+     prep("gdk_crank1_v3", FLIP) + prep("gdk_tail1_v3", ID) +
+     prep("gdk_comb_v3", LAY) + prep("gdk_comb_key_v3", ID)),
     ("68_deka2_v3", p020_j,                # хребет Д2, кривошип 3, 4 ленты-хвоста
      prep("gdk2_base_v3", ID) + prep("gdk_crank3_v3", FLIP) +
      prep("gdk_tail0_v3", ID) + prep("gdk_tail1_v3", ID) +
