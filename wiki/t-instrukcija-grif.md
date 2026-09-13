@@ -11,9 +11,8 @@
 | [34_gitara_sec3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/34_gitara_sec3.3mf) | секция-3: дно, 4 П-рейки, фретборд с языком, планка-потолок | поддержки только от стола | ✅ Напечатано |
 | [35_gitara_deka1.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/35_gitara_deka1.3mf), [36_gitara_deka2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/36_gitara_deka2.3mf) | из этих столов нужны только **8 лент-продолжений** | — | ✅ Напечатано |
 | [66_kupon_shesternya.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/66_kupon_shesternya.3mf) | купон посадки кривошипа на шестерёнку мотора | 0.2 мм, **печатать первым** | ⬜ Не напечатано |
-| [69_deka_proba1.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/69_deka_proba1.3mf) | проба одного узла: хребет Д1, кривошип 1, лента 1, гребёнка, фиксатор | 0.2 мм, поддержки только от стола | ⬜ Не напечатано |
-| [67_deka1_v3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/67_deka1_v3.3mf) | хребет Д1, кривошипы 0–2, проставка мотора 0, 3 гребёнки, 3 фиксатора | 0.2 мм, поддержки только от стола | ⬜ Не напечатано |
-| [68_deka2_v3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/68_deka2_v3.3mf) | хребет Д2, кривошип 3, 4 ленты-хвоста | 0.2 мм, поддержки только от стола | ⬜ Не напечатано |
+| [67_deka1_v3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/67_deka1_v3.3mf) | хребет Д1, кривошипы 0–2, проставка мотора 0, 3 гребёнки, 3 фиксатора, ленты 0–2 — **печатать первым: с него проверяется первый мотор** | 0.2 мм, поддержки только от стола | ⬜ Не напечатано |
+| [68_deka2_v3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/68_deka2_v3.3mf) | хребет Д2, кривошип 3, лента 3 | 0.2 мм, поддержки только от стола | ⬜ Не напечатано |
 
 Со столов 35/36 старые хребты, кривошипы, втулки, хвосты и гребёнки **не нужны** — они были
 под другой мотор и другой механизм.
