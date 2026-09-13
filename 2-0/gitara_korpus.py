@@ -116,8 +116,9 @@ for i in range(N_SEG):
     HOLES_S += [h % P_LEN for h in hs]
 
 # ---------------- тумбы под хребет (мир x,y; верх z=0, винт сверху) --------
-TUMBA = [(-15, 525), (-15, 585), (-15, 630), (-15, 685), (-15, 750),
-         (20, 545), (20, 595), (20, 700), (20, 760)]
+# v2 (13.09.2026): моторы тележек — круглые Ø36.5 глубиной 22 под хребтом;
+# столбики переставлены туда, где не задевают корпуса моторов и уши фланцев
+TUMBA = [(-18, 540), (-18, 590), (-18, 705), (18, 705), (-18, 775), (18, 775)]
 # крепёж крышки к стенкам хребта (вертикально, Ø3.2 в крышке / 2.6 в стенке)
 TOP_SCREWS = [(sx, y) for y in (520, 580, 615, 715, 760) for sx in (-24, 24)]
 
@@ -269,16 +270,18 @@ for nm in ("dno_ne", "dno_nw", "dno_se", "dno_sw",
            "top_wn", "top_ws", "top_en", "top_es"):
     asm.add(nm, rf"{OUT}\gk_{nm}.stl")
 asm.add("bent", rf"{OUT}\gk_band_bent.stl")
-asm.add("dk1", rf"{OUT}\gdk1_base.stl", loc=(0, 480, 0))
-asm.add("dk2", rf"{OUT}\gdk2_base.stl", loc=(0, 640, 0))
+asm.add("dk1", rf"{OUT}\gdk1_base_v2.stl", loc=(0, 480, 0))
+asm.add("dk2", rf"{OUT}\gdk2_base_v2.stl", loc=(0, 640, 0))
+for _k, _my in enumerate((515, 565, 615, 678)):          # моторы тележек (дека v2)
+    asm.add(f"mot{_k}", rf"{OUT}\gdk_motor{_k}_model.stl", loc=(0, _my, 0))
 touch = [("dno_ne", "dno_se"), ("dno_nw", "dno_sw"), ("dno_se", "dno_sw"),
          ("top_wn", "top_ws"), ("top_en", "top_es"), ("top_wn", "top_en"),
          ("top_ws", "top_es"),
-         ("dno_ne", "dk1"), ("dno_nw", "dk1"),          # тумбы под дном хребта
-         ("dno_se", "dk2"), ("dno_sw", "dk2"),
          ("top_wn", "dk1"), ("top_ws", "dk2"),          # крышка на стенках хребта
          ("bent", "dno_ne"), ("bent", "top_ws")]        # лента у бортиков
 clear = [("dno_ne", "top_en", 5), ("bent", "dk1", 0.0)]
+clear += [(f"mot{_k}", _d, 1.0) for _k in range(4)          # мотор не касается дна и тумб
+          for _d in ("dno_ne", "dno_nw", "dno_se", "dno_sw")]
 asm.add("fret3", rf"{OUT}\gs3_fret.stl", loc=(0, 320, 23))
 asm.add("ex3", rf"{OUT}\gdk_ext.stl", loc=(10, 320, 19.25))   # этаж 3
 touch += [("fret3", "top_wn")]                 # язык на бобышках крышки
@@ -290,6 +293,11 @@ asm.check_holes("top_wn", [(x, y, Z_TOP0 + 0.5, 1.6)
                            for x, y in JT_Y if x < 58]
                 + [(x, y, Z_TOP0 + 0.5, 1.6) for x, y in JT_X if y < 718],
                 verbose=False)
+# тумбы под хребтом: каждая секция деки стоит хотя бы на одном куске дна
+for _dk in ("dk1", "dk2"):
+    if not any(asm._dist(_dk, _p)[0] < 0.05 for _p in ("dno_ne", "dno_nw", "dno_se", "dno_sw")):
+        print(f"  FAIL {_dk}: не стоит на тумбах")
+        raise SystemExit(1)
 # тумбы: каналы соосны дыркам в дне хребта (Ø3.4 в деке, мир TUMBA)
 import numpy as _np
 for x, y in TUMBA:

@@ -181,6 +181,18 @@ plates = [
      prep("gdk1_base") + prep("gdk_comb", copies=3) +          # кривошипы, втулки,
      prep("gdk_crank0") + prep("gdk_crank1") + prep("gdk_crank2") +   # гребёнки
      prep("gdk_sleeve0") + prep("gdk_sleeve1") + prep("gdk_sleeve2")),
+    # ---- ДЕКА v2 (13.09.2026) под моторы тележек Ø36 (ось мотора X=0 сбоку
+    # от жёлоба, кривошип: ступица на шестерне + диск + палец вниз r7.2).
+    # Гребёнки и 8 лент-продолжений — со старых столов 35/36, не перепечатывать
+    ("66_kupon_shesternya", p020_j,        # купон посадки ступицы на шестерню:
+     prep("gdk_kupon_shesternya", ID)),    # 4 трубки, риски 1..4 = Ø6.0 −0.4/−0.2/0/+0.2
+    ("67_deka1_v2", p020_j,                # хребет Д1 (3 мотора) + кривошипы 0–2
+     prep("gdk1_base_v2", ID) +            # (кривошипы диском на стол)
+     prep("gdk_crank0_v2", FLIP) + prep("gdk_crank1_v2", FLIP) + prep("gdk_crank2_v2", FLIP)),
+    ("68_deka2_v2", p020_j,                # хребет Д2 (1 мотор) + кривошип 3 + 4 хвоста
+     prep("gdk2_base_v2", ID) + prep("gdk_crank3_v2", FLIP) +
+     prep("gdk_tail0_v2", ID) + prep("gdk_tail1_v2", ID) +
+     prep("gdk_tail2_v2", ID) + prep("gdk_tail3_v2", ID)),
     ("36_gitara_deka2", p020_j,            # ДЕКА-2 + ленты: сегменты и хвосты
      prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
      prep("gdk_comb") + prep("gdk_ext", copies=8) +
