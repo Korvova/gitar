@@ -4,6 +4,8 @@
 здесь только «что взять в руки и куда поставить». Картинки нарисованы с настоящих STL
 (`2-0/render_sborka_a.py`), поэтому положение каждой детали на них точное.
 
+Следующий этап — секции 2 и 3 с лентами и хребет с моторами — в [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif).
+
 Оси: Y вдоль грифа, порожек = 0, дека = 160. «Юг» — сторона деки, «север» — сторона
 порожка. X поперёк, Z вверх.
 
@@ -153,6 +155,8 @@ Y = 18. Плита должна лечь на стенки P0 плоско; ес
 | Спица | не вылезает из жёлоба, не спрыгивает со стада | потолок плиты должен прижимать кольцо; зазор больше 0.4 — плита не села |
 | Усилие | плечо ходит от лёгкого нажатия на хвост | если туго — капля силиконовой смазки на стад и в канал |
 
+**Результат (13.09.2026): собрано и проверено руками.** Плечи ходят свободно, тележки двигаются от хвостов спиц, клинов нет. Посадки Ø5.1 по купону и смазка сработали.
+
 ## Этап Б: полная стопка из четырёх станций
 
 То же самое ещё два раза: после P1 — межэтажка P2 со станцией 2 (стад Y = 102), потом
@@ -160,6 +164,8 @@ P3 со станцией 3 (Y = 118), и только потом палуба с
 плиты пропускает все нижние штыри, поэтому плиты опускаются строго сверху, а не
 заводятся сбоку. Винты — М3×30 (стопка 26 мм). Детали: `gs1_p2_mid`, `gs1_p3_mid`
 (стол 31), `gs1_arm2/3`, `gs1_spica2/3`, ещё две тележки (стол 32).
+
+**Результат (13.09.2026): полная стопка из четырёх станций собрана, все четыре плеча и тележки ходят хорошо.** Дальше — [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif).
 
 Порядок и уроки по остальным узлам — секции 2–3, дека с моторами, ленты по этажам,
 корпус — в [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif),
@@ -169,13 +175,13 @@ P3 со станцией 3 (Y = 118), и только потом палуба с
 
 ## Файлы для печати
 
-| Стол | Что на нём | Настройки |
-|---|---|---|
-| [65_kupon_posadok.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/65_kupon_posadok.3mf) | купон посадок Ø5 и Ø6 | 0.2 мм, печатать первым |
-| [31_gitara_sec1_plity.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) | P0, P1, P2, P3 | 0.2 мм, без поддержек |
-| [32_gitara_sec1_meh.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) | палуба P4, 4 плеча, 4 спицы, 4 тележки — **посадки Ø5.1 (по купону 12.09.2026)** | 0.12 мм, брим на штыри плеч |
-| [33_gitara_sec2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/33_gitara_sec2.3mf), [34_gitara_sec3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/34_gitara_sec3.3mf) | секции 2 и 3: дно, 4 П-рейки, фретборд, планка-потолок — **у фретборда плоское дно (13.09.2026), под ним поддержки не нужны** | поддержки только от стола |
-| [35_gitara_deka1.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/35_gitara_deka1.3mf), [36_gitara_deka2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/36_gitara_deka2.3mf) | хребет деки, кривошипы, гребёнки, ленты | ждут решения по мотору (колодцы под NEMA14) |
+| Стол | Что на нём | Настройки | Статус |
+|---|---|---|---|
+| [65_kupon_posadok.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/65_kupon_posadok.3mf) | купон посадок Ø5 и Ø6 | 0.2 мм, печатать первым | ✅ Напечатано |
+| [31_gitara_sec1_plity.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/31_gitara_sec1_plity.3mf) | P0, P1, P2, P3 | 0.2 мм, без поддержек | ✅ Напечатано |
+| [32_gitara_sec1_meh.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/32_gitara_sec1_meh.3mf) | палуба P4, 4 плеча, 4 спицы, 4 тележки — **посадки Ø5.1 (по купону 12.09.2026)** | 0.12 мм, брим на штыри плеч | ✅ Напечатано |
+| [33_gitara_sec2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/33_gitara_sec2.3mf), [34_gitara_sec3.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/34_gitara_sec3.3mf) | секции 2 и 3: дно, 4 П-рейки, фретборд, планка-потолок — **у фретборда плоское дно (13.09.2026), под ним поддержки не нужны** | поддержки только от стола | ✅ Напечатано |
+| [35_gitara_deka1.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/35_gitara_deka1.3mf), [36_gitara_deka2.3mf](https://raw.githubusercontent.com/Korvova/gitar/main/2-0/Print3mf/36_gitara_deka2.3mf) | хребет деки (колодцы под NEMA17), кривошипы, гребёнки, ленты | поддержки только от стола | ✅ Напечатано — хребет с моторами ждёт перепроектирования, см. [гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) |
 
 Все STL по отдельности — в [2-0/Print/Print](https://github.com/Korvova/gitar/tree/main/2-0/Print/Print).
 Столы открывать в Bambu Studio «как проект». Пластик PETG HF.
