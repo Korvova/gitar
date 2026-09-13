@@ -65,12 +65,12 @@ def build_section(tag, sec_y0, south_shelf=True):
     for wy in wy_west:                                  # каналы накладки (запад)
         base -= Pos(-23.8, wy, 19.6) * Cylinder(1.3, 10.2)
 
-    # фретборд = и крышка стопки (идея юзера): язычок-потолок верхней ленты
-    # с 45-градусными скосами — печать ладами вверх без поддержек
+    # фретборд = и крышка стопки (идея юзера). ДНО ПЛОСКОЕ (юзер 13.09:
+    # язычок снизу требовал поддержек) — потолок верхней ленты вынесен в
+    # отдельную планку gs2_cap; её держат вдоль два пенька в глухих дырках
     fret = BB(-26, 26, 0, L, 0, 2)
-    tongue = Polyline((5.5, 0), (14.5, 0), (12.5, -2), (7.5, -2), (5.5, 0))
-    tface = make_face(Plane.XZ * tongue)
-    fret += Pos(0, 18, 0) * extrude(tface, L - 18)
+    for cy in CAP_PINS_Y:
+        fret -= Pos(10, cy, 0.55) * Cylinder(1.5, 1.3)  # глухая дырка снизу
     for Ln in frets_in(sec_y0 + 5, sec_y0 + L - 5):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (2.5, 17.7) for wy in wy_wall]
@@ -84,11 +84,20 @@ def build_section(tag, sec_y0, south_shelf=True):
         fret -= Pos(wx, wy, 1) * Cylinder(1.6, 2.2)
     return base, fret, holes
 
+# потолок верхней ленты: лежит в П-рейке этажа-3 поверх ленты, сверху
+# прижат плоским фретбордом; вдоль держат пеньки в дырках фретборда
+CAP_PINS_Y = (30, 150)
+cap = BB(5.5, 14.5, 18, L, 0, 2.0)                      # 9.0 в канале 9.2
+for cy in CAP_PINS_Y:
+    cap += Pos(10, cy, 2.45) * Cylinder(1.2, 0.9)       # пенёк Ø2.4 h0.9
+
 tray = BB(4.2, 15.8, 18, L, 0, 1.6)
 tray += BB(4.2, 5.4, 18, L, 1.6, 5.4)
 tray += BB(14.6, 15.8, 18, L, 1.6, 5.4)
 export_stl(Part() + tray, rf"{OUT}\gs2_tray.stl")
 print("gs2_tray ok")
+export_stl(Part() + cap, rf"{OUT}\gs2_cap.stl")
+print("gs2_cap ok")
 
 band = BB(-4, 4, -10, L + 10, 0, 1.6)
 export_stl(Part() + band, rf"{OUT}\gs2_band_test.stl")
@@ -120,14 +129,15 @@ for tag in ("gs2", "gs3"):
             touch.append((f"tray{k}", f"tray{k - 1}"))
             clear.append((f"band{k - 1}", f"tray{k}", 0.15))
     asm.add("fret", rf"{OUT}\{tag}_fret.stl", loc=(0, 0, 23))
-    touch += [("fret", "base"), ("fret", "tray3")]
-    clear += [("band3", "fret", 0.15)]
-    # язычок обязан быть НАД верхней лентой: зазор к ней маленький
-    _d, _ = asm._dist("band3", "fret")
+    asm.add("cap", rf"{OUT}\gs2_cap.stl", loc=(0, 0, 21.0))
+    touch += [("fret", "base"), ("fret", "tray3"), ("cap", "fret")]
+    clear += [("band3", "fret", 0.5), ("band3", "cap", 0.1),
+              ("cap", "tray3", 0.05)]
     asm.check(clearances=clear, touching=touch, verbose=False)
-    d_t, _ = asm._dist("band3", "fret")
+    # потолок-планка обязана быть НАД верхней лентой: зазор к ней маленький
+    d_t, _ = asm._dist("band3", "cap")
     if d_t > 0.5:
-        print(f"  FAIL {tag}: язычок фретборда не над лентой (зазор {d_t:.2f})")
+        print(f"  FAIL {tag}: планка-потолок не над лентой (зазор {d_t:.2f})")
         raise SystemExit(1)
     asm.check_holes("fret", [(wx, wy, 24.0, 1.6) for wx, wy in ALL[tag]],
                     verbose=False)

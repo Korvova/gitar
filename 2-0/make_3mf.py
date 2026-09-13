@@ -172,9 +172,11 @@ plates = [
      prep("gs1_arm0") + prep("gs1_arm1") + prep("gs1_arm2") + prep("gs1_arm3") +
      prep("gs1_spica0") + prep("gs1_spica1") + prep("gs1_spica2") + prep("gs1_spica3")),
     ("33_gitara_sec2", p020_j,             # секция-2 РАЗБОРНАЯ: дно + 4 П-рейки
-     prep("gs2_base") + prep("gs2_tray", copies=4) + prep("gs2_fret")),
+     prep("gs2_base") + prep("gs2_tray", copies=4) + prep("gs2_fret") +
+     prep("gs2_cap")),                     # потолок верхней ленты (дно фретборда плоское)
     ("34_gitara_sec3", p020_j,             # секция-3 (низ грифа): то же + свои лады
-     prep("gs3_base") + prep("gs2_tray", copies=4) + prep("gs3_fret")),
+     prep("gs3_base") + prep("gs2_tray", copies=4) + prep("gs3_fret") +
+     prep("gs2_cap")),                     # потолок верхней ленты
     ("35_gitara_deka1", p020_j,            # ДЕКА-1: дно (3 мотора NEMA17) +
      prep("gdk1_base") + prep("gdk_comb", copies=3) +          # кривошипы, втулки,
      prep("gdk_crank0") + prep("gdk_crank1") + prep("gdk_crank2") +   # гребёнки
