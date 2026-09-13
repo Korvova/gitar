@@ -77,8 +77,11 @@ def ear_holes(my, sign):
 TUMBA1 = [(-18, 60), (-18, 110)]       # тумбы корпуса (лок секции)
 TUMBA2 = [(-18, 65), (18, 65), (-18, 135), (18, 135)]
 COMB_Y = (540, 590, 634)               # гребёнки между моторами (мир)
-COMB_X0, COMB_X1 = -6.0, 15.6          # гребёнка «Е»: спинка на западе, зубья до 15.6
+COMB_X0, COMB_X1 = -6.0, 10.2          # гребёнка «Е»: спинка на западе, зубья до 10.2 —
+                                       # держат ленту (X 6..14) за западную половину
 TENON = (-6.0, 5.4)                    # шип гребёнки в паз дна (по X)
+COMB_SLIDE = 4.5                       # гребёнка ставится западнее на 4.5 и задвигается на ленты
+KEY_X = (TENON[0] - COMB_SLIDE - 0.2, TENON[0] - 0.2)   # фиксатор в паз за шипом
 
 
 def pick_ear_sign(my, sec_y0, tumba):
@@ -133,9 +136,9 @@ def deka_base(sec_y0, south_shelf, tumba_xy, lid_y, neck_mount=False):
         used.append((MOT_X, yl))
     for yg in COMB_Y:                                  # пазы шипов гребёнок
         yl = yg - sec_y0
-        if 4 < yl < L - 4:
-            b -= BB(TENON[0] - 0.2, TENON[1] + 0.2, yl - 2.2, yl + 2.2, 0.5, 3.1)
-            used.append((-0.3, yl))
+        if 4 < yl < L - 4:                             # длинный паз: шип едет 4.5 мм
+            b -= BB(TENON[0] - COMB_SLIDE - 0.2, TENON[1] + 0.2, yl - 2.2, yl + 2.2, 0.5, 3.1)
+            used += [(-0.3, yl), (TENON[0] - COMB_SLIDE, yl)]
     for tx, ty in tumba_xy:
         b -= Pos(tx, ty, 1.5) * Cylinder(1.7, 3.2)
         used.append((tx, ty))
@@ -215,6 +218,8 @@ comb = BB(COMB_X0, COMB_X1, -2, 2, 3, 22.5)
 for zf in Z_FLOOR:
     comb -= BB(5.4, COMB_X1 + 0.1, -2.1, 2.1, zf - 0.15, zf + 1.95)
 comb += BB(TENON[0], TENON[1], -2, 2, 0.6, 3.0)       # шип в паз дна
+# фиксатор: брусок в паз за шипом, чтобы гребёнка не уехала назад на запад
+comb_key = BB(KEY_X[0] + 0.1, KEY_X[1] - 0.1, -2.0, 2.0, 0.6, 4.5)
 
 
 # ---------------- ленты: защёлки-нахлёсты ----------------
@@ -287,7 +292,7 @@ for i, (kind, val) in enumerate((("o", -0.4), ("o", -0.2), ("o", 0.0), ("o", 0.2
 parts = [("gdk1_base_v3", deka_base(DK1_Y0, True, TUMBA1, (40, 100, 135), neck_mount=True)),
          ("gdk2_base_v3", deka_base(DK2_Y0, False, TUMBA2, (75, 120))),
          ("gdk_comb_v3", comb), ("gdk_ext", ext), ("gdk_kupon_shesternya", kupon),
-         ("gdk_spacer0_v3", spacer_part(EAR_SIGN[0]))]
+         ("gdk_spacer0_v3", spacer_part(EAR_SIGN[0])), ("gdk_comb_key_v3", comb_key)]
 parts += [(f"gdk_crank{k}_v3", crank_part(k)) for k in range(4)]
 parts += [(f"gdk_tail{k}_v3", tails[k]) for k in range(4)]
 parts += [(f"gdk_motor{k}_model", motor_model(EAR_SIGN[k])) for k in range(4)]
@@ -357,6 +362,14 @@ for k in range(4):
 d, depth = asm._dist("sp0", "dk1")
 if depth > 0.1 or d > 0.05:
     bad.append(f"проставка 0 не прилегает к дну: зазор {d:.2f}, вход {depth:.2f}")
+asm.add("key0", stl("gdk_comb_key_v3"), loc=(0, COMB_Y[0], 0))
+d, depth = asm._dist("key0", dk_of(COMB_Y[0]))
+if depth > 0.1:
+    bad.append(f"фиксатор гребёнки не садится в паз: вход {depth:.2f}")
+d, depth = asm._dist("key0", "comb0")
+if depth > 0.1:
+    bad.append(f"фиксатор врезается в гребёнку: вход {depth:.2f}")
+del asm.meshes["key0"]
 for i, yg in enumerate(COMB_Y):
     d, depth = asm._dist(f"comb{i}", dk_of(yg))
     if depth > 0.1:
@@ -371,6 +384,17 @@ d, depth = asm._dist("tl0", "ex0")
 if depth > 0.1:
     bad.append(f"защёлка хвоста 0: вход {depth:.2f}")
 del asm.meshes["ex0"]
+
+# сборка: гребёнка ставится западнее на COMB_SLIDE, ленты уже лежат — не задевает
+for k in range(4):
+    place(k, 0)
+for i, yg in enumerate(COMB_Y):
+    asm.add(f"combw{i}", stl("gdk_comb_v3"), loc=(-COMB_SLIDE, yg, 0))
+    for k in range(4):
+        if MY[k] - 12 > yg:
+            need(f"combw{i}", f"tl{k}", 0.2, "установка гребёнки", "гребёнка до задвигания/лента")
+    need(f"combw{i}", dk_of(yg), 0.0, "установка гребёнки")
+    del asm.meshes[f"combw{i}"]
 
 # полный оборот: все вместе и со сдвигом 90° по этажам
 if SWEEP:
