@@ -1,30 +1,34 @@
 # -*- coding: utf-8 -*-
-"""ГИТАРА: ДЕКА v2 (2 секции по 160, y 480..800) — моторный отсек под настоящие
-моторы тележек: круглый шаговик Ø36 (чертёж владельца 13.09.2026).
+"""ГИТАРА: ДЕКА v3 (2 секции по 160, y 480..800) — моторный отсек под моторы
+тележек Ø36 с шестерёнкой z10 (чертёж и замер владельца 13.09.2026).
 
-Что поменялось против v1 (NEMA17) и почему — проверка по STL 13.09.2026:
-в v1 валы моторов не были в проверке сборки, и вал Ø5 проходил сквозь палец
-кривошипа, вилку хвоста и ленты верхних этажей. В v2:
-  * мотор снизу дна, вал вверх, но ОСЬ МОТОРА на X = 0 — сбоку от жёлоба лент
-    (жёлоб X 6..14): ни вал, ни ступица кривошипа не проходят сквозь ленты;
-  * кривошип = ступица на шестерне вала + диск над лентой своего этажа +
-    палец ВНИЗ на радиусе R_PIN = 7.6 в открытую вилку хвоста;
-  * вилка — открытая на запад: палец входит в неё сверху, при качании ±38°
-    центр пальца ходит по X 6.0..7.6 и всегда держится зубьями вилки;
-  * зубья вилки не шире щели гребёнки: хвост протаскивается сквозь гребёнки;
-  * вал 6 мм не доходит до лент этажей 1–3 (они выше Z 8.4);
+v3 — ПОЛНЫЙ ОБОРОТ кривошипа (идея владельца), механизм «кулиса»:
+  * мотор снизу дна, вал вверх, ось мотора X = 0 сбоку от жёлоба лент (X 6..14);
+  * кривошип = ступица на шестерне + диск ПОД лентой своего этажа + палец Ø5
+    ВВЕРХ на радиусе R = 4.8 в поперечную прорезь ленты. Ступица и шестерня
+    не доходят до ленты, поэтому кривошип крутится на 360°, лента ходит
+    вперёд-назад на ±R (синусом). Сила на ленте в 1.6 раза больше, чем в v2;
+  * этажу 0 под лентой места нет: мотор 0 опущен на проставке 4 мм, диск 0
+    крутится в окне дна хребта;
+  * гребёнки открыты на восток (форма «Е»): ленты кладутся сверху, гребёнки
+    задвигаются сбоку после всех лент — через закрытую щель широкий хвост
+    с прорезью не пролез бы;
   * уши фланца повёрнуты на 56°: винты М3 ложатся между жёлобом и стенкой.
-В проверке сборки: модель мотора (корпус, пилот, фланец с ушами, шестерня с
-допуском вала +0.5) и КАЧАНИЕ всех кривошипов с лентами по сектору — зазоры
-считаются на каждом шаге.
+Проверка сборки: модель мотора по чертежу (вал с допуском +0.5) и полный оборот
+всех кривошипов (вместе и со сдвигом 90°), зазоры на каждом шаге 30°.
 
 Запуск: .venv-b123d\\Scripts\\python gitara_deka.py
 """
+import gc
 import math
+import os
 import sys
 from build123d import *
 
-OUT = r"C:\App\gitar\2-0\Print\Print"
+# рядом со скриптом: работает и на Windows, и на сервере Linux
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Print", "Print")
+os.makedirs(OUT, exist_ok=True)
+SWEEP = os.environ.get("DEKA_SWEEP", "1") != "0"   # DEKA_SWEEP=0 — только детали и статика
 L = 160
 Z_FLOOR = [3, 8.4, 13.8, 19.2]
 JX = (-21, -9, 5, 21)
@@ -32,31 +36,31 @@ LANE = 10                              # центр жёлоба лент
 DK1_Y0, DK2_Y0 = 480, 640
 
 # ---------------- мотор (чертёж владельца) ----------------
-MOT_X = 0.0                            # ось мотора сбоку от жёлоба
+MOT_X = 0.0
 MY = [515, 565, 615, 678]              # мотор этажа k (ближний к грифу — этаж 0)
-MOT_R = 36.5 / 2                       # корпус Ø36.5
-MOT_H = 22.0                           # глубина корпуса
-PILOT_R, PILOT_H = 16.0 / 2, 1.5       # пилот Ø16 (−0.052) × 1.5
-EAR_SPAN = 43.85                       # 2 × М3 на 43.85
-EAR_R = EAR_SPAN / 2
-EAR_ANG = 56.0                         # поворот ушей от оси Y (винты между жёлобом и стенкой)
-SHAFT_OUT = 6.0 + 0.5                  # вал от фланца 6 ± 0.5 — берём худший
+MOT_R, MOT_H = 36.5 / 2, 22.0
+PILOT_R, PILOT_H = 16.0 / 2, 1.5
+EAR_R = 43.85 / 2
+EAR_ANG = 56.0
+SHAFT_OUT = 6.0 + 0.5                  # вал от фланца 6 ± 0.5 — худший случай
 GEAR_L = 4.0
-GEAR_D = 6.0                           # наружный Ø шестерни: замер владельца 13.09.2026 — 6.0
-GEAR_Z0 = SHAFT_OUT - 0.5 - GEAR_L     # начало шестерни при номинале (≈2.0)
+GEAR_D = 6.0                           # замер владельца 13.09.2026
+SPACER = 4.0                           # проставка мотора 0
+FLANGE_Z = [-SPACER, 0.0, 0.0, 0.0]    # высота фланца мотора k
 
-# ---------------- кривошип ----------------
-R_PIN = 7.6                            # радиус пальца
-PIN_R = 2.5                            # палец Ø5
-SWING = 38.0                           # рабочий сектор ±38° -> ход ленты ±4.68
-SWING_MAX = 40.0                       # предел: центр пальца не западнее FORK_X+0.3 (cos = 5.8/7.6)
-BORE_D = GEAR_D - 0.2                  # посадка ступицы на шестерню (купон 66)
+# ---------------- кривошип (кулиса) ----------------
+R_CR = 4.8                             # радиус пальца = ход ленты ±4.8
+PIN_R = 2.5
+BORE_D = GEAR_D - 0.2                  # посадка на шестерню (купон 66, риска 2)
 HUB_R = GEAR_D / 2 + 1.2
-HUB_Z0 = 2.2
-DISK_R = R_PIN + PIN_R + 1.0
-DISK_DZ, DISK_T = 1.8, 1.8             # диск: низ на полу+1.8, толщина 1.8 (верх этажа 3 = 22.8 < 23)
-FORK_X = 5.5                           # западный край зубьев вилки (мир): не шире щели гребёнки 5.4,
-                                       # чтобы хвост протаскивался сквозь гребёнки вилкой вперёд
+DISK_R = R_CR + PIN_R + 1.0
+DISK_T = 1.8
+SLOT_C = 0.15                          # зазор пальца в прорези по Y
+SLOT_HALF = R_CR + PIN_R + 0.3         # полудлина прорези по X
+
+
+def disk_top(k):
+    return Z_FLOOR[k] - 0.35           # диск под лентой этажа k
 
 
 def BB(x0, x1, y0, y1, z0, z1):
@@ -65,25 +69,22 @@ def BB(x0, x1, y0, y1, z0, z1):
 
 
 def ear_holes(my, sign):
-    """Два уха фланца мотора: (x, y) мир. sign выбирает диагональ."""
     a = math.radians(EAR_ANG)
     dx, dy = EAR_R * math.sin(a), EAR_R * math.cos(a)
     return [(MOT_X + sign * dx, my + dy), (MOT_X - sign * dx, my - dy)]
 
 
-# тумбы корпуса (лок секции): винты сверху сквозь дно
-# v2: столбики 16×16 не должны задевать корпуса моторов Ø36.5 и уши фланцев —
-# в Д1 место есть только у западной стенки между моторами (расчёт 13.09.2026)
-TUMBA1 = [(-18, 60), (-18, 110)]
+TUMBA1 = [(-18, 60), (-18, 110)]       # тумбы корпуса (лок секции)
 TUMBA2 = [(-18, 65), (18, 65), (-18, 135), (18, 135)]
 COMB_Y = (540, 590, 634)               # гребёнки между моторами (мир)
+COMB_X0, COMB_X1 = -6.0, 15.6          # гребёнка «Е»: спинка на западе, зубья до 15.6
+TENON = (-6.0, 5.4)                    # шип гребёнки в паз дна (по X)
 
 
 def pick_ear_sign(my, sec_y0, tumba):
-    """Диагональ ушей, дальняя от стыковых дырок, тумб и ямок гребёнок."""
     others = [(hx, sec_y0 + 9) for hx in JX] + [(hx, sec_y0 + L + 9) for hx in JX]
     others += [(tx, sec_y0 + ty) for tx, ty in tumba]
-    others += [(gx, yg) for yg in COMB_Y for gx in (-4, 18)]
+    others += [(gx, yg) for yg in COMB_Y for gx in (-6, -0.3, 5.4)]
     best = None
     for s in (1, -1):
         d = min(math.hypot(ex - ox, ey - oy)
@@ -104,7 +105,6 @@ for k, my in enumerate(MY):
 
 
 def deka_base(sec_y0, south_shelf, tumba_xy, lid_y, neck_mount=False):
-    """Дно секции деки v2: колодцы моторов Ø36, стыки, стенки, ямки гребёнок."""
     b = BB(-26, 26, 0, L, 0, 3)
     b += BB(-26, -22, 0, L, 3, 23)
     b += BB(22, 26, 0, L, 3, 23)
@@ -117,30 +117,33 @@ def deka_base(sec_y0, south_shelf, tumba_xy, lid_y, neck_mount=False):
             b -= Pos(hx, L + 9, 0.75) * Cylinder(1.6, 1.7)
     else:
         b += BB(-26, 26, L - 2, L, 3, 23)
-    holes_used = []
+    used = []
     for k, my in enumerate(MY):
         if not (sec_y0 <= my < sec_y0 + L):
             continue
         yl = my - sec_y0
-        b -= Pos(MOT_X, yl, PILOT_H / 2 + 0.05) * Cylinder(PILOT_R + 0.05, PILOT_H + 0.2)  # пилот
-        b -= Pos(MOT_X, yl, 1.5) * Cylinder(HUB_R + 0.5, 3.2)                            # ступица
+        if k == 0:                                     # окно диска 0 насквозь
+            b -= Pos(MOT_X, yl, 1.5) * Cylinder(DISK_R + 0.5, 3.2)
+        else:
+            b -= Pos(MOT_X, yl, PILOT_H / 2 + 0.05) * Cylinder(PILOT_R + 0.05, PILOT_H + 0.2)
+            b -= Pos(MOT_X, yl, 1.5) * Cylinder(HUB_R + 0.5, 3.2)
         for ex, ey in ear_holes(my, EAR_SIGN[k]):
-            b -= Pos(ex, ey - sec_y0, 1.5) * Cylinder(1.7, 3.2)                          # М3
-            holes_used.append((ex, ey - sec_y0))
-        holes_used.append((MOT_X, yl))
-    for yg in COMB_Y:                                  # ямки гребёнок
+            b -= Pos(ex, ey - sec_y0, 1.5) * Cylinder(1.7, 3.2)
+            used.append((ex, ey - sec_y0))
+        used.append((MOT_X, yl))
+    for yg in COMB_Y:                                  # пазы шипов гребёнок
         yl = yg - sec_y0
         if 4 < yl < L - 4:
-            for gx in (-4, 18):
-                b -= Pos(gx, yl, 1.5) * Cylinder(3.0, 3.2)
-    for tx, ty in tumba_xy:                            # тумбы корпуса
+            b -= BB(TENON[0] - 0.2, TENON[1] + 0.2, yl - 2.2, yl + 2.2, 0.5, 3.1)
+            used.append((-0.3, yl))
+    for tx, ty in tumba_xy:
         b -= Pos(tx, ty, 1.5) * Cylinder(1.7, 3.2)
-        holes_used.append((tx, ty))
+        used.append((tx, ty))
     for ex in (-19, -11):                              # сетка стоек электроники
         for ey in range(25, L - 15, 35):
-            if all(math.hypot(ex - hx, ey - hy) > 8 for hx, hy in holes_used):
+            if all(math.hypot(ex - hx, ey - hy) > 9 for hx, hy in used):
                 b -= Pos(ex, ey, 1.5) * Cylinder(1.3, 3.2)
-    for ty in lid_y:                                   # крышка корпуса
+    for ty in lid_y:
         for sx in (-24, 24):
             b -= Pos(sx, ty, 18.2) * Cylinder(1.3, 10)
     if neck_mount:
@@ -151,45 +154,70 @@ def deka_base(sec_y0, south_shelf, tumba_xy, lid_y, neck_mount=False):
     return b
 
 
-# ---------------- модель мотора (для проверки и сцены, не печатается) ------
+def ear_plate(sign, z0, z1, r_lobe):
+    """Фланцевая пластина: лепестки к ушам + перемычки (для модели и проставки)."""
+    a = math.radians(EAR_ANG)
+    p = None
+    for s in (1, -1):
+        ex, ey = s * sign * EAR_R * math.sin(a), s * EAR_R * math.cos(a)
+        lobe = Pos(ex, ey, (z0 + z1) / 2) * Cylinder(r_lobe, z1 - z0)
+        bar = Pos(ex / 2, ey / 2, (z0 + z1) / 2) * Rot(0, 0, -math.degrees(math.atan2(ex, ey))) * \
+            Box(2 * r_lobe, EAR_R, z1 - z0)
+        p = lobe + bar if p is None else p + lobe + bar
+    return p
+
+
 def motor_model(sign):
+    """Мотор в своей системе: фланец z=0, вал вверх (для проверки и сцены)."""
     m = Pos(0, 0, -MOT_H / 2) * Cylinder(MOT_R, MOT_H)
     m += Pos(0, 0, PILOT_H / 2) * Cylinder(PILOT_R, PILOT_H)
+    m += ear_plate(sign, -1.0, 0.0, 3.5)
     a = math.radians(EAR_ANG)
-    for s in (1, -1):                                  # фланец: лепесток к каждому уху
-        ex, ey = s * sign * EAR_R * math.sin(a), s * EAR_R * math.cos(a)
-        m += Pos(ex, ey, -0.5) * Cylinder(3.5, 1.0)
-        mid = Pos(ex / 2, ey / 2, -0.5) * Rot(0, 0, -math.degrees(math.atan2(ex, ey))) * Box(7.0, EAR_R, 1.0)
-        m += mid
-        m -= Pos(ex, ey, -0.5) * Cylinder(1.6, 1.2)
+    for s in (1, -1):
+        m -= Pos(s * sign * EAR_R * math.sin(a), s * EAR_R * math.cos(a), -0.5) * Cylinder(1.6, 1.2)
     m += Pos(0, 0, PILOT_H + (SHAFT_OUT - PILOT_H) / 2) * Cylinder(1.25, SHAFT_OUT - PILOT_H)
     m += Pos(0, 0, SHAFT_OUT - GEAR_L / 2) * Cylinder(GEAR_D / 2, GEAR_L)
     return m
 
 
-# ---------------- кривошип: ступица на шестерне, диск над лентой, палец вниз --
+def spacer_part(sign):
+    """Проставка мотора 0 (мир z −4..0): пилот снизу, ступица насквозь, уши."""
+    s = Pos(0, 0, -SPACER / 2) * Cylinder(11.0, SPACER)
+    s += ear_plate(sign, -SPACER, 0.0, 4.2)
+    s -= Pos(0, 0, -SPACER + (PILOT_H + 0.1) / 2 - 0.05) * Cylinder(PILOT_R + 0.05, PILOT_H + 0.2)
+    s -= Pos(0, 0, -SPACER / 2) * Cylinder(HUB_R + 0.5, SPACER + 0.2)
+    a = math.radians(EAR_ANG)
+    for q in (1, -1):
+        s -= Pos(q * sign * EAR_R * math.sin(a), q * EAR_R * math.cos(a), -SPACER / 2) * \
+            Cylinder(1.7, SPACER + 0.2)
+    return s
+
+
 def crank_part(k):
-    zf = Z_FLOOR[k]
-    d0 = zf + DISK_DZ
+    """Кривошип в системе оси мотора (мир z): ступица на шестерне, диск под
+    лентой, палец вверх в прорезь ленты."""
+    fz = FLANGE_Z[k]
+    hub_z0 = fz + 2.2
+    dt = disk_top(k)
+    d0 = dt - DISK_T
     c = Pos(0, 0, d0 + DISK_T / 2) * Cylinder(DISK_R, DISK_T)
-    c += Pos(0, 0, (HUB_Z0 + d0) / 2) * Cylinder(HUB_R, d0 - HUB_Z0)
-    bore_top = SHAFT_OUT + 0.2
-    c -= Pos(0, 0, (HUB_Z0 - 0.1 + bore_top) / 2) * Cylinder(BORE_D / 2, bore_top - HUB_Z0 + 0.1)
-    c += Pos(R_PIN, 0, (zf + 0.3 + d0) / 2) * Cylinder(PIN_R, d0 - zf - 0.3)   # палец: низ на полу+0.3
+    if d0 > hub_z0:
+        c += Pos(0, 0, (hub_z0 + d0) / 2) * Cylinder(HUB_R, d0 - hub_z0)
+    bore_top = fz + SHAFT_OUT + 0.2                    # у этажа 0 выходит сквозь диск — это не мешает
+    c -= Pos(0, 0, (hub_z0 - 0.1 + bore_top) / 2) * Cylinder(BORE_D / 2, bore_top - hub_z0 + 0.1)
+    pin_top = Z_FLOOR[k] + 1.45
+    c += Pos(R_CR, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
     return c
 
 
-cranks = [crank_part(k) for k in range(4)]
-
-# ---------------- гребёнка (как в v1: не зависит от мотора) ----------------
-comb = BB(-6, 21.9, -2, 2, 3, 22.5)
+# ---------------- гребёнка «Е»: открыта на восток ----------------
+comb = BB(COMB_X0, COMB_X1, -2, 2, 3, 22.5)
 for zf in Z_FLOOR:
-    comb -= BB(5.4, 14.6, -2.1, 2.1, zf - 0.15, zf + 1.95)
-comb += Pos(-4, 0, 1.6) * Cylinder(2.85, 2.8)
-comb += Pos(18, 0, 1.6) * Cylinder(2.85, 2.8)
+    comb -= BB(5.4, COMB_X1 + 0.1, -2.1, 2.1, zf - 0.15, zf + 1.95)
+comb += BB(TENON[0], TENON[1], -2, 2, 0.6, 3.0)       # шип в паз дна
 
 
-# ---------------- ленты: защёлки-нахлёсты (как в v1) ----------------------
+# ---------------- ленты: защёлки-нахлёсты ----------------
 def lap_top(seg, y0):
     seg -= BB(-4.1, 4.1, y0 - 0.1, y0 + 18, -0.1, 0.8)
     seg -= Pos(0, y0 + 6.5, 1.2) * Cylinder(1.75, 1.0)
@@ -206,140 +234,180 @@ def lap_bot(seg, y1):
 
 ext = lap_bot(lap_top(BB(-4, 4, 0, 178, 0, 1.6), 0), 178)
 
-# хвост v2: лента до мотора своего этажа, на конце — зубья вилки с западным
-# выступом до FORK_X и открытый на запад паз под палец (лок: X от центра жёлоба)
+# хвост v3: лента до мотора, на конце — площадка с ПОПЕРЕЧНОЙ прорезью (кулиса)
+YOKE_HALF_Y = PIN_R + SLOT_C + 1.5
 tails = []
 for k in range(4):
-    yc = MY[k] - 480                                   # центр паза (лок)
-    ln = yc + 5.0
+    yc = MY[k] - 480
+    ln = yc + YOKE_HALF_Y
     t = lap_top(BB(-4, 4, 0, ln, 0, 1.6), 0)
-    t += BB(FORK_X - LANE, -4, yc - 4.65, ln, 0, 1.6)  # западный выступ зубьев
-    t -= BB(FORK_X - LANE - 0.1, (R_PIN + PIN_R + 0.3) - LANE,
-            yc - (PIN_R + 0.15), yc + (PIN_R + 0.15), -0.1, 1.7)
+    x_w = MOT_X - SLOT_HALF - 1.2 - LANE               # западный край площадки (лок)
+    t += BB(x_w, -4, yc - YOKE_HALF_Y, ln, 0, 1.6)
+    t -= BB(MOT_X - SLOT_HALF - LANE, MOT_X + SLOT_HALF - LANE,
+            yc - (PIN_R + SLOT_C), yc + (PIN_R + SLOT_C), -0.1, 1.7)
     tails.append(t)
 
-# ---------------- купон 66: посадка ступицы на шестерню ----------------------
-# четыре трубки как ступица: отверстия GEAR_D −0.4 / −0.2 / 0 / +0.2, риски 1..4
-kupon = BB(-2, 50, -6, 6, 0, 2)
-for i, dd in enumerate((-0.4, -0.2, 0.0, 0.2)):
+# ---------------- купон 66: посадка на шестерню ----------------
+GEAR_Z = 10
+GEAR_M = GEAR_D / (GEAR_Z + 2)
+R_TIP, R_ROOT = GEAR_D / 2, GEAR_D / 2 - 2.25 * GEAR_M
+TOOTH_TIP_HALF, TOOTH_ROOT_HALF = 3.8, 15.0
+
+
+def star_hole(c, h, z0):
+    pts = []
+    pitch = 360.0 / GEAR_Z
+    for i in range(GEAR_Z):
+        a = i * pitch
+        ra, rt = R_ROOT + c, R_TIP + c
+        dr, dtt = math.degrees(c / ra), math.degrees(c / rt)
+        # полуугол впадины не больше полушага минус 1° — иначе соседние зубцы
+        # перехлёстываются, контур сам себя пересекает и ядро CAD раздувает память
+        hr = min(TOOTH_ROOT_HALF + dr, pitch / 2 - 1.0)
+        ht = min(TOOTH_TIP_HALF + dtt, hr - 1.0)
+        for ang, r in ((a - hr, ra), (a - ht, rt), (a + ht, rt), (a + hr, ra)):
+            pts.append((r * math.cos(math.radians(ang)), r * math.sin(math.radians(ang))))
+    pts.append(pts[0])
+    return Pos(0, 0, z0) * extrude(make_face(Polyline(*pts)), h)
+
+
+kupon = BB(-2, 74, -6, 6, 0, 2)
+for i, (kind, val) in enumerate((("o", -0.4), ("o", -0.2), ("o", 0.0), ("o", 0.2),
+                                 ("z", 0.1), ("z", 0.2))):
     x = 6 + i * 12
     kupon += Pos(x, 0, 4) * Cylinder(HUB_R, 4)
-    kupon -= Pos(x, 0, 3.5) * Cylinder((GEAR_D + dd) / 2, 5.2)
+    if kind == "o":
+        kupon -= Pos(x, 0, 3.5) * Cylinder((GEAR_D + val) / 2, 5.2)
+    else:
+        kupon -= Pos(x, 0, 0) * star_hole(val, 6.2, 0.9)
     for j in range(i + 1):
-        kupon -= BB(x - 3 + j * 1.6, x - 2.2 + j * 1.6, -6.1, -5.2, 1.4, 2.1)
+        w = 1.2 if i < 4 else 1.0
+        kupon -= BB(x - 4 + j * w, x - 4 + j * w + 0.6, -6.1, -5.2, 1.4, 2.1)
 
-parts = [("gdk1_base_v2", deka_base(DK1_Y0, True, TUMBA1, (40, 100, 135), neck_mount=True)),
-         ("gdk2_base_v2", deka_base(DK2_Y0, False, TUMBA2, (75, 120))),
-         ("gdk_comb", comb), ("gdk_ext", ext), ("gdk_kupon_shesternya", kupon)]
-parts += [(f"gdk_crank{k}_v2", cranks[k]) for k in range(4)]
-parts += [(f"gdk_tail{k}_v2", tails[k]) for k in range(4)]
+parts = [("gdk1_base_v3", deka_base(DK1_Y0, True, TUMBA1, (40, 100, 135), neck_mount=True)),
+         ("gdk2_base_v3", deka_base(DK2_Y0, False, TUMBA2, (75, 120))),
+         ("gdk_comb_v3", comb), ("gdk_ext", ext), ("gdk_kupon_shesternya", kupon),
+         ("gdk_spacer0_v3", spacer_part(EAR_SIGN[0]))]
+parts += [(f"gdk_crank{k}_v3", crank_part(k)) for k in range(4)]
+parts += [(f"gdk_tail{k}_v3", tails[k]) for k in range(4)]
 parts += [(f"gdk_motor{k}_model", motor_model(EAR_SIGN[k])) for k in range(4)]
 for name, part in parts:
     p = part if isinstance(part, Part) else Part() + part
-    export_stl(p, rf"{OUT}\{name}.stl")
+    export_stl(p, os.path.join(OUT, name + ".stl"))
     print(f"{name}: volume={p.volume:.0f} mm3, solids={len(p.solids())}")
 print("export done")
 
 # ================= ПРОВЕРКИ =================
+# Память: каждая деталь грузится ОДИН раз; на шагах оборота подвижные детали
+# только переставляются копией (раньше сборка перегружалась на каждом шаге —
+# за 24 шага съедалась вся оперативка).
+import trimesh
 from clearance import Assembly
 
 
-def base_asm():
-    asm = Assembly()
-    asm.add("dk1", rf"{OUT}\gdk1_base_v2.stl", loc=(0, DK1_Y0, 0))
-    asm.add("dk2", rf"{OUT}\gdk2_base_v2.stl", loc=(0, DK2_Y0, 0))
-    for k in range(4):
-        asm.add(f"mot{k}", rf"{OUT}\gdk_motor{k}_model.stl", loc=(MOT_X, MY[k], 0))
-    for i, yg in enumerate(COMB_Y):
-        asm.add(f"comb{i}", rf"{OUT}\gdk_comb.stl", loc=(0, yg, 0))
-    return asm
+def stl(name):
+    return os.path.join(OUT, name + ".stl")
 
+
+asm = Assembly()
+asm.add("dk1", stl("gdk1_base_v3"), loc=(0, DK1_Y0, 0))
+asm.add("dk2", stl("gdk2_base_v3"), loc=(0, DK2_Y0, 0))
+asm.add("sp0", stl("gdk_spacer0_v3"), loc=(MOT_X, MY[0], 0))
+for k in range(4):
+    asm.add(f"mot{k}", stl(f"gdk_motor{k}_model"), loc=(MOT_X, MY[k], FLANGE_Z[k]))
+for i, yg in enumerate(COMB_Y):
+    asm.add(f"comb{i}", stl("gdk_comb_v3"), loc=(0, yg, 0))
+RAW_CR = [trimesh.load(stl(f"gdk_crank{k}_v3"), force="mesh") for k in range(4)]
+RAW_TL = [trimesh.load(stl(f"gdk_tail{k}_v3"), force="mesh") for k in range(4)]
 
 bad = []
+worst = {}
 
 
-def need(asm, a, b, gap, where):
+def need(a, b, gap, where, key=None):
     d, depth = asm._dist(a, b)
     if depth > 0.05 or d < gap - 1e-6:
         bad.append(f"{where}: {a} <-> {b} зазор {d:.2f} (нужно {gap}), вход {depth:.2f}")
+    if key:
+        worst[key] = min(worst.get(key, 99), d if depth <= 0.05 else -depth)
     return d
 
 
-# статика: моторы садятся в колодцы, гребёнки в ямки
-asm = base_asm()
+def dk_of(y):
+    return "dk1" if y < DK2_Y0 else "dk2"
+
+
+def place(k, angle):
+    """Кривошип k повернуть на angle, ленту k сдвинуть на R·sin — без перезагрузки."""
+    T = trimesh.transformations.rotation_matrix(math.radians(angle), [0, 0, 1])
+    T[:3, 3] = (MOT_X, MY[k], 0)
+    c = RAW_CR[k].copy()
+    c.apply_transform(T)
+    asm.meshes[f"cr{k}"] = c
+    t = RAW_TL[k].copy()
+    t.apply_translation((LANE, 480 + R_CR * math.sin(math.radians(angle)), Z_FLOOR[k] + 0.05))
+    asm.meshes[f"tl{k}"] = t
+
+
+# статика
 for k in range(4):
-    dk = "dk1" if MY[k] < DK2_Y0 else "dk2"
-    need(asm, f"mot{k}", dk, 0.0, "мотор в колодце")
-    for i in range(3):
-        need(asm, f"mot{k}", f"comb{i}", 0.1, "мотор/гребёнка")   # ухо под дном, штырь в ямке — по высоте 0.2
-for i in range(3):
-    d, depth = asm._dist(f"comb{i}", "dk1" if COMB_Y[i] < DK2_Y0 else "dk2")
+    d, depth = asm._dist(f"mot{k}", "sp0" if k == 0 else dk_of(MY[k]))
     if depth > 0.1:
-        bad.append(f"гребёнка {i} не садится в ямки: вход {depth:.2f}")
+        bad.append(f"мотор {k} не садится: вход {depth:.2f}")
+d, depth = asm._dist("sp0", "dk1")
+if depth > 0.1 or d > 0.05:
+    bad.append(f"проставка 0 не прилегает к дну: зазор {d:.2f}, вход {depth:.2f}")
+for i, yg in enumerate(COMB_Y):
+    d, depth = asm._dist(f"comb{i}", dk_of(yg))
+    if depth > 0.1:
+        bad.append(f"гребёнка {i} не садится в паз: вход {depth:.2f}")
+    for k in range(4):
+        need(f"comb{i}", f"mot{k}", 0.1, "статика", "гребёнка/мотор")
 
-# качание: все кривошипы вместе и вразнобой, от −SWING_MAX до +SWING_MAX
-angles = [-SWING_MAX, -SWING, -20, 0, 20, SWING, SWING_MAX]
-modes = {"вместе": [1, 1, 1, 1], "вразнобой": [1, -1, 1, -1]}
-worst = {}
-for mode, sgn in modes.items():
-    for th in angles:
-        asm = base_asm()
-        for k in range(4):
-            a = th * sgn[k]
-            asm.add(f"cr{k}", rf"{OUT}\gdk_crank{k}_v2.stl", loc=(MOT_X, MY[k], 0), rz=a)
-            dy = R_PIN * math.sin(math.radians(a))
-            asm.add(f"tl{k}", rf"{OUT}\gdk_tail{k}_v2.stl",
-                    loc=(LANE, 480 + dy, Z_FLOOR[k] + 0.05))
-        where = f"{mode} {th:+.0f}°"
-        for k in range(4):
-            dk = "dk1" if MY[k] < DK2_Y0 else "dk2"
-            for key, a, b, g in (
-                    ("кривошип/дно", f"cr{k}", dk, 0.3),
-                    ("палец в вилке", f"cr{k}", f"tl{k}", 0.1),
-                    ("лента/мотор", f"tl{k}", f"mot{k}", 0.5)):
-                d = need(asm, a, b, g, where)
-                worst[key] = min(worst.get(key, 99), d)
-            for j in range(4):
-                if j != k:
-                    d = need(asm, f"tl{k}", f"cr{j}", 0.5, where)
-                    worst["лента/чужой кривошип"] = min(worst.get("лента/чужой кривошип", 99), d)
-                    d = need(asm, f"tl{k}", f"mot{j}", 0.5, where)
-                    worst["лента/чужой мотор"] = min(worst.get("лента/чужой мотор", 99), d)
-            for i, yg in enumerate(COMB_Y):
-                d = need(asm, f"cr{k}", f"comb{i}", 0.5, where)
-                worst["кривошип/гребёнка"] = min(worst.get("кривошип/гребёнка", 99), d)
-                if MY[k] - 12 > yg:
-                    d = need(asm, f"tl{k}", f"comb{i}", 0.1, where)
-                    worst["лента/гребёнка"] = min(worst.get("лента/гребёнка", 99), d)
-        # палец обязан быть В зубьях вилки: центр пальца по X не западнее FORK_X
-        px = MOT_X + R_PIN * math.cos(math.radians(abs(th)))
-        if px < FORK_X + 0.3:
-            bad.append(f"{where}: палец выходит из вилки (центр X {px:.2f})")
-        top = max(asm.meshes[f"cr{k}"].bounds[1][2] for k in range(4))
-        if top > 22.9:
-            bad.append(f"{where}: кривошип выше стенок ({top:.2f})")
-
-# стык-3: защёлка ленты-продолжения на хвост этажа 0
-asm = base_asm()
-asm.add("tl0", rf"{OUT}\gdk_tail0_v2.stl", loc=(LANE, 480, Z_FLOOR[0] + 0.05))
-asm.add("ex0", rf"{OUT}\gdk_ext.stl", loc=(LANE, 320, Z_FLOOR[0] + 0.05))
+# защёлка ленты-продолжения на хвост этажа 0
+place(0, 0)
+asm.add("ex0", stl("gdk_ext"), loc=(LANE, 320, Z_FLOOR[0] + 0.05))
 d, depth = asm._dist("tl0", "ex0")
 if depth > 0.1:
     bad.append(f"защёлка хвоста 0: вход {depth:.2f}")
+del asm.meshes["ex0"]
 
-# сборка: хвост протаскивается сквозь щели гребёнок вилкой вперёд
-if FORK_X < 5.4 + 0.05:
-    bad.append(f"зубья вилки (X {FORK_X}) шире щели гребёнки (X 5.4) — хвост не протащить")
+# полный оборот: все вместе и со сдвигом 90° по этажам
+if SWEEP:
+    modes = {"вместе": [0, 0, 0, 0], "сдвиг 90°": [0, 90, 180, 270]}
+    for mode, ph in modes.items():
+        for th0 in range(0, 360, 30):
+            for k in range(4):
+                place(k, th0 + ph[k])
+            where = f"{mode} {th0}°"
+            for k in range(4):
+                need(f"cr{k}", dk_of(MY[k]), 0.3, where, "кривошип/дно")
+                need(f"cr{k}", f"tl{k}", 0.1, where, "палец в прорези, диск под лентой")
+                if k == 0:
+                    need("cr0", "sp0", 0.3, where, "кривошип 0/проставка")
+                for j in range(4):
+                    need(f"tl{k}", f"mot{j}", 0.5, where, "лента/мотор")
+                    if j != k:
+                        need(f"cr{k}", f"tl{j}", 0.5, where, "кривошип/чужая лента")
+                        need(f"cr{k}", f"mot{j}", 0.5, where, "кривошип/чужой мотор")
+                for i, yg in enumerate(COMB_Y):
+                    need(f"cr{k}", f"comb{i}", 0.5, where, "кривошип/гребёнка")
+                    if MY[k] - 12 > yg:
+                        need(f"tl{k}", f"comb{i}", 0.1, where, "лента/гребёнка")
+                if asm.meshes[f"cr{k}"].bounds[1][2] > Z_FLOOR[k] + 1.65:
+                    bad.append(f"{where}: кривошип {k} выше ленты своего этажа")
+            gc.collect()
+            print(f"  шаг {where}: ок, нарушений всего {len(bad)}", flush=True)
+else:
+    print("оборот пропущен (DEKA_SWEEP=0)")
 
-print("минимальные зазоры по качанию (мм):")
+print("минимальные зазоры (мм):")
 for key in sorted(worst):
-    print(f"  {key:22s} {worst[key]:.2f}")
-print(f"ход ленты при ±{SWING:.0f}°: ±{R_PIN * math.sin(math.radians(SWING)):.2f} мм; "
-      f"предел ±{SWING_MAX:.0f}°: ±{R_PIN * math.sin(math.radians(SWING_MAX)):.2f} мм")
-print("уши моторов (диагональ):", EAR_SIGN)
+    print(f"  {key:34s} {worst[key]:.2f}")
+print(f"ход ленты ±{R_CR} мм за оборот; уши моторов: {EAR_SIGN}")
 if bad:
     print("!! НАРУШЕНИЯ:")
-    for s in bad[:40]:
-        print("  FAIL", s)
+    for line in bad[:40]:
+        print("  FAIL", line)
     sys.exit(1)
-print("дека v2: каркас, моторы и качание чистые")
+print("дека v3: каркас, моторы" + (" и полный оборот" if SWEEP else "") + " чистые")
