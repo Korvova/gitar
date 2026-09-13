@@ -75,6 +75,15 @@ def build_section(tag, sec_y0, south_shelf=True):
         fret += Pos(0, Ln - sec_y0, 2) * Rot(0, 90, 0) * Cylinder(1.2, 48)
     holes = [(wx, wy) for wx in (2.5, 17.7) for wy in wy_wall]
     holes += [(-23.8, wy) for wy in wy_west]
+    # линии струн (идея юзера 13.09): 6 валиков-полуцилиндров вдоль грифа поверх
+    # ладов, шаг 8.8; у винтов фретборда валик прерывается под головку
+    for sx in STRING_X:
+        ridge = Pos(sx, L / 2, 2) * Rot(90, 0, 0) * Cylinder(STRING_R, L)
+        ridge -= BB(sx - 1, sx + 1, -1, L + 1, 0.9, 2.0)      # только верхняя половина
+        for hx, hy in holes:
+            if abs(hx - sx) < 3.6:
+                ridge -= Pos(hx, hy, 2) * Cylinder(3.6, 3)
+        fret += ridge
     if tag == "gs3":
         # язык на юг ПОВЕРХ крышки корпуса (идея юзера): ложится в её окно
         # на бобышки, винты сквозь язык + бобышку в стенки хребта
@@ -87,6 +96,8 @@ def build_section(tag, sec_y0, south_shelf=True):
 # потолок верхней ленты: лежит в П-рейке этажа-3 поверх ленты, сверху
 # прижат плоским фретбордом; вдоль держат пеньки в дырках фретборда
 CAP_PINS_Y = (30, 150)
+STRING_X = (-22.0, -13.2, -4.4, 4.4, 13.2, 22.0)        # линии струн на фретборде
+STRING_R = 0.6
 cap = BB(5.5, 14.5, 18, L, 0, 2.0)                      # 9.0 в канале 9.2
 for cy in CAP_PINS_Y:
     cap += Pos(10, cy, 2.45) * Cylinder(1.2, 0.9)       # пенёк Ø2.4 h0.9
