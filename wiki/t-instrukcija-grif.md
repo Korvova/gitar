@@ -72,7 +72,7 @@
 
 ### Часть 2. Дека с моторами
 
-После печати столов 66, 67, 68.
+После печати столов 66, 67, 68. **То же самое проще, шаг за шагом, отдельной страницей — [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke).**
 
 ![Дека в сборе: моторы под дном, кривошипы, хвосты лент, гребёнки](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/deka_v2_iso.png)
 

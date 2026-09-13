@@ -36,6 +36,8 @@
 * [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, привод «палка», моторы
 * [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif) — пошаговый чек-лист сборки грифа, деки и корпуса
 * [Т. Инструкция по сборке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-sborki) — сборка руками по шагам с картинками: этап А, полная стопка, файлы для печати
+* [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
+* [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
 * [Т. Корпус и дека](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-korpus) — форма классической гитары
 * [Т. Электроника и звук](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-elektronika) — датчики, прошивки, MIDI
 * [Т. Тактильная обратная связь](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-taktilka) — браслет, вибро, LED

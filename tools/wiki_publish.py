@@ -39,6 +39,7 @@ TITLES = {
     "t-plan": "⌛Т. План",
     "t-instrukcija-sborki": "✅Т. Инструкция по сборке: секция-1",
     "t-instrukcija-grif": "⌛Т. Инструкция по сборке: гриф с моторами",
+    "t-grif-v-deke": "⌛Т. Гриф в деке",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
