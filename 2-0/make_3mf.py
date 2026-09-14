@@ -165,6 +165,8 @@ plates = [
     ("31_gitara_sec1_plity", p020_j,       # ГИТАРА секция-1: 5 плит стопки
      prep("gs1_p0_base") + prep("gs1_p1_mid") +
      prep("gs1_p2_mid") + prep("gs1_p3_mid")),
+    ("72_zatvor", p020_j,                  # «затвор» под большой палец: пластина под дно + ползунок
+     prep("zatvor_plate_v0") + prep("zatvor_slide_v0")),
     ("70_hall_stend", p020_j,              # стенд датчика положения: основание со стойкой + палка с магнитом
      prep("hall_stend_base_v1") + prep("hall_stend_bar_v1")),
     ("71_hall_posts", p020_j,              # стойки 49E в деку v3, этажи 0-3 (клей на дно хребта)

@@ -37,6 +37,7 @@ TITLES = {
     "t-plata": "⌛Т. Плата",
     "t-sborka-grif": "⌛Т. Сборка гриф",
     "t-plan": "⌛Т. План",
+    "t-peremeshchenie-po-grifu": "⌛Т. Перемещение по грифу рукой",
     "t-polozhenie-telezhek": "⌛Т. Положение тележек",
     "t-instrukcija-sborki": "✅Т. Инструкция по сборке: секция-1",
     "t-instrukcija-grif": "⌛Т. Инструкция по сборке: гриф с моторами",
