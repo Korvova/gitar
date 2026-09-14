@@ -40,6 +40,7 @@
 * [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
 * [Т. Корпус и дека](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-korpus) — форма классической гитары
 * [Т. Электроника и звук](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-elektronika) — датчики, прошивки, MIDI
+* [Т. Положение тележек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-polozhenie-telezhek) — как узнать, где тележка: хоминг по упору, датчики Холла по ленте в деке, стенд проверки
 * [Т. Тактильная обратная связь](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-taktilka) — браслет, вибро, LED
 * [Архитектура и стек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/arxitektura) — как устроен код моделей
 * [Печать и сборка](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/pechat-sborka) — столы печати и крепёж
