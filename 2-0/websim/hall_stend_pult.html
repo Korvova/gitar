@@ -108,7 +108,8 @@ draw();
 const pts = [];
 function record() {
   const s = stats(Math.round(RATE / 2)); if (!s) return;
-  const mm = parseFloat(document.getElementById('mm').value);
+  const el = document.getElementById('mm');
+  const mm = Number.isFinite(el.valueAsNumber) ? el.valueAsNumber : parseFloat(String(el.value).replace(',', '.'));
   pts.push({mm, m: s.m, sd: s.sd}); pts.sort((a, b) => a.mm - b.mm); render();
 }
 function render() {
@@ -146,10 +147,11 @@ function drawCurve() {
   cx.fillText(x0 + ' мм', 30, H - 5); cx.fillText(x1 + ' мм', W - 50, H - 5);
 }
 document.getElementById('btnConnect').onclick = connect;
-document.getElementById('btnRec').onclick = record;
-document.getElementById('btnNext').onclick = () => { const e = document.getElementById('mm'); e.value = (parseFloat(e.value) + 1).toFixed(1); };
+function bump() { const e = document.getElementById('mm'); const v = Number.isFinite(e.valueAsNumber) ? e.valueAsNumber : parseFloat(String(e.value).replace(',', '.')) || 0; e.valueAsNumber = Math.round((v + 1) * 10) / 10; }
+document.getElementById('btnNext').onclick = bump;
 document.getElementById('btnClear').onclick = () => { pts.length = 0; render(); };
-document.addEventListener('keydown', e => { if (e.key === 'Enter') { record(); const m = document.getElementById('mm'); m.value = (parseFloat(m.value) + 1).toFixed(1); } });
+document.addEventListener('keydown', e => { if (e.key !== 'Enter') return; e.preventDefault(); if (document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur(); record(); bump(); });
+document.getElementById('btnRec').onclick = () => { record(); bump(); };
 </script>
 </body>
 </html>
