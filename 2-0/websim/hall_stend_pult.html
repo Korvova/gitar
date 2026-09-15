@@ -33,8 +33,10 @@
 <canvas id="scope"></canvas>
 <div class="row">
   <span class="box">положение по датчику <span class="big" id="vPos" style="font-size:2em">—</span> <span class="dim">мм</span></span>
-  <span class="dim" id="posHow">диапазон подбирается сам по min/max сигнала; после записи таблицы — по ней</span>
-  <button id="btnRange" class="sec">Сбросить диапазон</button>
+  <button id="btnS" class="sec">Палка на южном упоре = 0</button>
+  <button id="btnN" class="sec">Палка на северном упоре = 9.6</button>
+  <span class="dim" id="posHow">нажми обе кнопки на упорах — схема пойдёт по ним; после таблицы — по таблице</span>
+  <button id="btnRange" class="sec">Сброс</button>
 </div>
 <canvas id="anim" style="height:150px"></canvas>
 <div class="row">
@@ -122,7 +124,7 @@ function adcToMm(v) {
       if (v <= t[i].m) { const f = (v - t[i - 1].m) / ((t[i].m - t[i - 1].m) || 1); return t[i - 1].mm + f * (t[i].mm - t[i - 1].mm); }
     return t[t.length - 1].mm;
   }
-  if (rngHi - rngLo < 30) return null;              // авто-диапазон: min..max = 0..9.6
+  if (!(rngHi - rngLo >= 30)) return null;          // калибровка упорами: lo..hi = 0..9.6
   return (v - rngLo) / (rngHi - rngLo) * TRAVEL;
 }
 const ac = document.getElementById('anim'), actx = ac.getContext('2d');
@@ -130,11 +132,10 @@ function drawAnim() {
   const W = ac.width = ac.clientWidth, H = ac.height = ac.clientHeight;
   actx.fillStyle = '#0b0d10'; actx.fillRect(0, 0, W, H);
   const v = smoothed(); if (v === null) return;
-  if (pts.length < 2) { rngLo = Math.min(rngLo, v); rngHi = Math.max(rngHi, v); }
-  let mm = adcToMm(v); if (mm === null) { actx.fillStyle = '#9aa0aa'; actx.font = '14px system-ui'; actx.fillText('подвигай палку от упора до упора — диапазон настроится', 20, H / 2); return; }
+  let mm = adcToMm(v); if (mm === null) { actx.fillStyle = '#9aa0aa'; actx.font = '14px system-ui'; actx.fillText('поставь палку на южный упор и нажми «= 0», потом на северный и «= 9.6»', 20, H / 2); return; }
   mm = Math.max(-1, Math.min(TRAVEL + 1, mm));
   document.getElementById('vPos').textContent = mm.toFixed(1);
-  document.getElementById('posHow').textContent = pts.length >= 2 ? 'по таблице калибровки (' + pts.length + ' точек)' : 'авто-диапазон: ' + rngLo.toFixed(0) + '…' + rngHi.toFixed(0);
+  document.getElementById('posHow').textContent = pts.length >= 2 ? 'по таблице калибровки (' + pts.length + ' точек)' : 'упоры: ' + rngLo.toFixed(0) + ' (0) … ' + rngHi.toFixed(0) + ' (9.6)';
   // масштаб: канал BAR_L+TRAVEL мм на ширину
   const chL = BAR_L + TRAVEL, sc = (W - 80) / chL, X = ymm => 40 + ymm * sc;   // ymm: от южного упора
   const y0 = H * 0.30, h = H * 0.32;
@@ -149,7 +150,7 @@ function drawAnim() {
   actx.fillStyle = '#c96a3a'; actx.fillRect(bx, y0 + h * 0.2, BAR_L * sc, h * 0.6);
   actx.fillStyle = '#e08a55'; actx.fillRect(bx, y0 + h * 0.05, 6 * sc, h * 0.9);           // ручка (юг)
   const mx = X(mm + BAR_L / 2);
-  actx.fillStyle = '#d9d9de'; actx.beginPath(); actx.arc(mx, y0 + h / 2, 2 * sc, 0, 7); actx.fill();   // магнит
+  actx.fillStyle = '#d9d9de'; actx.beginPath(); actx.arc(mx, y0 + h / 2, Math.min(2 * sc, h * 0.28), 0, 7); actx.fill();   // магнит Ø4 (палка нарисована не в масштабе по ширине)
   actx.strokeStyle = '#2fb344'; actx.setLineDash([3, 3]); actx.beginPath(); actx.moveTo(X(sensY), y0 - 10); actx.lineTo(X(sensY), y0 + h + 2); actx.stroke(); actx.setLineDash([]);
   // шкала 0..10 у южного упора палки
   actx.fillStyle = '#9aa0aa';
@@ -157,6 +158,8 @@ function drawAnim() {
   actx.fillStyle = '#e8e8ea'; actx.font = '12px system-ui'; actx.fillText('юг', X(0) - 30, y0 + h / 2 + 4); actx.fillText('север', X(chL) + 8, y0 + h / 2 + 4);
 }
 document.getElementById('btnRange').onclick = () => { rngLo = Infinity; rngHi = -Infinity; };
+document.getElementById('btnS').onclick = () => { const v = smoothed(); if (v !== null) rngLo = v; };
+document.getElementById('btnN').onclick = () => { const v = smoothed(); if (v !== null) rngHi = v; };
 draw();
 // ---- таблица точек ----
 const pts = [];
