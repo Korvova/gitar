@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Стенд датчика положения: магнит мимо 49E</title>
+<style>
+  body{background:#14161a;color:#e8e8ea;font-family:"Segoe UI",system-ui,sans-serif;margin:0;padding:16px}
+  h1{font-size:1.2em;margin:0 0 10px}
+  button{background:#ff7a1a;color:#14161a;border:0;border-radius:8px;padding:10px 18px;font-size:1em;font-weight:700;cursor:pointer;margin-right:8px}
+  button.sec{background:#2a2f38;color:#e8e8ea}
+  .row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .box{background:#1d2026;border-radius:10px;padding:8px 14px}
+  .big{font-size:3em;font-weight:700;color:#7fb0ff;font-variant-numeric:tabular-nums}
+  .dim{color:#9aa0aa;font-size:.9em}
+  canvas{width:100%;height:220px;background:#0b0d10;border-radius:10px;border:1px solid #2a2f38;display:block;margin:10px 0}
+  table{border-collapse:collapse;margin-top:8px}
+  td,th{border:1px solid #2a2f38;padding:4px 10px;text-align:right;font-variant-numeric:tabular-nums}
+  th{background:#1d2026}
+  input[type=number]{width:70px;font-size:1.1em;background:#2a2f38;color:#e8e8ea;border:0;border-radius:6px;padding:6px}
+  .ok{color:#2fb344} .bad{color:#e03535}
+  textarea{width:100%;height:120px;background:#0b0d10;color:#e8e8ea;border:1px solid #2a2f38;border-radius:8px;font-family:monospace}
+</style>
+</head>
+<body>
+<h1>🧲 Стенд датчика положения — магнит на палке мимо 49E</h1>
+<div class="row">
+  <button id="btnConnect">Подключить COM</button>
+  <span class="box">АЦП сейчас <span class="big" id="vNow">—</span></span>
+  <span class="box">шум за 1 с ± <span id="vNoise">—</span></span>
+  <span class="box">размах за 1 с <span id="vRange">—</span></span>
+  <span class="dim" id="status">не подключено (прошивка struny6_hall, датчик на GPIO32 = канал 1)</span>
+</div>
+<canvas id="scope"></canvas>
+<div class="row">
+  <label>Стрелка на шкале, мм <input type="number" id="mm" step="0.1" value="0"></label>
+  <button id="btnRec">Записать точку (Enter)</button>
+  <button id="btnNext" class="sec">+1 мм</button>
+  <button id="btnClear" class="sec">Очистить таблицу</button>
+</div>
+<div class="row" style="align-items:flex-start">
+  <table id="tbl"><thead><tr><th>мм</th><th>АЦП (среднее 0.5 с)</th><th>шум ±</th><th>Δ к предыдущей</th><th>Δ/шум</th></tr></thead><tbody></tbody></table>
+  <canvas id="curve" style="width:420px;height:260px;flex:none"></canvas>
+</div>
+<div id="verdict" class="box" style="margin-top:8px">Заполни точки от 0 до 9.6 мм — вердикт появится здесь.</div>
+<p class="dim">Для вики (скопировать строку таблицы):</p>
+<textarea id="md" readonly></textarea>
+<p class="dim">Критерий страницы «Т. Положение тележек»: показания монотонные без горба, шаг между
+соседними миллиметрами больше шума раз в пять, при возврате в ту же точку значение повторяется.
+Горб = магнит слишком близко к датчику или полярность не та — перевернуть магнит.</p>
+
+<script>
+let port, reader, rxCount = 0;
+const buf = [];                       // последние ~8 с значений
+let RATE = 250;
+async function connect() {
+  const st = document.getElementById('status');
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate: 460800});
+    try { await port.setSignals({dataTerminalReady: false, requestToSend: false}); } catch (e) {}
+    st.textContent = 'подключено, жду данные…'; st.style.color = '#2fb344';
+    readLoop();
+  } catch (e) { st.textContent = 'ОШИБКА: ' + e.message + ' (закрой другие вкладки с портом)'; st.style.color = '#e03535'; }
+}
+setInterval(() => { if (rxCount) { const st = document.getElementById('status'); st.textContent = 'поток: ' + rxCount + ' строк/с'; RATE = Math.max(50, rxCount); } rxCount = 0; }, 1000);
+async function readLoop() {
+  const dec = new TextDecoder(); let carry = '';
+  reader = port.readable.getReader();
+  while (true) {
+    const {value, done} = await reader.read(); if (done) break;
+    const lines = (carry + dec.decode(value)).split('\n'); carry = lines.pop();
+    for (const ln of lines) {
+      if (ln[0] === '#') continue;
+      const v = parseInt(ln.trim().split(/\s+/)[0]);   // первый канал = GPIO32
+      if (isNaN(v)) continue;
+      rxCount++; buf.push(v); if (buf.length > RATE * 8) buf.splice(0, buf.length - RATE * 8);
+    }
+  }
+}
+function stats(n) {                    // среднее и сигма по последним n значениям
+  const a = buf.slice(-n); if (!a.length) return null;
+  const m = a.reduce((s, v) => s + v, 0) / a.length;
+  const sd = Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / a.length);
+  return {m, sd, min: Math.min(...a), max: Math.max(...a)};
+}
+// ---- осциллограф ----
+const cv = document.getElementById('scope'), ctx = cv.getContext('2d');
+function draw() {
+  requestAnimationFrame(draw);
+  const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
+  ctx.fillStyle = '#0b0d10'; ctx.fillRect(0, 0, W, H);
+  const n = Math.min(buf.length, RATE * 8); if (n < 2) return;
+  const a = buf.slice(-n); let lo = Math.min(...a), hi = Math.max(...a);
+  if (hi - lo < 40) { const c = (hi + lo) / 2; lo = c - 20; hi = c + 20; }
+  ctx.strokeStyle = '#2a2f38'; ctx.beginPath();
+  for (let g = 0; g <= 4; g++) { const y = H * g / 4; ctx.moveTo(0, y); ctx.lineTo(W, y); } ctx.stroke();
+  ctx.fillStyle = '#9aa0aa'; ctx.font = '12px system-ui'; ctx.fillText(hi, 4, 12); ctx.fillText(lo, 4, H - 4);
+  ctx.strokeStyle = '#7fb0ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+  a.forEach((v, i) => { const x = i / n * W, y = H - (v - lo) / (hi - lo) * (H - 10) - 5; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.stroke();
+  const s1 = stats(RATE);
+  if (s1) { document.getElementById('vNow').textContent = buf[buf.length - 1];
+    document.getElementById('vNoise').textContent = s1.sd.toFixed(1);
+    document.getElementById('vRange').textContent = (s1.max - s1.min); }
+}
+draw();
+// ---- таблица точек ----
+const pts = [];
+function record() {
+  const s = stats(Math.round(RATE / 2)); if (!s) return;
+  const mm = parseFloat(document.getElementById('mm').value);
+  pts.push({mm, m: s.m, sd: s.sd}); pts.sort((a, b) => a.mm - b.mm); render();
+}
+function render() {
+  const tb = document.querySelector('#tbl tbody'); tb.innerHTML = '';
+  let prev = null, mono = true, weak = 0, sign = 0, sdMax = 0;
+  pts.forEach(p => {
+    const d = prev ? p.m - prev.m : null; sdMax = Math.max(sdMax, p.sd, 1);
+    const ratio = d === null ? null : Math.abs(d) / Math.max(p.sd, prev.sd, 1);
+    if (d !== null) { if (sign === 0) sign = Math.sign(d); else if (Math.sign(d) !== sign && Math.abs(d) > 2 * sdMax) mono = false; if (ratio < 5) weak++; }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.mm}</td><td>${p.m.toFixed(0)}</td><td>${p.sd.toFixed(1)}</td><td>${d === null ? '' : d.toFixed(0)}</td><td class="${ratio === null ? '' : ratio >= 5 ? 'ok' : 'bad'}">${ratio === null ? '' : ratio.toFixed(1)}</td>`;
+    tb.appendChild(tr); prev = p;
+  });
+  const v = document.getElementById('verdict');
+  if (pts.length >= 3) {
+    const span = pts[pts.length - 1].m - pts[0].m;
+    v.innerHTML = (mono ? '<span class="ok">Монотонно ✓</span>' : '<span class="bad">Есть горб ✗ — перевернуть магнит или проверить зазор</span>') +
+      ` · размах ${span.toFixed(0)} единиц на ${(pts[pts.length - 1].mm - pts[0].mm).toFixed(1)} мм` +
+      (weak ? ` · <span class="bad">слабых шагов (Δ/шум &lt; 5): ${weak}</span>` : ' · <span class="ok">все шаги в 5+ раз выше шума ✓</span>');
+  }
+  document.getElementById('md').value = '| Стрелка, мм | ' + pts.map(p => p.mm).join(' | ') + ' |\n|' + '---|'.repeat(pts.length + 1) + '\n| АЦП | ' + pts.map(p => p.m.toFixed(0)).join(' | ') + ' |';
+  drawCurve();
+}
+const cc = document.getElementById('curve'), cx = cc.getContext('2d');
+function drawCurve() {
+  const W = cc.width = cc.clientWidth, H = cc.height = cc.clientHeight;
+  cx.fillStyle = '#0b0d10'; cx.fillRect(0, 0, W, H); if (pts.length < 2) return;
+  const x0 = Math.min(...pts.map(p => p.mm)), x1 = Math.max(...pts.map(p => p.mm));
+  const y0 = Math.min(...pts.map(p => p.m)), y1 = Math.max(...pts.map(p => p.m));
+  const X = mm => 30 + (mm - x0) / (x1 - x0 || 1) * (W - 40), Y = v => H - 20 - (v - y0) / (y1 - y0 || 1) * (H - 40);
+  cx.strokeStyle = '#2fb344'; cx.lineWidth = 2; cx.beginPath();
+  pts.forEach((p, i) => i ? cx.lineTo(X(p.mm), Y(p.m)) : cx.moveTo(X(p.mm), Y(p.m))); cx.stroke();
+  cx.fillStyle = '#7fb0ff'; pts.forEach(p => { cx.beginPath(); cx.arc(X(p.mm), Y(p.m), 4, 0, 7); cx.fill(); });
+  cx.fillStyle = '#9aa0aa'; cx.font = '12px system-ui'; cx.fillText(y1.toFixed(0), 2, 12); cx.fillText(y0.toFixed(0), 2, H - 22);
+  cx.fillText(x0 + ' мм', 30, H - 5); cx.fillText(x1 + ' мм', W - 50, H - 5);
+}
+document.getElementById('btnConnect').onclick = connect;
+document.getElementById('btnRec').onclick = record;
+document.getElementById('btnNext').onclick = () => { const e = document.getElementById('mm'); e.value = (parseFloat(e.value) + 1).toFixed(1); };
+document.getElementById('btnClear').onclick = () => { pts.length = 0; render(); };
+document.addEventListener('keydown', e => { if (e.key === 'Enter') { record(); const m = document.getElementById('mm'); m.value = (parseFloat(m.value) + 1).toFixed(1); } });
+</script>
+</body>
+</html>
