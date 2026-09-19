@@ -56,6 +56,33 @@ void tmcSetup() {
   drv.ihold(8);
 }
 
+// ДИАГНОСТИКА проводки: что сам драйвер видит по UART
+String diagStr() {
+  String r = "";
+  uint8_t tc = drv.test_connection();       // 0 = ок, 1 = нет ответа, 2 = нет питания VM
+  r += "UART: ";
+  r += (tc == 0 ? "ок" : tc == 1 ? "НЕТ ОТВЕТА (RX2/TX2/резистор, либо нет VM)" : "драйвер без питания VM");
+  if (tc != 0) return r;
+  r += " | версия 0x" + String(drv.version(), HEX);
+  r += " | EN: " + String(drv.enn() ? "ВЫКЛючен (на ноге EN высокий)" : "включён");
+  r += " | ток " + String(drv.rms_current()) + " мА, cs=" + String(drv.cs_actual());
+  // обрыв катушек виден только на ходу: делаем медленные шаги и читаем флаги
+  digitalWrite(PIN_EN, LOW);
+  bool ola = false, olb = false, s2a = false, s2b = false;
+  for (int i = 0; i < 400; i++) {
+    digitalWrite(PIN_STEP, HIGH); delayMicroseconds(1500);
+    digitalWrite(PIN_STEP, LOW);  delayMicroseconds(1500);
+    if (i % 50 == 49) {
+      ola |= drv.ola(); olb |= drv.olb();
+      s2a |= drv.s2ga() || drv.s2vsa(); s2b |= drv.s2gb() || drv.s2vsb();
+    }
+  }
+  r += " | катушка A: " + String(s2a ? "ЗАМЫКАНИЕ" : ola ? "ОБРЫВ (не подключена)" : "ок");
+  r += " | катушка B: " + String(s2b ? "ЗАМЫКАНИЕ" : olb ? "ОБРЫВ (не подключена)" : "ок");
+  if (drv.otpw()) r += " | ПЕРЕГРЕВ";
+  return r;
+}
+
 WebServer server(80);
 
 // ---- низкоуровневое движение шагами (прерываемое) ----
@@ -139,6 +166,7 @@ void execCmd(String line) {
   float a2 = sp2 < 0 ? 0 : rest.substring(sp2 + 1).toFloat();
 
   if (cmd == "status") serialReply(statusStr());
+  else if (cmd == "diag") serialReply(diagStr());
   else if (cmd == "stop") { demoOn = false; swHalf = 0; abortMove = true; serialReply("ok стоп"); }
   else if (cmd == "free") { demoOn = false; swHalf = 0; digitalWrite(PIN_EN, HIGH); serialReply("ok мотор отпущен"); }
   else if (cmd == "hold") { digitalWrite(PIN_EN, LOW); serialReply("ok мотор держит"); }
