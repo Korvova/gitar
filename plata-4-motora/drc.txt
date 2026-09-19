@@ -1,5 +1,5 @@
 ** Drc report for plata_4_motora.kicad_pcb **
-** Created on 2026-09-19T14:43:58 **
+** Created on 2026-09-19T14:48:47 **
 ** Report includes: Errors **
 
 ** Found 0 DRC violations **

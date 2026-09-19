@@ -211,7 +211,9 @@ fp3 = pcbnew.FOOTPRINT(board)
 fp3.SetReference("TRG")
 fp3.Reference().SetVisible(False)
 fp3.SetPosition(VECTOR2I_MM(TRG_X - 1.27 + 15.0, (TRG_GND_Y + Y_BUS) / 2))
-add_model(fp3, os.path.join(HERE, "models", "pd_trigger.step"), off=(0, 0, 2.5), rot=(0, 0, 180))
+add_model(fp3, os.path.join(HERE, "models", "pd_trigger.step"), off=(0, 0, 0), rot=(0, 0, 180))
+for fp_ in (tg, tv):
+    fp_.Models().clear()
 board.Add(fp3)
 text("12V", 126.0, 30.5, 1.6)
 
