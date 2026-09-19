@@ -34,7 +34,7 @@ TITLES = {
     "proshivka-esp32": "❓Прошивка ESP32: заливка без BOOT",
     "t-marketing": "⌛Т. маркетинг",
     "t-3d-modeli": "⌛Т. 3д модели",
-    "t-plata": "⌛Т. Плата",
+    "t-plata": "⌛Т. Плата для мотора",
     "t-sborka-grif": "⌛Т. Сборка гриф",
     "t-plan": "⌛Т. План",
     "t-grif-v-deke-ot-astra": "🚀Гриф в деке от астра",
