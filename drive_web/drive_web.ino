@@ -59,11 +59,29 @@ void tmcSetup() {
 // ДИАГНОСТИКА проводки: что сам драйвер видит по UART
 String diagStr() {
   String r = "";
-  uint8_t tc = drv.test_connection();       // 0 = ок, 1 = нет ответа, 2 = нет питания VM
-  r += "UART: ";
-  r += (tc == 0 ? "ок" : tc == 1 ? "НЕТ ОТВЕТА (RX2/TX2/резистор, либо нет VM)" : "драйвер без питания VM");
-  if (tc != 0) return r;
-  r += " | версия 0x" + String(drv.version(), HEX);
+  // сырой запрос регистра IOIN: считаем, сколько байт вернулось по RX2.
+  // 0 = линия RX2 мертва; 4 = только эхо своего запроса (драйвер молчит); 12 = эхо + ответ
+  uint8_t req[4] = {0x05, 0x00, 0x06, 0};
+  uint8_t crc = 0;
+  for (int i = 0; i < 3; i++) {
+    uint8_t b = req[i];
+    for (int j = 0; j < 8; j++) {
+      if ((crc >> 7) ^ (b & 1)) crc = (crc << 1) ^ 0x07; else crc <<= 1;
+      b >>= 1;
+    }
+  }
+  req[3] = crc;
+  while (Serial2.available()) Serial2.read();
+  Serial2.write(req, 4);
+  delay(30);
+  int got = Serial2.available();
+  while (Serial2.available()) Serial2.read();
+  r += "байт по RX2: " + String(got);
+  if (got == 0) return r + " -> на RX2 (GPIO16) ничего не приходит: провод TX драйвера -> RX2, либо резистор/TX2";
+  if (got < 12) return r + " -> своё эхо есть, драйвер МОЛЧИТ: чип не запущен (VM ниже 4.75 В или нет GND у VM)";
+  uint8_t ver = drv.version();
+  if (drv.CRCerror) return r + " -> ответ битый (плохой контакт или помеха)";
+  r += " | UART ок | версия 0x" + String(ver, HEX);
   r += " | EN: " + String(drv.enn() ? "ВЫКЛючен (на ноге EN высокий)" : "включён");
   r += " | ток " + String(drv.rms_current()) + " мА, cs=" + String(drv.cs_actual());
   // обрыв катушек виден только на ходу: делаем медленные шаги и читаем флаги
