@@ -16,3 +16,6 @@ drive_web/build/
 # временное
 переписка_тренажёр.md
 .claude/settings.local.json
+plata-4-motora/*.glb
+plata-4-motora/*.kicad_prl
+plata-4-motora/*-backups/

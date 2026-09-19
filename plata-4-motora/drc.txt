@@ -1,0 +1,30 @@
+** Drc report for plata_4_motora.kicad_pcb **
+** Created on 2026-09-19T14:22:10 **
+** Report includes: Errors **
+
+** Found 0 DRC violations **
+
+** Found 3 unconnected pads **
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(37.2400 mm, 20.0000 mm): Track [VIO] on B.Cu, length 17.8000 mm
+    @(47.4000 mm, 32.7000 mm): PTH pad 2 [VIO] of U1B
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(82.9600 mm, 20.0000 mm): PTH pad 7 [VIO] of U2T
+    @(93.1200 mm, 32.7000 mm): PTH pad 2 [VIO] of U3B
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(82.9600 mm, 20.0000 mm): PTH pad 7 [VIO] of U2T
+    @(72.8000 mm, 32.7000 mm): PTH pad 3 [VIO] of U2B
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **
