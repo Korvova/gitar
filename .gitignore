@@ -19,3 +19,5 @@ drive_web/build/
 plata-4-motora/*.glb
 plata-4-motora/*.kicad_prl
 plata-4-motora/*-backups/
+plata-4-motora/.history/
+plata-4-motora/*.lck

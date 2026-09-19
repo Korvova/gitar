@@ -24,25 +24,27 @@ OUT = os.path.join(HERE, "plata_4_motora.kicad_pcb")
 KICAD = r"C:\Users\AdminPC\AppData\Local\Programs\KiCad\10.0\share\kicad"
 FP_ROOT = os.path.join(KICAD, "footprints")
 
-W, H = 120.0, 84.0
+W, H = 137.0, 86.0
 W_SIG, W_PWR = 1.2, 1.5
 PITCH = 2.54
 
 # ---- драйверы ----
-X0, DRV_P = 22.0, 22.86          # ножка 1 драйвера 0, шаг драйверов
+X0, DRV_P = 36.0, 22.86          # ножка 1 драйвера 0, шаг драйверов
 Y_T, Y_B = 20.0, 32.7            # ряд мотора (VM GND A2 A1 B1 B2 VIO GND) и ряд сигналов (EN MS1 MS2 TX RX CLK STEP DIR)
 Y_HDR = 7.0                      # штыри моторов
 Y_VIO_TOP = 2.2
 Y_HOP = 16.5                     # дуга GND над ножкой VM соседа
 Y_A, Y_BUS, Y_D, Y_C = 22.9, 25.25, 27.6, 29.8   # полосы под драйвером: GND, VM, VIO, UART
 # ---- ESP ----
-XE, YE = 76.0, 54.0              # первая ножка верхнего ряда (D23); нижний ряд на YE + 25.4
+XE, YE = 90.0, 54.0              # первая ножка верхнего ряда (D23); нижний ряд на YE + 25.4
 UP = ["D23", "D22", "TX0", "RX0", "D21", "D19", "D18", "D5", "D17", "D16", "D4", "D2", "D15", "GND", "3V3"]
 LO = ["EN", "VP", "VN", "D34", "D35", "D32", "D33", "D25", "D26", "D27", "D14", "D12", "D13", "GND", "VIN"]
 # кто на какой ножке ESP (для прошивки)
 PINMAP = {"EN0": "D32", "STEP0": "D33", "DIR0": "D25", "EN1": "D26", "STEP1": "D27", "DIR1": "D14",
           "EN2": "D23", "STEP2": "D22", "DIR2": "D21", "EN3": "D19", "STEP3": "D18", "DIR3": "D5"}
-X_UART, X_VIO, X_GND = 112.0, 114.4, 116.8       # спуски справа
+X_UART, X_VIO = 126.0, 128.4                      # спуски справа
+X_GNDL, Y_GNDB = 23.0, 83.5                       # GND к ESP: слева вниз и вдоль нижнего края
+TRG_X, TRG_GND_Y = 27.5, 7.47                     # триггер: пары отверстий GND и VCC, между ними 17.78
 LANES = [38.0, 40.4, 42.8, 45.2, 47.6]           # полосы между драйверами и ESP
 WRAP = {"DIR1": 63.6, "STEP1": 65.8, "EN1": 68.0, "DIR0": 70.2, "STEP0": 72.4, "EN0": 74.6}  # полосы под ESP
 
@@ -187,49 +189,43 @@ for k in range(4):
 
 X3 = X0 + DRV_P * 3
 # шины под драйверами
-track(5.5, Y_BUS, X3, Y_BUS, "VM", W_PWR)
+track(TRG_X, Y_BUS, X3, Y_BUS, "VM", W_PWR)
 track(X0 + 3 * PITCH, Y_C, X_UART, Y_C, "UART")
-# VIO: верхняя шина -> слева вниз -> полоса D -> справа вниз к 3V3
-route([(X3 + 6 * PITCH, Y_VIO_TOP), (2.2, Y_VIO_TOP), (2.2, Y_D), (X_VIO, Y_D)], "VIO")
+# VIO: верхняя шина -> справа вниз -> полоса D под драйверами (до перемычки адреса драйвера 1)
+route([(X0 + 6 * PITCH, Y_VIO_TOP), (X_VIO, Y_VIO_TOP), (X_VIO, Y_D), (X0 + DRV_P + PITCH, Y_D)], "VIO")
 
-# ================= питание: провода от триггера и конденсатор =================
-def wire_pad(ref, x, y, name, value):
-    fp = load_fp("Connector_PinHeader_2.54mm", "PinHeader_1x01_P2.54mm_Vertical")
-    fp.SetReference(ref)
-    fp.SetValue(value)
-    fp.SetPosition(VECTOR2I_MM(x, y))
-    board.Add(fp)
-    p = fp.FindPadByNumber("1")
-    p.SetShape(pcbnew.PAD_SHAPE_CIRCLE)
-    p.SetSize(VECTOR2I_MM(2.6, 2.6))
-    p.SetDrillSize(VECTOR2I_MM(1.3, 1.3))
-    p.SetNet(nets[name])
-    fp.Models().clear()
-    return fp
-
-wire_pad("VM+", 5.5, 22.0, "VM", "+ от триггера")
-wire_pad("GND-", 5.5, 14.38, "GND", "- от триггера")
-track(5.5, 22.0, 5.5, Y_BUS, "VM", W_PWR)
-route([(5.5, 14.38), (7.62, Y_HOP), (X0 + PITCH, Y_HOP), (X0 + PITCH, Y_T)], "GND")
-text("+", 5.5, 25.2, 2.0)
-text("-", 5.5, 11.2, 2.0)
+# ================= питание: триггер PD (фиолетовый, 30x20) на гнёздах и конденсатор =================
+SOCK2 = ("Connector_PinSocket_2.54mm", "PinSocket_1x02_P2.54mm_Vertical")
+tg = row(SOCK2, "TRG_GND", TRG_X, TRG_GND_Y, 2, "триггер GND")
+tv = row(SOCK2, "TRG_VCC", TRG_X, Y_BUS, 2, "триггер VCC")
+for n in (1, 2):
+    net(tg, n, "GND")
+    net(tv, n, "VM")
+track(TRG_X, TRG_GND_Y, TRG_X + PITCH, TRG_GND_Y, "GND")
+# GND: к цепочке драйверов (дугой над VM драйвера 0) и слева вниз — к ESP и конденсатору
+route([(TRG_X + PITCH, TRG_GND_Y), (32.8, TRG_GND_Y), (32.8, Y_HOP), (X0 + PITCH, Y_HOP), (X0 + PITCH, Y_T)], "GND")
+route([(TRG_X, TRG_GND_Y), (X_GNDL, TRG_GND_Y), (X_GNDL, Y_GNDB)], "GND")
+module_3d("TRG", TRG_X + PITCH + 1.27 - 15.0, (TRG_GND_Y + Y_BUS) / 2, "pd_trigger.step")
+text("12V", 12.0, 30.0, 1.6)
 
 cap = load_fp("Capacitor_THT", "CP_Radial_D10.0mm_P5.00mm")
 cap.SetReference("C1")
 cap.SetValue("470u 35V")
-cap.SetPosition(VECTOR2I_MM(13.0, Y_BUS))
-cap.SetOrientationDegrees(90)
+cap.SetPosition(VECTOR2I_MM(TRG_X + PITCH / 2, Y_BUS + 5.5))
+cap.SetOrientationDegrees(-90)
 board.Add(cap)
-if pad_xy(cap, 2) != (13.0, round(Y_BUS - 5.0, 2)):
-    cap.SetOrientationDegrees(-90)
-assert pad_xy(cap, 2) == (13.0, round(Y_BUS - 5.0, 2)), pad_xy(cap, 2)
+CX = round(TRG_X + PITCH / 2, 2)
+if pad_xy(cap, 2) != (CX, round(Y_BUS + 10.5, 2)):
+    cap.SetOrientationDegrees(90)
+assert pad_xy(cap, 2) == (CX, round(Y_BUS + 10.5, 2)), pad_xy(cap, 2)
 for num, name in (("1", "VM"), ("2", "GND")):
     p = cap.FindPadByNumber(num)
     p.SetNet(nets[name])
-    p.SetShape(pcbnew.PAD_SHAPE_OVAL)
-    p.SetSize(VECTOR2I_MM(1.6, 2.4))              # после поворота длинная ось — вдоль шины
+    p.SetShape(pcbnew.PAD_SHAPE_CIRCLE)
+    p.SetSize(VECTOR2I_MM(2.2, 2.2))
     p.SetDrillSize(VECTOR2I_MM(1.0, 1.0))
-track(13.0, Y_BUS - 5.0, 13.0, Y_HOP, "GND")
+track(CX, Y_BUS + 5.5, CX, Y_BUS, "VM", W_PWR)
+track(CX, Y_BUS + 10.5, X_GNDL, Y_BUS + 10.5, "GND")
 
 # ================= ESP =================
 up = row(SOCK15, "ESP_UP", XE, YE, 15, "ESP32 D23..3V3")
@@ -285,7 +281,7 @@ route([(xd, YE), (xd, YE + 7.0), (xr + 7.62, YE + 7.0), (xr + 7.62, YE + 4.0)], 
 xd = ex("3V3")
 route([(X_VIO, Y_D), (X_VIO, LANES[4]), (xd, LANES[4]), (xd, YE)], "VIO")
 xg = ex("GND", LO)
-route([(X3 + 7 * PITCH, Y_A), (X_GND, Y_A), (X_GND, YE + 18.0), (xg, YE + 18.0), (xg, YE + 25.4)], "GND")
+route([(X_GNDL, Y_GNDB), (xg, Y_GNDB), (xg, YE + 25.4)], "GND")
 # моторы 0 и 1 — в обход ESP слева, к нижнему ряду
 for sig, y in WRAP.items():
     xs, xd = src(sig), ex(PINMAP[sig], LO)
@@ -304,7 +300,7 @@ for k in (1, 2, 3):
     board.Add(ln)
 
 # ================= крепёж и контур =================
-for i, (x, y) in enumerate(((7.0, 8.0), (114.0, 8.0), (6.0, 79.0), (117.0, 80.6))):
+for i, (x, y) in enumerate(((4.0, 3.6), (133.0, 8.0), (6.0, 79.0), (133.0, 78.0))):
     fp = load_fp("MountingHole", "MountingHole_3.2mm_M3")
     fp.SetReference("H%d" % (i + 1))
     fp.SetPosition(VECTOR2I_MM(x, y))

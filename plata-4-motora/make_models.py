@@ -64,6 +64,21 @@ def esp():
     return Compound(label="esp32_devkit30", children=parts)
 
 
+def trigger():
+    """Фиолетовый PD-триггер 30x20: Type-C слева, пары штырьков GND и VCC у правого края, между парами 17.78."""
+    L, W = 30.0, 20.0
+    parts = [colored(Pos(0, 0, 0.8) * Box(L, W, 1.6), (0.35, 0.1, 0.5), "pcb")]
+    parts.append(colored(Pos(-L / 2 + 3.2, 0, 1.6 + 1.6) * Box(7.4, 9.0, 3.2), (0.8, 0.8, 0.82), "usbc"))
+    parts.append(colored(Pos(-2, 5, 1.6 + 1.2) * Box(6, 4, 2.4), (0.85, 0.45, 0.1), "dip"))
+    parts.append(colored(Pos(0, -2, 1.6 + 0.6) * Box(5, 4, 1.2), (0.1, 0.1, 0.1), "chip"))
+    gold = (0.85, 0.7, 0.2)
+    for y in (-8.89, 8.89):
+        for x in (L / 2 - 1.27, L / 2 - 1.27 - P):
+            parts.append(colored(Pos(x, y, -PIN_DOWN / 2 + 0.8) * Box(0.64, 0.64, PIN_DOWN + 1.6), gold, "pin"))
+    return Compound(label="pd_trigger", children=parts)
+
+
+export_step(trigger(), os.path.join(OUT, "pd_trigger.step"))
 export_step(driver(), os.path.join(OUT, "s2209.step"))
 export_step(esp(), os.path.join(OUT, "esp32_devkit30.step"))
 print("ok", OUT)
