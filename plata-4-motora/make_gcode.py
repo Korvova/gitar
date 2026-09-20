@@ -2,25 +2,18 @@
 """
 G-code платы 4 моторов -> TTC3018 (MKS DLC32, GRBL, Candle). Способ: маркер + травление.
 
-Рабочее поле станка 100 x 100 мм, плата 141 x 90 — делается ДВУМЯ ПОЛОВИНАМИ.
-Заготовка 100 x 150, медью ВВЕРХ, длинной стороной от себя, левым краем вдоль упора
-(линейка или рейка, прижатая к столу): между половинами заготовка сдвигается по упору на себя.
+Заготовка 100 x 100, медью ВВЕРХ. Рисунок 65 x 89 мм стоит в левой части заготовки:
+правая полоса шириной ~28 мм пустая — прижимы ставить там (и не глубже 5 мм с остальных сторон).
+Координаты: X = x KiCad, Y = y KiCad. У KiCad y смотрит вниз, у станка Y — от оператора:
+этот переворот и есть зеркало для рисунка со стороны меди. Моторы 0 и 1 — ближний край, триггер и USB — справа.
 
-Координаты: X = y KiCad, Y = W - x KiCad. Зеркало для рисунка со стороны меди даёт
-переворот оси Y (у KiCad она вниз, у станка — от оператора). Штыри моторов слева, USB к оператору.
-
-Четыре крестика остаются в меди как метки: Б (ближний), СЛ и СП (средние левый и правый), Д (дальний).
-Каждый файл сам выставляется по крестику и проверяется по второму, поэтому между файлами
-заготовку можно двигать (смещение маркера от шпинделя мерить не надо).
-
-  A1_marker.nc  маркер.  X0Y0 = кончик маркера над левым ближним углом заготовки. Рисует Б, СЛ, СП и ближнюю половину.
-  A2_sverlo.nc  сверло 1.0. X0Y0 = сверло над центром Б. Пауза над СЛ — проверить. Сверлит ближнюю половину.
-  --- сдвинуть заготовку по упору на себя примерно на 70 мм ---
-  B1_marker.nc  маркер.  X0Y0 = маркер над центром СЛ. Пауза над СП — проверить. Рисует дальнюю половину и Д.
-  B2_sverlo.nc  сверло 1.0. X0Y0 = сверло над центром СЛ. Пауза над СП — проверить. Сверлит дальнюю половину.
+Два крестика остаются в меди как метки: Л (левый) и П (правый).
+  1_marker.nc  маркер, шпиндель выключен. X0Y0 = кончик маркера над левым ближним углом заготовки.
+  2_sverlo.nc  сверло 1.0. X0Y0 = сверло над центром крестика Л; файл встаёт на паузу над крестиком П —
+               проверить попадание и продолжить. Смещение маркера от шпинделя мерить не надо.
 Z0 всегда = инструмент касается меди.
 
-Запуск: "%LOCALAPPDATA%\\Programs\\KiCad\\10.0\\bin\\python.exe" make_gcode.py
+Запуск: python из KiCad 10 (bin/python.exe) make_gcode.py
 """
 import os
 import math
@@ -34,11 +27,9 @@ for old in os.listdir(OUTDIR):
     if old[0] in "12AB" and old.endswith(".nc"):
         os.remove(os.path.join(OUTDIR, old))
 
-OX, OY = 5.0, 4.5                      # отступ платы от левого ближнего угла заготовки
-SPLIT_KX = 66.0                        # линия раздела половин, координата x KiCad
-OVERLAP = 1.5                          # дорожки через раздел рисуются с нахлёстом
-CROSS_K = {"B": (126.7, 40.0), "SL": (66.2, 9.5), "SP": (66.0, 80.0), "D": (10.0, 45.0)}   # KiCad
-CROSS_ARM = 3.0
+OX, OY = 4.0, 4.0                      # отступ платы от левого ближнего угла заготовки
+CROSS_K = {"L": (8.0, 39.5), "P": (61.3, 48.0)}   # KiCad, свободные места платы
+CROSS_ARM = 2.0
 PEN = 1.0
 PEN_DOWN, PEN_UP, PEN_FEED, PEN_PLUNGE = -1.0, 2.0, 450, 300
 SAFE_Z, DRILL_DEPTH, DRILL_PECK, DRILL_FEED = 3.0, -1.9, -0.9, 50
@@ -50,10 +41,9 @@ BW = mm(board.GetBoardEdgesBoundingBox().GetWidth())
 
 
 def m(x, y):
-    return (y + OX, BW - x + OY)
+    return (x + OX, y + OY)
 
 
-Y_SPLIT = m(SPLIT_KX, 0)[1]
 CROSS = {k: m(*v) for k, v in CROSS_K.items()}
 
 
@@ -126,20 +116,6 @@ def order_strokes(strokes, start):
     return out
 
 
-def half(near):
-    lo, hi = (-1e9, Y_SPLIT + OVERLAP) if near else (Y_SPLIT - OVERLAP, 1e9)
-    strokes = []
-    for sg in segs:
-        c = clip(sg, lo, hi)
-        if c:
-            strokes.append([c[0], c[1]])
-    for c, sts in pads:
-        if (c[1] <= Y_SPLIT) == near:
-            strokes += sts
-    hl = [h for h in holes if (h[1] <= Y_SPLIT) == near]
-    return strokes, hl
-
-
 def write_marker(name, strokes, crosses, origin, check, title):
     ox, oy = origin
     g = ["(%s)" % title, "G21 G90 G94", "G17", "M5", "G0 Z%.1f" % PEN_UP]
@@ -177,43 +153,36 @@ def write_drill(name, hl, origin, check, title, check_name):
     return len(order)
 
 
-sA, hA = half(True)
-sB, hB = half(False)
-eA = write_marker("A1_marker.nc", sA, [CROSS["B"], CROSS["SL"], CROSS["SP"]], (0.0, 0.0), None,
-                  "A1 MARKER blizhnyaya polovina. X0Y0 = marker nad levym blizhnim uglom zagotovki, Z0 = kasanie medi")
-nA = write_drill("A2_sverlo.nc", hA, CROSS["B"], CROSS["SL"],
-                 "A2 SVERLO 1.0 blizhnyaya polovina. X0Y0 = sverlo nad centrom krestika B (blizhniy), Z0 = med", "SL")
-eB = write_marker("B1_marker.nc", sB, [CROSS["D"]], CROSS["SL"], CROSS["SP"],
-                  "B1 MARKER dalnyaya polovina. X0Y0 = marker nad centrom krestika SL (sredniy leviy), Z0 = kasanie medi")
-nB = write_drill("B2_sverlo.nc", hB, CROSS["SL"], CROSS["SP"],
-                 "B2 SVERLO 1.0 dalnyaya polovina. X0Y0 = sverlo nad centrom krestika SL, Z0 = med", "SP")
-print("A1: X %.1f..%.1f  Y %.1f..%.1f  %.1f m" % eA, "| A2: %d otv" % nA)
-print("B1: X %.1f..%.1f  Y %.1f..%.1f  %.1f m" % eB, "| B2: %d otv" % nB, "| razdel Y = %.1f" % Y_SPLIT)
+strokes = [[sg[0], sg[1]] for sg in segs] + [st for c, sts in pads for st in sts]
+e1 = write_marker("1_marker.nc", strokes, [CROSS["L"], CROSS["P"]], (0.0, 0.0), None,
+                  "1 MARKER. X0Y0 = marker nad levym blizhnim uglom zagotovki 100x100, Z0 = kasanie medi")
+n2 = write_drill("2_sverlo.nc", holes, CROSS["L"], CROSS["P"],
+                 "2 SVERLO 1.0. X0Y0 = sverlo nad centrom levogo krestika, Z0 = med", "P (praviy)")
+print("marker: X %.1f..%.1f  Y %.1f..%.1f  %.1f m" % e1, "| sverlo: %d otv" % n2)
 
 try:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(10, 14), dpi=100)
-    ax.add_patch(plt.Rectangle((0, 0), 100, 150, fc="#c9814a", ec="k"))
-    for strokes, col in ((sA, "#1b2a8a"), (sB, "#0b6b3a")):
-        for st in strokes:
-            ax.plot([p[0] for p in st], [p[1] for p in st], color=col, lw=2.4, solid_capstyle="round")
+    fig, ax = plt.subplots(figsize=(11, 11), dpi=100)
+    ax.add_patch(plt.Rectangle((0, 0), 100, 100, fc="#c9814a", ec="k"))
+    for st in strokes:
+        ax.plot([p[0] for p in st], [p[1] for p in st], color="#1b2a8a", lw=3.0, solid_capstyle="round")
     for k, c in CROSS.items():
         for st in cross_strokes(c):
             ax.plot([p[0] for p in st], [p[1] for p in st], color="#b00020", lw=2.4)
-        ax.text(c[0] + 3.5, c[1] + 1.5, {"B": "Б", "SL": "СЛ", "SP": "СП", "D": "Д"}[k], color="#b00020",
+        ax.text(c[0] + 3.5, c[1] + 1.5, {"L": "Л", "P": "П"}[k], color="#b00020",
                 fontsize=13, weight="bold")
     for h in holes:
         ax.add_patch(plt.Circle(h, 0.5, fc="white", ec="none", zorder=5))
-    ax.axhline(Y_SPLIT, color="k", ls="--", lw=1)
-    ax.text(101, Y_SPLIT, "раздел", fontsize=10, va="center")
+    ax.add_patch(plt.Rectangle((72, 0), 28, 100, fc="none", ec="#0b6b3a", ls="--", lw=1.5))
+    ax.text(86, 50, "пусто: место\nдля прижимов", ha="center", va="center", fontsize=12, color="#0b3d1f")
     ax.plot(0, 0, "r+", ms=25, mew=3)
-    ax.text(2, -5, "X0 Y0 файла A1 — маркер над левым ближним углом заготовки", color="r", fontsize=11)
+    ax.text(2, -5, "X0 Y0 файла 1_marker — маркер над левым ближним углом заготовки", color="r", fontsize=11)
     ax.set_xlim(-5, 112)
-    ax.set_ylim(-9, 155)
+    ax.set_ylim(-9, 105)
     ax.set_aspect("equal")
-    ax.set_title("Вид сверху на станок, оператор снизу. Синее — половина A, зелёное — половина B, красное — крестики")
+    ax.set_title("Вид сверху на станок, оператор снизу. Заготовка 100x100: синее — маркер, красное — крестики")
     fig.savefig(os.path.join(HERE, "gcode_preview.png"), bbox_inches="tight")
     print("preview: gcode_preview.png")
 except ImportError:

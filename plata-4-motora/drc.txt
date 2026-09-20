@@ -1,22 +1,46 @@
 ** Drc report for plata_4_motora.kicad_pcb **
-** Created on 2026-09-19T14:48:47 **
+** Created on 2026-09-20T12:32:26 **
 ** Report includes: Errors **
 
-** Found 0 DRC violations **
+** Found 5 DRC violations **
+[courtyards_overlap]: Courtyards overlap
+    Rule: ограничение настроек области установки; error
+    @(13.3000 mm, 80.2000 mm): Footprint U2T
+    @(34.3000 mm, 80.2000 mm): Footprint U3T
+[courtyards_overlap]: Courtyards overlap
+    Rule: ограничение настроек области установки; error
+    @(13.3000 mm, 67.5000 mm): Footprint U2B
+    @(34.3000 mm, 67.5000 mm): Footprint U3B
+[courtyards_overlap]: Courtyards overlap
+    Rule: ограничение настроек области установки; error
+    @(5.0000 mm, 11.4000 mm): Footprint U0T
+    @(26.0000 mm, 11.4000 mm): Footprint U1T
+[courtyards_overlap]: Courtyards overlap
+    Rule: ограничение настроек области установки; error
+    @(26.0000 mm, 24.1000 mm): Footprint U1B
+    @(5.0000 mm, 24.1000 mm): Footprint U0B
+[courtyards_overlap]: Courtyards overlap
+    Rule: ограничение настроек области установки; error
+    @(26.0000 mm, 11.4000 mm): Footprint U1T
+    @(46.3200 mm, 8.4000 mm): Footprint JG1
 
-** Found 3 unconnected pads **
+** Found 4 unconnected pads **
 [unconnected_items]: Missing connection between items
     Local override; error
-    @(37.2400 mm, 20.0000 mm): Track [VIO] on B.Cu, length 17.8000 mm
-    @(47.4000 mm, 32.7000 mm): PTH pad 2 [VIO] of U1B
+    @(60.0000 mm, 34.4300 mm): Track [GND] on B.Cu, length 5.6000 mm
+    @(46.3200 mm, 29.3000 mm): Track [GND] on B.Cu, length 3.8000 mm
 [unconnected_items]: Missing connection between items
     Local override; error
-    @(82.9600 mm, 20.0000 mm): Track [VIO] on B.Cu, length 17.8000 mm
-    @(72.8000 mm, 32.7000 mm): PTH pad 3 [VIO] of U2B
+    @(26.0000 mm, 67.5000 mm): PTH pad 6 [VIO] of U2B
+    @(15.8400 mm, 80.2000 mm): Track [VIO] on B.Cu, length 9.2000 mm
 [unconnected_items]: Missing connection between items
     Local override; error
-    @(93.1200 mm, 32.7000 mm): Track [VIO] on B.Cu, length 2.5400 mm
-    @(105.8200 mm, 20.0000 mm): Track [VIO] on B.Cu, length 17.8000 mm
+    @(2.4000 mm, 19.0000 mm): Track [VIO] on B.Cu, length 26.1400 mm
+    @(28.5400 mm, 24.1000 mm): PTH pad 2 [VIO] of U1B
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(2.4000 mm, 72.6000 mm): Track [VIO] on B.Cu, length 47.1400 mm
+    @(49.5400 mm, 67.5000 mm): PTH pad 7 [VIO] of U3B
 
 ** Found 0 Footprint errors **
 
