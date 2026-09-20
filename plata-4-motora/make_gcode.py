@@ -32,7 +32,7 @@ CROSS_K = {"L": (8.0, 39.5), "P": (61.3, 48.0)}   # KiCad, свободные м
 CROSS_ARM = 2.0
 PEN = 1.0
 PEN_DOWN, PEN_UP, PEN_FEED, PEN_PLUNGE = -1.0, 2.0, 450, 300
-SAFE_Z, DRILL_DEPTH, DRILL_PECK, DRILL_FEED = 3.0, -1.9, -0.9, 50
+SAFE_Z, DRILL_DEPTH, DRILL_PECK, DRILL_FEED = 3.0, -2.4, -1.0, 50
 SPINDLE = "S1000"
 
 board = pcbnew.LoadBoard(BOARD_FILE)
@@ -121,7 +121,7 @@ def write_marker(name, strokes, crosses, origin, check, title):
     g = ["(%s)" % title, "G21 G90 G94", "G17", "M5", "G0 Z%.1f" % PEN_UP]
     if check:
         g += ["G0 X%.3f Y%.3f" % (check[0] - ox, check[1] - oy), "G0 Z0.5",
-              "M0 (proverka: marker nad centrom krestika SP? da - prodolzhit)", "G0 Z%.1f" % PEN_UP]
+              "M0", "G0 Z%.1f" % PEN_UP]
     allst = [s for c in crosses for s in cross_strokes(c)] + order_strokes(strokes, origin)
     for st in allst:
         g += ["G0 X%.3f Y%.3f" % (st[0][0] - ox, st[0][1] - oy), "G1 Z%.2f F%d" % (PEN_DOWN, PEN_PLUNGE)]
@@ -143,9 +143,12 @@ def write_drill(name, hl, origin, check, title, check_name):
         order.append(cur)
     g = ["(%s)" % title, "G21 G90 G94", "G17", "G0 Z%.1f" % SAFE_Z,
          "G0 X%.3f Y%.3f" % (check[0] - ox, check[1] - oy), "G0 Z0.5",
-         "M0 (proverka: sverlo nad centrom krestika %s? da - prodolzhit)" % check_name,
+         "M0",
          "G0 Z%.1f" % SAFE_Z, "M3 %s" % SPINDLE, "G4 P2"]
-    for x, y in order:
+    skip = int(os.environ.get("SKIP", "0"))          # продолжение после остановки: сколько отверстий уже готово
+    if skip:
+        name = name.replace(".nc", "_s_%d.nc" % (skip + 1))
+    for x, y in order[skip:]:
         g += ["G0 X%.3f Y%.3f" % (x - ox, y - oy), "G1 Z%.2f F%d" % (DRILL_PECK, DRILL_FEED), "G0 Z0.3",
               "G1 Z%.2f F%d" % (DRILL_DEPTH, DRILL_FEED), "G0 Z%.1f" % SAFE_Z]
     g += ["M5", "G0 Z10", "G0 X0 Y0", "M2"]
