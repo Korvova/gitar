@@ -192,29 +192,24 @@ except ImportError:
     print("matplotlib net - bez kartinki")
 
 
-# ---------- 3: обрезка кукурузой 1.0 — только правая и дальняя стороны (Г-образный рез) ----------
-# Левая и ближняя кромки платы — это кромки самой заготовки: там стоят прижимы, гайка цанги до них не дотянется.
+# ---------- 3: обрезка кукурузой 1.0 — ДВЕ параллельные линии, слева и справа от рисунка ----------
+# Заготовка длинная, рисунок посередине, прижимы на концах. Ближняя и дальняя кромки платы — кромки заготовки.
+# Резы идут с запасом за края заготовки (по воздуху). На каждом резе 2 перемычки — плата остаётся на месте.
 CUT_D, CUT_PASSES, CUT_TAB_TOP, CUT_FEED, CUT_PLUNGE, TAB_HALF = 1.0, [-0.5, -1.0, -1.4, -1.9], -1.1, 120, 50, 1.5
-BH = mm(board.GetBoardEdgesBoundingBox().GetHeight())
-xr, yf = OX + BW + CUT_D / 2, OY + BH + CUT_D / 2            # центр фрезы: правая и дальняя линии реза
 cx0, cy0 = CROSS["L"]
-path = [((xr, -1.5), (xr, yf), [50.0]), ((xr, yf), (-1.5, yf), [70.0, 30.0])]   # (начало, конец, перемычки вдоль реза)
-g = ["(3 OBREZKA kukuruza 1.0. X0Y0 = freza nad centrom levogo krestika, Z0 = med)", "G21 G90 G94", "G17",
+X_CUTS = [OX - CUT_D / 2 - cx0, OX + BW + CUT_D / 2 - cx0]      # левая и правая линии, от левого крестика
+Y_FROM, Y_TO, TABS_Y = -56.0, 64.0, [-25.0, 35.0]
+g = ["(3 OBREZKA kukuruza 1.0: dve linii. X0Y0 = freza nad centrom levogo krestika, Z0 = med)", "G21 G90 G94", "G17",
      "G0 Z%.1f" % SAFE_Z, "G0 X%.3f Y%.3f" % (CROSS["P"][0] - cx0, CROSS["P"][1] - cy0), "G0 Z0.5", "M0",
      "G0 Z%.1f" % SAFE_Z, "M3 %s" % SPINDLE, "G4 P2"]
-for z in CUT_PASSES:
-    g += ["G0 X%.3f Y%.3f" % (path[0][0][0] - cx0, path[0][0][1] - cy0), "G1 Z%.2f F%d" % (z, CUT_PLUNGE)]
-    for (a, b, tabs) in path:
-        vert = abs(a[0] - b[0]) < 1e-6
-        sgn = 1 if (b[1] > a[1] if vert else b[0] > a[0]) else -1
-        for t in tabs:
+for xc in X_CUTS:
+    for z in CUT_PASSES:
+        g += ["G0 X%.3f Y%.3f" % (xc, Y_FROM), "G1 Z%.2f F%d" % (z, CUT_PLUNGE)]
+        for t in TABS_Y:
             if z < CUT_TAB_TOP:
-                p1 = (a[0], t - sgn * TAB_HALF) if vert else (t - sgn * TAB_HALF, a[1])
-                p2 = (a[0], t + sgn * TAB_HALF) if vert else (t + sgn * TAB_HALF, a[1])
-                g += ["G1 X%.3f Y%.3f F%d" % (p1[0] - cx0, p1[1] - cy0, CUT_FEED), "G0 Z%.2f" % CUT_TAB_TOP,
-                      "G1 X%.3f Y%.3f F%d" % (p2[0] - cx0, p2[1] - cy0, CUT_FEED), "G1 Z%.2f F%d" % (z, CUT_PLUNGE)]
-        g += ["G1 X%.3f Y%.3f F%d" % (b[0] - cx0, b[1] - cy0, CUT_FEED)]
-    g += ["G0 Z%.1f" % SAFE_Z]
+                g += ["G1 Y%.3f F%d" % (t - TAB_HALF, CUT_FEED), "G0 Z%.2f" % CUT_TAB_TOP,
+                      "G1 Y%.3f F%d" % (t + TAB_HALF, CUT_FEED), "G1 Z%.2f F%d" % (z, CUT_PLUNGE)]
+        g += ["G1 Y%.3f F%d" % (Y_TO, CUT_FEED), "G0 Z%.1f" % SAFE_Z]
 g += ["M5", "G0 Z10", "G0 X0 Y0", "M2"]
 open(os.path.join(OUTDIR, "3_obrezka_kukuruza_1.0.nc"), "w").write("\n".join(g) + "\n")
-print("obrezka: rez po X=%.1f i Y=%.1f ot ugla zagotovki, plata %.0f x %.0f" % (xr, yf, OX + BW, OY + BH))
+print("obrezka: linii X = %.1f i %.1f ot levogo krestika, Y ot %.0f do %.0f" % (X_CUTS[0], X_CUTS[1], Y_FROM, Y_TO))
