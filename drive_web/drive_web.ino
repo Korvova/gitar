@@ -24,6 +24,11 @@ const int PIN_STEP = 25, PIN_DIR = 26, PIN_EN = 27;
 #define TMC_RX 16
 #define TMC_TX 17
 TMC2209Stepper drv(&Serial2, 0.11f, 0);
+// плата 4 моторов: драйверы на общей линии UART, адрес = номер мотора (MS1/MS2 перемычками)
+TMC2209Stepper drv1(&Serial2, 0.11f, 1), drv2(&Serial2, 0.11f, 2), drv3(&Serial2, 0.11f, 3);
+TMC2209Stepper* DRV[4] = {&drv, &drv1, &drv2, &drv3};
+const uint8_t BOARD_EN[4]   = {23, 19, 25, 14};   // ножки ESP на плате 4 моторов (вики 9.8)
+const uint8_t BOARD_STEP[4] = {22, 4, 33, 27};
 int curMA = 350;
 
 const long STEPS_PER_REV = 1600;      // 200*1/8
@@ -57,11 +62,11 @@ void tmcSetup() {
 }
 
 // ДИАГНОСТИКА проводки: что сам драйвер видит по UART
-String diagStr() {
+String diagStr(uint8_t addr, bool coils) {
   String r = "";
   // сырой запрос регистра IOIN: считаем, сколько байт вернулось по RX2.
   // 0 = линия RX2 мертва; 4 = только эхо своего запроса (драйвер молчит); 12 = эхо + ответ
-  uint8_t req[4] = {0x05, 0x00, 0x06, 0};
+  uint8_t req[4] = {0x05, addr, 0x06, 0};
   uint8_t crc = 0;
   for (int i = 0; i < 3; i++) {
     uint8_t b = req[i];
@@ -76,28 +81,34 @@ String diagStr() {
   delay(30);
   int got = Serial2.available();
   while (Serial2.available()) Serial2.read();
-  r += "байт по RX2: " + String(got);
+  r += "адрес " + String(addr) + ": байт по RX2: " + String(got);
   if (got == 0) return r + " -> на RX2 (GPIO16) ничего не приходит: провод TX драйвера -> RX2, либо резистор/TX2";
   if (got < 12) return r + " -> своё эхо есть, драйвер МОЛЧИТ: чип не запущен (VM ниже 4.75 В или нет GND у VM)";
-  uint8_t ver = drv.version();
-  if (drv.CRCerror) return r + " -> ответ битый (плохой контакт или помеха)";
+  TMC2209Stepper& d = *DRV[addr & 3];
+  uint8_t ver = d.version();
+  if (d.CRCerror) return r + " -> ответ битый (плохой контакт или помеха)";
   r += " | UART ок | версия 0x" + String(ver, HEX);
-  r += " | EN: " + String(drv.enn() ? "ВЫКЛючен (на ноге EN высокий)" : "включён");
-  r += " | ток " + String(drv.rms_current()) + " мА, cs=" + String(drv.cs_actual());
+  r += " | EN: " + String(d.enn() ? "ВЫКЛючен (на ноге EN высокий)" : "включён");
+  r += " | ток " + String(d.rms_current()) + " мА, cs=" + String(d.cs_actual());
+  if (!coils) return r;
   // обрыв катушек виден только на ходу: делаем медленные шаги и читаем флаги
-  digitalWrite(PIN_EN, LOW);
+  uint8_t pe = BOARD_EN[addr & 3], ps = BOARD_STEP[addr & 3];
+  pinMode(pe, OUTPUT); pinMode(ps, OUTPUT);
+  d.rms_current(curMA);
+  digitalWrite(pe, LOW);
   bool ola = false, olb = false, s2a = false, s2b = false;
   for (int i = 0; i < 400; i++) {
-    digitalWrite(PIN_STEP, HIGH); delayMicroseconds(1500);
-    digitalWrite(PIN_STEP, LOW);  delayMicroseconds(1500);
+    digitalWrite(ps, HIGH); delayMicroseconds(1500);
+    digitalWrite(ps, LOW);  delayMicroseconds(1500);
     if (i % 50 == 49) {
-      ola |= drv.ola(); olb |= drv.olb();
-      s2a |= drv.s2ga() || drv.s2vsa(); s2b |= drv.s2gb() || drv.s2vsb();
+      ola |= d.ola(); olb |= d.olb();
+      s2a |= d.s2ga() || d.s2vsa(); s2b |= d.s2gb() || d.s2vsb();
     }
   }
+  digitalWrite(pe, HIGH);
   r += " | катушка A: " + String(s2a ? "ЗАМЫКАНИЕ" : ola ? "ОБРЫВ (не подключена)" : "ок");
   r += " | катушка B: " + String(s2b ? "ЗАМЫКАНИЕ" : olb ? "ОБРЫВ (не подключена)" : "ок");
-  if (drv.otpw()) r += " | ПЕРЕГРЕВ";
+  if (d.otpw()) r += " | ПЕРЕГРЕВ";
   return r;
 }
 
@@ -184,7 +195,11 @@ void execCmd(String line) {
   float a2 = sp2 < 0 ? 0 : rest.substring(sp2 + 1).toFloat();
 
   if (cmd == "status") serialReply(statusStr());
-  else if (cmd == "diag") serialReply(diagStr());
+  else if (cmd == "diag") {
+    // "diag" — опрос всех 4 адресов (только связь); "diag N" — полный тест драйвера N с катушками
+    if (rest.length()) serialReply(diagStr((uint8_t)rest.toInt(), true));
+    else for (uint8_t a = 0; a < 4; a++) serialReply(diagStr(a, false));
+  }
   else if (cmd == "stop") { demoOn = false; swHalf = 0; abortMove = true; serialReply("ok стоп"); }
   else if (cmd == "free") { demoOn = false; swHalf = 0; digitalWrite(PIN_EN, HIGH); serialReply("ok мотор отпущен"); }
   else if (cmd == "hold") { digitalWrite(PIN_EN, LOW); serialReply("ok мотор держит"); }
