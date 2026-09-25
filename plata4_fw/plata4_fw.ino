@@ -69,17 +69,22 @@ String diagStr(uint8_t addr, bool coils) {
   if (!coils) return r;
   d.rms_current(curMA);
   digitalWrite(P_EN[addr], LOW);
+  delay(5);
+  r += d.enn() ? " | EN НЕ ДОХОДИТ (на ножке EN драйвера высокий)" : " | EN доходит";
   bool ola = false, olb = false, s2a = false, s2b = false;
+  uint16_t ms0 = d.MSCNT(); bool stepOk = false;   // счётчик микрошагов растёт от каждого STEP, даже если вал зажат
   for (int i = 0; i < 400; i++) {
     digitalWrite(P_STEP[addr], HIGH); delayMicroseconds(1500);
     digitalWrite(P_STEP[addr], LOW);  delayMicroseconds(1500);
     if (i % 50 == 49) {
       ola |= d.ola(); olb |= d.olb();
+      if (d.MSCNT() != ms0) stepOk = true;
       s2a |= d.s2ga() || d.s2vsa(); s2b |= d.s2gb() || d.s2vsb();
     }
   }
   r += " | катушка A: " + String(s2a ? "ЗАМЫКАНИЕ" : ola ? "ОБРЫВ" : "ок");
   r += " | катушка B: " + String(s2b ? "ЗАМЫКАНИЕ" : olb ? "ОБРЫВ" : "ок");
+  r += stepOk ? " | STEP доходит" : " | STEP НЕ ДОХОДИТ (дорожка STEP или EN)";
   if (d.otpw()) r += " | ПЕРЕГРЕВ";
   return r;
 }
