@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пульт 4 моторов</title>
+<style>
+  :root { --bg:#f4f1ea; --card:#fff; --ink:#1d1d1f; --mut:#6b6b6b; --acc:#2f6fd6; --ok:#2e8b57; --bad:#c0392b; --line:#ddd6c8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:14px 16px; background:#1d1d1f; color:#fff; }
+  header h1 { font-size:18px; margin:0 12px 0 0; }
+  #st { font-size:13px; opacity:.85; }
+  button { font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:9px 12px; cursor:pointer; min-width:54px; }
+  button:hover { border-color:var(--acc); }
+  button.big { background:var(--acc); color:#fff; border-color:var(--acc); }
+  button.stop { background:var(--bad); color:#fff; border-color:var(--bad); }
+  main { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .card h2 { margin:0 0 4px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
+  .pos { font-size:13px; color:var(--mut); margin-bottom:10px; }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+  .lbl { font-size:12px; color:var(--mut); margin-top:10px; }
+  .diag { font-size:12px; color:var(--mut); min-height:32px; margin-top:8px; word-break:break-word; }
+  .diag.ok { color:var(--ok); } .diag.bad { color:var(--bad); }
+  input[type=range] { width:100%; }
+  #log { margin:0 16px 16px; background:#111; color:#cfe; font:12px/1.4 ui-monospace, monospace; padding:10px; border-radius:10px; height:170px; overflow:auto; white-space:pre-wrap; }
+  .cmdline { display:flex; gap:6px; margin:0 16px 10px; }
+  .cmdline input { flex:1; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); }
+  @media (max-width: 480px) { header h1 { width:100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Пульт 4 моторов</h1>
+  <button class="big" id="bConn">Подключить</button>
+  <button id="bInit" title="Если триггер включили после ESP">Настроить драйверы</button>
+  <button id="bDiag">Проверить все</button>
+  <label style="font-size:13px">ток
+    <select id="cur">
+      <option>200</option><option selected>350</option><option>500</option><option>700</option>
+    </select> мА</label>
+  <button class="stop" id="bStop">СТОП</button>
+  <span id="st">не подключено</span>
+</header>
+<main id="cards"></main>
+<div class="cmdline"><input id="cmd" placeholder="своя команда, например: m 2  или  deg 45 20"><button id="bSend">Отправить</button></div>
+<div id="log"></div>
+
+<script>
+let port = null, writer = null, busy = Promise.resolve();
+const logEl = document.getElementById('log'), st = document.getElementById('st');
+const cards = document.getElementById('cards');
+
+function log(s) { logEl.textContent += s + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+for (let m = 0; m < 4; m++) {
+  const c = document.createElement('div');
+  c.className = 'card';
+  c.innerHTML =
+    '<h2>Мотор ' + m + ' <button data-m="' + m + '" data-a="diag">Тест</button></h2>' +
+    '<div class="pos" id="pos' + m + '">вал: —</div>' +
+    '<div class="lbl">Повернуть</div>' +
+    '<div class="row">' +
+      '<button data-m="' + m + '" data-deg="-90">−90°</button>' +
+      '<button data-m="' + m + '" data-deg="-15">−15°</button>' +
+      '<button data-m="' + m + '" data-deg="15">+15°</button>' +
+      '<button data-m="' + m + '" data-deg="90">+90°</button>' +
+      '<button data-m="' + m + '" data-deg="360">оборот</button>' +
+    '</div>' +
+    '<div class="lbl">Скорость: <b id="rpmv' + m + '">30</b> об/мин</div>' +
+    '<input type="range" min="5" max="120" value="30" id="rpm' + m + '">' +
+    '<div class="lbl">Качание туда-сюда</div>' +
+    '<div class="row">' +
+      '<button data-m="' + m + '" data-sw="15">±15°</button>' +
+      '<button data-m="' + m + '" data-sw="45">±45°</button>' +
+      '<button data-m="' + m + '" data-sw="90">±90°</button>' +
+      '<button data-m="' + m + '" data-a="stop">стоп</button>' +
+    '</div>' +
+    '<div class="row">' +
+      '<button data-m="' + m + '" data-a="hold">держать</button>' +
+      '<button data-m="' + m + '" data-a="free">отпустить</button>' +
+    '</div>' +
+    '<div class="diag" id="diag' + m + '"></div>';
+  cards.appendChild(c);
+  const r = c.querySelector('#rpm' + m);
+  r.oninput = () => { c.querySelector('#rpmv' + m).textContent = r.value; };
+}
+
+async function write(line) {
+  if (!writer) { log('— не подключено'); return; }
+  log('→ ' + line);
+  await writer.write(new TextEncoder().encode(line + '\n'));
+}
+// команда мотору: сначала выбрать его, потом действие; по очереди, чтобы не перемешались
+function toMotor(m, line) {
+  busy = busy.then(async () => { await write('m ' + m); await write(line); });
+  return busy;
+}
+
+cards.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const m = +b.dataset.m, rpm = document.getElementById('rpm' + m).value;
+  if (b.dataset.deg) toMotor(m, 'deg ' + b.dataset.deg + ' ' + rpm);
+  else if (b.dataset.sw) toMotor(m, 'sw ' + b.dataset.sw + ' ' + rpm);
+  else if (b.dataset.a === 'diag') { document.getElementById('diag' + m).textContent = 'проверяю…'; write('diag ' + m); }
+  else if (b.dataset.a) toMotor(m, b.dataset.a);
+});
+
+function onLine(s) {
+  log('← ' + s);
+  const mm = s.match(/вал 0:\s*(-?\d+)°\s*1:\s*(-?\d+)°\s*2:\s*(-?\d+)°\s*3:\s*(-?\d+)°/);
+  if (mm) for (let i = 0; i < 4; i++) document.getElementById('pos' + i).textContent = 'вал: ' + mm[i + 1] + '°';
+  const d = s.match(/^адрес (\d)/);
+  if (d) {
+    const el = document.getElementById('diag' + d[1]);
+    el.textContent = s.replace(/^адрес \d:\s*/, '');
+    el.className = 'diag ' + (/ОБРЫВ|ЗАМЫКАНИЕ|молчит|битый|мертва|ПЕРЕГРЕВ/.test(s) ? 'bad' : 'ok');
+  }
+}
+
+document.getElementById('bConn').onclick = async () => {
+  if (!('serial' in navigator)) { alert('Нужен Chrome или Edge'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    st.textContent = 'подключено';
+    log('— подключено');
+    readLoop();
+    setTimeout(() => write('status'), 300);
+  } catch (e) { log('ошибка: ' + e.message); }
+};
+
+async function readLoop() {
+  const reader = port.readable.getReader(), dec = new TextDecoder();
+  let buf = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (l) onLine(l); }
+    }
+  } catch (e) { log('— связь потеряна: ' + e.message); st.textContent = 'не подключено'; }
+}
+
+document.getElementById('bInit').onclick = () => write('init');
+document.getElementById('bDiag').onclick = () => write('diag');
+document.getElementById('bStop').onclick = () => write('stop');
+document.getElementById('cur').onchange = e => write('cur ' + e.target.value);
+document.getElementById('bSend').onclick = () => { const v = document.getElementById('cmd').value.trim(); if (v) write(v); };
+document.getElementById('cmd').onkeydown = e => { if (e.key === 'Enter') document.getElementById('bSend').click(); };
+</script>
+</body>
+</html>
