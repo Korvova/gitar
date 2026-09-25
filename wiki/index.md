@@ -38,8 +38,8 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 | Узел | Состояние |
 |---|---|
-| Гриф с тележками и моторами | ⌛ Механика напечатана и собрана; дека под моторы Ø36 — проба первого мотора |
-| Плата управления 4 моторами | ⌛ Изготовлена 20–24.09, все 4 драйвера отвечают, прошивка залита; моторы на плате ещё не крутили |
+| Гриф с тележками и моторами | ⌛ Проба первого мотора на деке прошла 25.09; собираем короткий гриф и проверяем все 4 тележки |
+| Плата управления 4 моторами | ✅ Изготовлена и проверена 25.09: все 4 мотора крутятся от пульта |
 | Корпус и дека | ⌛ Спроектированы полностью, напечатаны частично |
 | Тактильная обратная связь | ⬜ Браслет и вибро в тележках — не начаты |
 | Струны (правая рука) | Вспомогательная проверка: узел щипка на датчиках Холла собран и работает, дальше пока не развиваем |
@@ -56,20 +56,29 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 ## Оглавление
 
+**Сейчас в работе**
+
+* [Т. Сборка короткий гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-korotkij-grif) — стенд: секция-1 + секция-2 + дека с 4 моторами + плата, проверка всех четырёх тележек
+
+**В работе и в планах**
+
+* [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
+* [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
 * [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) — дорожная карта до производства, сделанное зачёркиваем
 * [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, привод «палка», моторы
 * [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif) — пошаговый чек-лист сборки грифа, деки и корпуса
-* [Т. Инструкция по сборке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-sborki) — сборка руками по шагам с картинками: этап А, полная стопка, файлы для печати
-* [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
-* [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
-* [Т. Плата для мотора](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plata) — стенд одного мотора: ESP32 + драйвер S2209, проверенная схема
-* [Т. Плата для 4-х моторов](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plata-4-motora) — своя плата: разводка, изготовление на станке, травление, пайка, проверка
 * [Т. Корпус и дека](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-korpus) — форма классической гитары
 * [Т. Электроника и звук](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-elektronika) — датчики, прошивки, MIDI
-* [Т. Положение тележек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-polozhenie-telezhek) — как узнать, где тележка: хоминг по упору, датчики Холла по ленте в деке, стенд проверки
 * [Т. Перемещение по грифу рукой](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-peremeshchenie-po-grifu) — идея «затвор» под большим пальцем: как ученик сам задаёт сдвиг позиции
 * [Т. Тактильная обратная связь](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-taktilka) — браслет, вибро, LED
 * [Архитектура и стек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/arxitektura) — как устроен код моделей
 * [Печать и сборка](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/pechat-sborka) — столы печати и крепёж
 * [Прошивка ESP32](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/proshivka-esp32) — заливка без BOOT, окружение машин, чтение Serial
+
+**Готово ✅**
+
+* [Т. Плата для 4-х моторов](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plata-4-motora) — своя плата: разводка, изготовление на станке, травление, пайка, проверка
+* [Т. Плата для мотора](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plata) — стенд одного мотора: ESP32 + драйвер S2209, проверенная схема
+* [Т. Инструкция по сборке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-sborki) — сборка руками по шагам с картинками: этап А, полная стопка, файлы для печати
+* [Т. Положение тележек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-polozhenie-telezhek) — как узнать, где тележка: хоминг по упору, датчики Холла по ленте в деке, стенд проверки
 * [Т. Струны](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-struny) — вспомогательная проверка: узел щипка правой руки
