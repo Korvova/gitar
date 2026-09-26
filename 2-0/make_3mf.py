@@ -201,6 +201,9 @@ plates = [
      # ↑ ленты 0-2 здесь: со стола 67 сразу проверяется первый мотор целиком
     ("68_deka2_v3", p020_j,                # хребет Д2, кривошип 3, лента 3
      prep("gdk2_base_v3", ID) + prep("gdk_crank3_v3", FLIP) + prep("gdk_tail3_v3", ID)),
+    # ---- ложа для пальцев (26.09.2026): тележка секции-1 + ложе сверху, замена gs1_cart
+    ("69_lozhe_palcy", p020_j,             # 4 одинаковых, низом тележки на стол,
+     prep("gs1_cart_lozhe", ID, copies=4)),   # скосы 45° под ложем — без поддержек
     ("36_gitara_deka2", p020_j,            # ДЕКА-2 + ленты: сегменты и хвосты
      prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
      prep("gdk_comb") + prep("gdk_ext", copies=8) +
