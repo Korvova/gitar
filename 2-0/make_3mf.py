@@ -204,6 +204,13 @@ plates = [
     # ---- ложа для пальцев (26.09.2026): тележка секции-1 + ложе сверху, замена gs1_cart
     ("69_lozhe_palcy", p020_j,             # 4 одинаковых, низом тележки на стол,
      prep("gs1_cart_lozhe", ID, copies=4)),   # скосы 45° под ложем — без поддержек
+    # ---- СЕКЦИЯ-1 v2 (26.09.2026): тележки на шаге V позиции 26/25/24, у каждой своё русло
+    ("73_sec1_v2_plity", p020_j,           # 4 плиты стопки (дно + 3 межэтажки)
+     prep("gs1_p0_base_v2") + prep("gs1_p1_mid_v2") + prep("gs1_p2_mid_v2") + prep("gs1_p3_mid_v2")),
+    ("74_sec1_v2_meh", p012_j,             # палуба + плечи + спицы + 4 тележки с ложем
+     prep("gs1_p4_deck_v2") + prep("gs1_cart_lozhe_v2", ID, copies=4) +
+     prep("gs1_arm0_v2") + prep("gs1_arm1_v2") + prep("gs1_arm2_v2") + prep("gs1_arm3_v2") +
+     prep("gs1_spica0_v2") + prep("gs1_spica1_v2") + prep("gs1_spica2_v2") + prep("gs1_spica3_v2")),
     ("36_gitara_deka2", p020_j,            # ДЕКА-2 + ленты: сегменты и хвосты
      prep("gdk2_base") + prep("gdk_crank3") + prep("gdk_sleeve3") +
      prep("gdk_comb") + prep("gdk_ext", copies=8) +

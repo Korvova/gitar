@@ -30,8 +30,12 @@ def shot(parts, name, cam, size=(1400, 900)):
     print("ok", name)
 
 
-shot([(load("gs1_cart_lozhe"), "#3f74c9")], "lozhe_detal.png", [(45, -55, 45), (0, 0, 5), (0, 0, 1)])
-parts = [(load("gs1_p4_deck", (0, 0, 23)), "#c9c4bb")]
-for k, (y, x) in enumerate(zip((18, 34, 50, 66), (-20, 8, 20, -6))):
-    parts.append((load("gs1_cart_lozhe", (x, y, 26)), ("#3f74c9", "#d9612f", "#5a9e61", "#b58a3c")[k]))
-shot(parts, "lozhe_na_grife.png", [(95, -70, 120), (0, 45, 28), (0, 0, 1)])
+import sys
+V = sys.argv[1] if len(sys.argv) > 1 else "v2"
+SUF, TAG = ("_v2", "_v2") if V == "v2" else ("", "_v0")
+CY = (16, 42, 67, 91) if V == "v2" else (18, 34, 50, 66)
+shot([(load("gs1_cart_lozhe" + SUF), "#3f74c9")], "lozhe" + TAG + "_detal.png", [(45, -55, 45), (0, 0, 5), (0, 0, 1)])
+parts = [(load("gs1_p4_deck" + SUF, (0, 0, 23)), "#c9c4bb")]
+for k, (y, x) in enumerate(zip(CY, (-20, 8, 20, -6))):
+    parts.append((load("gs1_cart_lozhe" + SUF, (x, y, 26 if V == "v2" else 23.5)), ("#3f74c9", "#d9612f", "#5a9e61", "#b58a3c")[k]))
+shot(parts, "lozhe" + TAG + "_na_grife.png", [(95, -70, 120), (0, 45, 28), (0, 0, 1)])
