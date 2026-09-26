@@ -203,7 +203,9 @@ plates = [
      prep("gdk2_base_v3", ID) + prep("gdk_crank3_v3", FLIP) + prep("gdk_tail3_v3", ID)),
     # ---- ложа для пальцев (26.09.2026): тележка секции-1 + ложе сверху, замена gs1_cart
     ("69_lozhe_palcy", p020_j,             # 4 одинаковых, низом тележки на стол,
-     prep("gs1_cart_lozhe", ID, copies=4)),   # скосы 45° под ложем — без поддержек
+     prep("gs1_cart_lozhe", ID, copies=3) + prep("gs1_cart_lozhe_kraj", ID)),   # 3 обычных + крайнее (тележка 3), полозьями на стол
+    ("75_lozhe_proba", p020_j,             # проба: одно обычное ложе — проверить посадку, потом стол 69
+     prep("gs1_cart_lozhe", ID)),
     # ---- СЕКЦИЯ-1 v2 (26.09.2026): тележки на шаге V позиции 26/25/24, у каждой своё русло
     ("73_sec1_v2_plity", p020_j,           # 4 плиты стопки (дно + 3 межэтажки)
      prep("gs1_p0_base_v2") + prep("gs1_p1_mid_v2") + prep("gs1_p2_mid_v2") + prep("gs1_p3_mid_v2")),
