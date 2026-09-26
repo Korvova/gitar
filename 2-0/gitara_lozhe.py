@@ -91,6 +91,8 @@ def build_flat(last=False):
     дно ложа мостом между бортиками, полозья сверху."""
     yc, PIN_CH, SLOT_Y, T = 2.0, 5.3, 10.0, 2.0
     y0, y1 = yc - LOZHE_Y / 2, yc + LOZHE_Y / 2
+    if VER == "v2":                         # v2: ложе в своём русле между бортиками (самое узкое ±10.5)
+        y0, y1 = -10.2, 10.2
     if last:
         y1 = 7.0                                  # тележка 3: южнее — бортик канала (y +7.35)
     hx = LOZHE_X / 2
@@ -103,12 +105,14 @@ def build_flat(last=False):
     for sx in (1, -1):
         c += BB(sx * PIN_CH / 2, sx * 4.4, yc - SLOT_Y / 2, yc + SLOT_Y / 2, -RUN, 0)
     part = Part() + c
-    print("ложе v0 плоское%s: volume" % (" крайнее" if last else "") + " %.0f mm3, solids %d" % (part.volume, len(part.solids())))
+    print("ложе " + VER + " плоское%s: volume" % (" крайнее" if last else "") + " %.0f mm3, solids %d" % (part.volume, len(part.solids())))
     return part
 
 
 RUN = 2.9
 names = []
+if VER == "v2":
+    export_stl(Pos(0, 0, RUN) * build_flat(), os.path.join(OUT, "gs1_cart_lozhe_v2_plosk.stl"))
 if VER != "v2":
     export_stl(Pos(0, 0, RUN) * build_flat(), os.path.join(OUT, "gs1_cart_lozhe_plosk.stl"))
     export_stl(Pos(0, 0, RUN) * build_flat(True), os.path.join(OUT, "gs1_cart_lozhe_plosk_kraj.stl"))
@@ -136,6 +140,12 @@ for case, xs in (("A", (20, -20, 20, -20)), ("B", (-20, 20, -20, 20)), ("C", (0,
         pairs_touch.append((nm, "deck"))
         if k:
             pairs_clear.append(("c%s%d" % (case, k - 1), nm, 0.9))
+if VER == "v2":                          # плоское ложе v2 в своих руслах, крайние положения
+    for k in range(4):
+        for x in (-20, 0, 20):
+            nm = "g%d_%d" % (k, x)
+            asm.add(nm, os.path.join(OUT, "gs1_cart_lozhe_v2_plosk.stl"), loc=(x, CARTS_Y[k], Z_DECK + DECK_T - RUN))
+            pairs_touch.append((nm, "deck"))
 if VER != "v2":                          # плоское ложе на тележках 0-2 в крайних положениях
     for k in range(4):
         for x in (-20, 0, 20):
