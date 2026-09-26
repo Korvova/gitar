@@ -4,7 +4,7 @@
 //   m <0..3>              — выбрать мотор, дальше все команды к нему
 //   deg <°> [об/мин]      — повернуть выбранный мотор
 //   sw <полуугол> [rpm]   — качание туда-сюда, sw 0 = стоп
-//   stop | hold | free    — стоп / держать / отпустить (выбранный)
+//   stop | hold | free    — стоп / держать / отпустить (выбранный); off — отпустить все
 //   cur <мА>              — ток всех драйверов (100..900)
 //   init                  — заново настроить все драйверы (после включения питания моторов)
 //   diag                  — опрос всех 4 адресов; diag N — полный тест драйвера N с катушками
@@ -21,6 +21,7 @@ TMC2209Stepper* DRV[4] = {&d0, &d1, &d2, &d3};
 
 const long STEPS_PER_REV = 1600;      // 200 * 1/8
 int curMA = 350;
+const float HOLD_MULT = 0.2;          // ток удержания в покое = 20% рабочего (иначе моторы и драйверы греются стоя)
 uint8_t sel = 0;
 float posDeg[4] = {0, 0, 0, 0};
 float swHalf = 0, swRpm = 30;
@@ -35,11 +36,11 @@ void tmcSetupAll() {
     d.I_scale_analog(false);
     d.mstep_reg_select(true);
     d.microsteps(8);
-    d.rms_current(curMA);
+    d.rms_current(curMA, HOLD_MULT);
     d.en_spreadCycle(false);
     d.toff(4);
     d.iholddelay(2);
-    d.ihold(8);
+    d.TPOWERDOWN(20);
   }
 }
 
@@ -67,7 +68,7 @@ String diagStr(uint8_t addr, bool coils) {
   if (d.CRCerror) return r + " -> ответ битый (два драйвера на одном адресе?)";
   r += " | ок, версия 0x" + String(ver, HEX) + " | ток " + String(d.rms_current()) + " мА";
   if (!coils) return r;
-  d.rms_current(curMA);
+  d.rms_current(curMA, HOLD_MULT);
   digitalWrite(P_EN[addr], LOW);
   delay(5);
   r += d.enn() ? " | EN НЕ ДОХОДИТ (на ножке EN драйвера высокий)" : " | EN доходит";
@@ -84,6 +85,7 @@ String diagStr(uint8_t addr, bool coils) {
   }
   r += " | катушка A: " + String(s2a ? "ЗАМЫКАНИЕ" : ola ? "ОБРЫВ" : "ок");
   r += " | катушка B: " + String(s2b ? "ЗАМЫКАНИЕ" : olb ? "ОБРЫВ" : "ок");
+  digitalWrite(P_EN[addr], HIGH);                 // после теста мотор отпускаем
   r += stepOk ? " | STEP доходит" : " | STEP НЕ ДОХОДИТ (дорожка STEP или EN)";
   if (d.otpw()) r += " | ПЕРЕГРЕВ";
   return r;
@@ -147,10 +149,11 @@ void execCmd(String line) {
   }
   else if (cmd == "stop") { swHalf = 0; abortMove = true; reply("ok стоп"); }
   else if (cmd == "free") { swHalf = 0; digitalWrite(P_EN[sel], HIGH); reply("ok мотор " + String(sel) + " отпущен"); }
+  else if (cmd == "off") { swHalf = 0; for (uint8_t i = 0; i < 4; i++) digitalWrite(P_EN[i], HIGH); reply("ok все моторы отпущены"); }
   else if (cmd == "hold") { digitalWrite(P_EN[sel], LOW); reply("ok мотор " + String(sel) + " держит"); }
   else if (cmd == "cur") {
     int ma = (int)a1;
-    if (ma >= 100 && ma <= 900) { curMA = ma; for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA); reply("ok ток " + String(curMA) + " мА"); }
+    if (ma >= 100 && ma <= 900) { curMA = ma; for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA, HOLD_MULT); reply("ok ток " + String(curMA) + " мА"); }
     else reply("ток 100..900");
   }
   else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
@@ -158,7 +161,7 @@ void execCmd(String line) {
     swHalf = fabs(a1); swRpm = a2 > 0 ? a2 : 30; swDir = 1;
     reply(swHalf > 0 ? "ok качание мотора " + String(sel) : "ok качание стоп");
   }
-  else reply("? команды: m deg sw stop hold free cur init diag status");
+  else reply("? команды: m deg sw stop hold free off cur init diag status");
 }
 
 String rxBuf;

@@ -41,6 +41,7 @@
       <option>200</option><option selected>350</option><option>500</option><option>700</option>
     </select> мА</label>
   <button class="stop" id="bStop">СТОП</button>
+  <button id="bOff" title="Снять ток со всех моторов — не греются">Отпустить все</button>
   <span id="st">не подключено</span>
 </header>
 <main id="cards"></main>
@@ -149,6 +150,7 @@ async function readLoop() {
 document.getElementById('bInit').onclick = () => write('init');
 document.getElementById('bDiag').onclick = () => write('diag');
 document.getElementById('bStop').onclick = () => write('stop');
+document.getElementById('bOff').onclick = () => write('off');
 document.getElementById('cur').onchange = e => write('cur ' + e.target.value);
 document.getElementById('bSend').onclick = () => { const v = document.getElementById('cmd').value.trim(); if (v) write(v); };
 document.getElementById('cmd').onkeydown = e => { if (e.key === 'Enter') document.getElementById('bSend').click(); };
