@@ -84,13 +84,15 @@ def build(last=False):
     return part
 
 
-def build_flat():
+def build_flat(last=False):
     """v0 «плоское» (идея владельца 26.09): без тележки и скосов — ложе лежит прямо на палубе,
     снизу два полоза в прорезь, в дне продолговатая дырка под штырь (штырь гуляет по Y на 4 мм,
     торчит над дном ложа ~2 мм — для пробы допустимо). Печать вверх ногами: бортиками на стол,
     дно ложа мостом между бортиками, полозья сверху."""
     yc, PIN_CH, SLOT_Y, T = 2.0, 5.3, 10.0, 2.0
     y0, y1 = yc - LOZHE_Y / 2, yc + LOZHE_Y / 2
+    if last:
+        y1 = 7.0                                  # тележка 3: южнее — бортик канала (y +7.35)
     hx = LOZHE_X / 2
     c = BB(-hx, hx, y0, y1, 0, T)
     c -= BB(-PIN_CH / 2, PIN_CH / 2, -2.8, 6.8, -0.1, T + 0.1)           # дырка под штырь
@@ -101,7 +103,7 @@ def build_flat():
     for sx in (1, -1):
         c += BB(sx * PIN_CH / 2, sx * 4.4, yc - SLOT_Y / 2, yc + SLOT_Y / 2, -RUN, 0)
     part = Part() + c
-    print("ложе v0 плоское: volume %.0f mm3, solids %d" % (part.volume, len(part.solids())))
+    print("ложе v0 плоское%s: volume" % (" крайнее" if last else "") + " %.0f mm3, solids %d" % (part.volume, len(part.solids())))
     return part
 
 
@@ -109,6 +111,7 @@ RUN = 2.9
 names = []
 if VER != "v2":
     export_stl(Pos(0, 0, RUN) * build_flat(), os.path.join(OUT, "gs1_cart_lozhe_plosk.stl"))
+    export_stl(Pos(0, 0, RUN) * build_flat(True), os.path.join(OUT, "gs1_cart_lozhe_plosk_kraj.stl"))
 for last in ((False,) if VER == "v2" else (False, True)):
     part = build(last)
     nm = "gs1_cart_lozhe" + SUF + ("_kraj" if last else "")
@@ -134,9 +137,10 @@ for case, xs in (("A", (20, -20, 20, -20)), ("B", (-20, 20, -20, 20)), ("C", (0,
         if k:
             pairs_clear.append(("c%s%d" % (case, k - 1), nm, 0.9))
 if VER != "v2":                          # плоское ложе на тележках 0-2 в крайних положениях
-    for k in range(3):
+    for k in range(4):
         for x in (-20, 0, 20):
             nm = "f%d_%d" % (k, x)
-            asm.add(nm, os.path.join(OUT, "gs1_cart_lozhe_plosk.stl"), loc=(x, CARTS_Y[k], Z_DECK + DECK_T - RUN))
+            stl = "gs1_cart_lozhe_plosk_kraj.stl" if k == 3 else "gs1_cart_lozhe_plosk.stl"
+            asm.add(nm, os.path.join(OUT, stl), loc=(x, CARTS_Y[k], Z_DECK + DECK_T - RUN))
             pairs_touch.append((nm, "deck"))
 asm.check(clearances=pairs_clear, touching=pairs_touch, verbose=False)
