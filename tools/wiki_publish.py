@@ -47,6 +47,7 @@ TITLES = {
     "t-sborka-korotkij-grif": "✅Т. Сборка короткий гриф",
     "t-telezhki": "⌛Т. Тележки",
     "t-grif-pod-telezhki": "⌛Т. Гриф под тележки",
+    "t-soft": "⌛Т. Софт",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")

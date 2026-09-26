@@ -63,6 +63,7 @@ AeroBand AG01 показывают или слушают, но руку не в�
 **В работе и в планах**
 
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
+* [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
 * [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
 * [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
 * [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) — дорожная карта до производства, сделанное зачёркиваем

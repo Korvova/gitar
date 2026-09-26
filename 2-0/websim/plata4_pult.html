@@ -23,6 +23,15 @@
   .lbl { font-size:12px; color:var(--mut); margin-top:10px; }
   .diag { font-size:12px; color:var(--mut); min-height:32px; margin-top:8px; word-break:break-word; }
   .diag.ok { color:var(--ok); } .diag.bad { color:var(--bad); }
+  .cal { border-top:1px dashed var(--line); margin-top:10px; padding-top:6px; }
+  .cal .row button { min-width:40px; padding:7px 8px; }
+  button.set { background:#eef7ee; } button.done { background:#2e8b57; color:#fff; border-color:#2e8b57; }
+  .calv { font-size:12px; color:var(--mut); }
+  #melody { margin:16px 16px 0; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  #melody h2 { margin:0 0 8px; font-size:17px; }
+  #notes { display:flex; flex-wrap:wrap; gap:4px; margin:10px 0 0; }
+  #notes span { font-size:12px; padding:4px 6px; border-radius:6px; background:#f2efe8; }
+  #notes span.now { background:var(--acc); color:#fff; }
   input[type=range] { width:100%; }
   #log { margin:0 16px 16px; background:#111; color:#cfe; font:12px/1.4 ui-monospace, monospace; padding:10px; border-radius:10px; height:170px; overflow:auto; white-space:pre-wrap; }
   .cmdline { display:flex; gap:6px; margin:0 16px 10px; }
@@ -44,6 +53,19 @@
   <button id="bOff" title="Снять ток со всех моторов — не греются">Отпустить все</button>
   <span id="st">не подключено</span>
 </header>
+<section id="melody">
+  <h2>Мелодия: «Ода к радости» (V позиция)</h2>
+  <div class="calv">Нужна калибровка: мотор 0 — струны 2 и 3, мотор 1 — струна 2, мотор 2 — струна 3, мотор 3 — струна 2.
+    Перед игрой — сверка: каждую тележку на струну 1 и «Сверка: это струна 1».</div>
+  <div class="row" style="align-items:center">
+    <button class="big" id="bPlay">▶ Играть</button>
+    <button id="bStopMel">■ Стоп</button>
+    <label style="font-size:13px">темп <b id="bpmv">40</b> уд/мин
+      <input type="range" id="bpm" min="20" max="120" value="40" style="width:200px"></label>
+    <label style="font-size:13px"><input type="checkbox" id="snd" checked> звук</label>
+  </div>
+  <div id="notes"></div>
+</section>
 <main id="cards"></main>
 <div class="cmdline"><input id="cmd" placeholder="своя команда, например: m 2  или  deg 45 20"><button id="bSend">Отправить</button></div>
 <div id="log"></div>
@@ -82,7 +104,22 @@ for (let m = 0; m < 4; m++) {
       '<button data-m="' + m + '" data-a="hold">держать</button>' +
       '<button data-m="' + m + '" data-a="free">отпустить</button>' +
     '</div>' +
-    '<div class="diag" id="diag' + m + '"></div>';
+    '<div class="diag" id="diag' + m + '"></div>' +
+    '<div class="cal"><div class="lbl">Калибровка струн: подвинь тележку под струну и нажми её номер</div>' +
+    '<div class="row">' +
+      '<button data-m="' + m + '" data-deg="-5">◀◀ 5°</button>' +
+      '<button data-m="' + m + '" data-deg="-1">◀ 1°</button>' +
+      '<button data-m="' + m + '" data-deg="1">1° ▶</button>' +
+      '<button data-m="' + m + '" data-deg="5">5° ▶▶</button>' +
+    '</div>' +
+    '<div class="lbl">Запомнить струну (зелёная — уже запомнена)</div><div class="row">' +
+      [1, 2, 3, 4, 5, 6].map(n => '<button class="set" id="sv' + m + '_' + n + '" data-m="' + m + '" data-save="' + n + '">' + n + '</button>').join('') +
+    '</div>' +
+    '<div class="lbl">Ехать на струну</div><div class="row">' +
+      [1, 2, 3, 4, 5, 6].map(n => '<button data-m="' + m + '" data-go="' + n + '">→' + n + '</button>').join('') +
+    '</div>' +
+    '<div class="row"><button data-m="' + m + '" data-ref="1">Сверка: это струна 1</button></div>' +
+    '<div class="calv" id="calv' + m + '">калибровка: —</div></div>';
   cards.appendChild(c);
   const r = c.querySelector('#rpm' + m);
   r.oninput = () => { c.querySelector('#rpmv' + m).textContent = r.value; };
@@ -102,7 +139,10 @@ function toMotor(m, line) {
 cards.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const m = +b.dataset.m, rpm = document.getElementById('rpm' + m).value;
-  if (b.dataset.deg) toMotor(m, 'deg ' + b.dataset.deg + ' ' + rpm);
+  if (b.dataset.save) toMotor(m, 'save ' + b.dataset.save);
+  else if (b.dataset.go) toMotor(m, 'go ' + b.dataset.go + ' ' + rpm);
+  else if (b.dataset.ref) toMotor(m, 'ref ' + b.dataset.ref);
+  else if (b.dataset.deg) toMotor(m, 'deg ' + b.dataset.deg + ' ' + (Math.abs(+b.dataset.deg) <= 5 ? 10 : rpm));
   else if (b.dataset.sw) toMotor(m, 'sw ' + b.dataset.sw + ' ' + rpm);
   else if (b.dataset.a === 'diag') { document.getElementById('diag' + m).textContent = 'проверяю…'; write('diag ' + m); }
   else if (b.dataset.a) toMotor(m, b.dataset.a);
@@ -112,6 +152,13 @@ function onLine(s) {
   log('← ' + s);
   const mm = s.match(/вал 0:\s*(-?\d+)°\s*1:\s*(-?\d+)°\s*2:\s*(-?\d+)°\s*3:\s*(-?\d+)°/);
   if (mm) for (let i = 0; i < 4; i++) document.getElementById('pos' + i).textContent = 'вал: ' + mm[i + 1] + '°';
+  const cm = s.match(/cal (\d):((?: \S+){6})/);
+  if (cm) {
+    const v = cm[2].trim().split(' ');
+    calOk[+cm[1]] = v.map(x => x !== '-');
+    document.getElementById('calv' + cm[1]).textContent = 'калибровка (шаги): ' + v.map((x, i) => (i + 1) + ':' + x).join('  ');
+    v.forEach((x, i) => { document.getElementById('sv' + cm[1] + '_' + (i + 1)).className = x !== '-' ? 'done' : 'set'; });
+  }
   const d = s.match(/^адрес (\d)/);
   if (d) {
     const el = document.getElementById('diag' + d[1]);
@@ -130,6 +177,7 @@ document.getElementById('bConn').onclick = async () => {
     log('— подключено');
     readLoop();
     setTimeout(() => write('status'), 300);
+    setTimeout(() => write('cal'), 700);
   } catch (e) { log('ошибка: ' + e.message); }
 };
 
@@ -151,6 +199,51 @@ document.getElementById('bInit').onclick = () => write('init');
 document.getElementById('bDiag').onclick = () => write('diag');
 document.getElementById('bStop').onclick = () => write('stop');
 document.getElementById('bOff').onclick = () => write('off');
+
+// ---------- мелодия: «Ода к радости», V позиция (Т. Тележки 11.10) ----------
+const calOk = [[], [], [], []];
+// нота: имя, частота, мотор (= палец: 0 указательный … 3 мизинец), струна, длительность в долях
+const ODA = [
+  ['ми', 329.63, 0, 2, 1], ['ми', 329.63, 0, 2, 1], ['фа', 349.23, 1, 2, 1], ['соль', 392.00, 3, 2, 1],
+  ['соль', 392.00, 3, 2, 1], ['фа', 349.23, 1, 2, 1], ['ми', 329.63, 0, 2, 1], ['ре', 293.66, 2, 3, 1],
+  ['до', 261.63, 0, 3, 1], ['до', 261.63, 0, 3, 1], ['ре', 293.66, 2, 3, 1], ['ми', 329.63, 0, 2, 1],
+  ['ми', 329.63, 0, 2, 1.5], ['ре', 293.66, 2, 3, 0.5], ['ре', 293.66, 2, 3, 2]];
+const FINGER = ['указ.', 'сред.', 'безым.', 'мизин.'];
+const notesEl = document.getElementById('notes');
+ODA.forEach((n, i) => {
+  const e = document.createElement('span'); e.id = 'nt' + i;
+  e.textContent = n[0] + ' · ' + FINGER[n[2]] + ' · стр ' + n[3]; notesEl.appendChild(e);
+});
+const bpm = document.getElementById('bpm');
+bpm.oninput = () => { document.getElementById('bpmv').textContent = bpm.value; };
+let actx = null, playing = false;
+function pluck(f, dur) {
+  if (!document.getElementById('snd').checked) return;
+  actx = actx || new AudioContext();
+  const t = actx.currentTime, o = actx.createOscillator(), o2 = actx.createOscillator(), g = actx.createGain();
+  o.type = 'triangle'; o.frequency.value = f; o2.type = 'sine'; o2.frequency.value = f * 2;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.4, dur * 1.2));
+  o.connect(g); o2.connect(g); g.connect(actx.destination);
+  o.start(t); o2.start(t); o.stop(t + dur * 1.3 + 0.1); o2.stop(t + dur * 1.3 + 0.1);
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+document.getElementById('bPlay').onclick = async () => {
+  const need = ODA.filter(n => !(calOk[n[2]] || [])[n[3] - 1]);
+  if (need.length && !confirm('Не все нужные струны откалиброваны. Играть всё равно (только звук у неоткалиброванных)?')) return;
+  playing = true;
+  for (let i = 0; i < ODA.length && playing; i++) {
+    const n = ODA[i], beat = 60000 / (+bpm.value);
+    document.querySelectorAll('#notes span').forEach(e => e.classList.remove('now'));
+    document.getElementById('nt' + i).classList.add('now');
+    write('to ' + n[2] + ' ' + n[3] + ' 120');
+    pluck(n[1], n[4] * beat / 1000);
+    await sleep(n[4] * beat);
+  }
+  playing = false;
+  document.querySelectorAll('#notes span').forEach(e => e.classList.remove('now'));
+};
+document.getElementById('bStopMel').onclick = () => { playing = false; write('stop'); };
 document.getElementById('cur').onchange = e => write('cur ' + e.target.value);
 document.getElementById('bSend').onclick = () => { const v = document.getElementById('cmd').value.trim(); if (v) write(v); };
 document.getElementById('cmd').onkeydown = e => { if (e.key === 'Enter') document.getElementById('bSend').click(); };

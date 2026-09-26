@@ -9,7 +9,13 @@
 //   init                  — заново настроить все драйверы (после включения питания моторов)
 //   diag                  — опрос всех 4 адресов; diag N — полный тест драйвера N с катушками
 //   status
+// Калибровка струн (Т. Тележки 11.8–11.9), к выбранному мотору:
+//   save N    — запомнить текущее положение как струну N (1..6), хранится в памяти ESP
+//   ref N     — сверка: «сейчас тележка на струне N» (в начале сессии, мотор не знает, где стоит)
+//   go N [rpm] — ехать на струну N;  to M N [rpm] — мотор M на струну N (для мелодий)
+//   cal       — таблица калибровки всех моторов;  calclr — стереть калибровку выбранного
 #include <TMCStepper.h>
+#include <Preferences.h>
 
 const uint8_t P_EN[4]   = {23, 19, 25, 14};
 const uint8_t P_STEP[4] = {22, 4, 33, 27};
@@ -24,6 +30,11 @@ int curMA = 350;
 const float HOLD_MULT = 0.2;          // ток удержания в покое = 20% рабочего (иначе моторы и драйверы греются стоя)
 uint8_t sel = 0;
 float posDeg[4] = {0, 0, 0, 0};
+long posStep[4] = {0, 0, 0, 0};       // положение вала в шагах от включения (или от сверки)
+const long NOCAL = -2147483647L;
+long cal[4][7];                        // cal[мотор][струна 1..6] — шаги; NOCAL = не задано
+Preferences prefs;
+
 float swHalf = 0, swRpm = 30;
 int swDir = 1;
 volatile bool abortMove = false;
@@ -108,6 +119,7 @@ void doSteps(uint8_t m, long n, bool fwd, float sps) {
     if ((i & 0x7F) == 0 && Serial.available() && Serial.peek() == 's') { abortMove = true; break; }
   }
   posDeg[m] += (fwd ? 1 : -1) * done * 360.0 / STEPS_PER_REV;
+  posStep[m] += (fwd ? 1 : -1) * done;
 }
 
 void doDeg(uint8_t m, float deg, float rpm) {
@@ -115,6 +127,39 @@ void doDeg(uint8_t m, float deg, float rpm) {
   float sps = rpm / 60.0 * STEPS_PER_REV;
   if (sps < 40) sps = 40;
   doSteps(m, (long)(fabs(deg) / 360.0 * STEPS_PER_REV), deg > 0, sps);
+}
+
+void calLoad() {
+  prefs.begin("gitar", true);
+  for (uint8_t m = 0; m < 4; m++)
+    for (uint8_t n = 1; n <= 6; n++) {
+      char k[8]; snprintf(k, sizeof(k), "c%u_%u", m, n);
+      cal[m][n] = prefs.getLong(k, NOCAL);
+    }
+  prefs.end();
+}
+
+void calSave(uint8_t m, uint8_t n) {
+  prefs.begin("gitar", false);
+  char k[8]; snprintf(k, sizeof(k), "c%u_%u", m, n);
+  if (cal[m][n] == NOCAL) prefs.remove(k); else prefs.putLong(k, cal[m][n]);
+  prefs.end();
+}
+
+String calStr(uint8_t m) {
+  String r = "cal " + String(m) + ":";
+  for (uint8_t n = 1; n <= 6; n++) r += " " + (cal[m][n] == NOCAL ? String("-") : String(cal[m][n]));
+  return r;
+}
+
+// ехать мотором m на струну n; false — струна не откалибрована
+bool goString(uint8_t m, uint8_t n, float rpm) {
+  if (n < 1 || n > 6 || cal[m][n] == NOCAL) return false;
+  long d = cal[m][n] - posStep[m];
+  float sps = rpm / 60.0 * STEPS_PER_REV;
+  if (sps < 40) sps = 40;
+  doSteps(m, labs(d), d > 0, sps);
+  return true;
 }
 
 String statusStr() {
@@ -156,12 +201,37 @@ void execCmd(String line) {
     if (ma >= 100 && ma <= 900) { curMA = ma; for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA, HOLD_MULT); reply("ok ток " + String(curMA) + " мА"); }
     else reply("ток 100..900");
   }
+  else if (cmd == "save" || cmd == "ref" || cmd == "go") {
+    int n = rest.toInt();
+    if (n < 1 || n > 6) { reply("струна 1..6"); return; }
+    if (cmd == "save") { cal[sel][n] = posStep[sel]; calSave(sel, n); reply("ok мотор " + String(sel) + " струна " + String(n) + " запомнена | " + calStr(sel)); }
+    else if (cmd == "ref") {
+      if (cal[sel][n] == NOCAL) { reply("струна " + String(n) + " у мотора " + String(sel) + " не откалибрована"); return; }
+      posStep[sel] = cal[sel][n]; reply("ok сверка: мотор " + String(sel) + " стоит на струне " + String(n));
+    } else {
+      swHalf = 0;
+      reply(goString(sel, n, a2 > 0 ? a2 : 60) ? "ok мотор " + String(sel) + " на струне " + String(n) : "струна " + String(n) + " не откалибрована");
+    }
+  }
+  else if (cmd == "to") {
+    int m = rest.toInt();
+    int sp = rest.indexOf(' ');
+    String r2 = sp < 0 ? "" : rest.substring(sp + 1);
+    int n = r2.toInt();
+    int sp3 = r2.indexOf(' ');
+    float rpm = sp3 < 0 ? 90 : r2.substring(sp3 + 1).toFloat();
+    if (m < 0 || m > 3) { reply("нет такого мотора"); return; }
+    swHalf = 0;
+    reply(goString(m, n, rpm) ? "ok to " + String(m) + " " + String(n) : "струна " + String(n) + " у мотора " + String(m) + " не откалибрована");
+  }
+  else if (cmd == "cal") { for (uint8_t m = 0; m < 4; m++) reply(calStr(m)); }
+  else if (cmd == "calclr") { for (uint8_t n = 1; n <= 6; n++) { cal[sel][n] = NOCAL; calSave(sel, n); } reply("ok калибровка мотора " + String(sel) + " стёрта"); }
   else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
   else if (cmd == "sw") {
     swHalf = fabs(a1); swRpm = a2 > 0 ? a2 : 30; swDir = 1;
     reply(swHalf > 0 ? "ok качание мотора " + String(sel) : "ok качание стоп");
   }
-  else reply("? команды: m deg sw stop hold free off cur init diag status");
+  else reply("? команды: m deg sw stop hold free off cur init diag status save ref go to cal calclr");
 }
 
 String rxBuf;
@@ -175,6 +245,7 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200, SERIAL_8N1, TMC_RX, TMC_TX);
   tmcSetupAll();
+  calLoad();
   reply("ok плата 4 моторов готова (m N, deg, sw, stop, hold, free, cur, init, diag, status)");
 }
 
