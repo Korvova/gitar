@@ -206,6 +206,8 @@ plates = [
      prep("gs1_cart_lozhe", ID, copies=3) + prep("gs1_cart_lozhe_kraj", ID)),   # 3 обычных + крайнее (тележка 3), полозьями на стол
     ("75_lozhe_proba", p020_j,             # проба: плоское ложе без тележки, бортиками на стол (FLIP)
      prep("gs1_cart_lozhe_plosk", FLIP)),
+    ("77_lozhe_v2_plosk", p020_j,          # 4 плоских ложа под секцию-1 v2, бортиками на стол
+     prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
      prep("gs1_cart_lozhe_plosk", FLIP, copies=2) + prep("gs1_cart_lozhe_plosk_kraj", FLIP)),
     # ---- СЕКЦИЯ-1 v2 (26.09.2026): тележки на шаге V позиции 26/25/24, у каждой своё русло
