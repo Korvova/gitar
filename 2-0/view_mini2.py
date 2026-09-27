@@ -60,15 +60,15 @@ pl.show(interactive_update=True, auto_close=False)
 while True:
     run = TR[state["key"]]
     tr = run["trace"]
-    t, c, a, f = tr[state["i"]]
+    t, c, a, f, lk = tr[state["i"]]
     cx, cy = R_CR * math.cos(c), MY + R_CR * math.sin(c)          # палец кривошипа
     sx, sy = RS * math.cos(a), AX + RS * math.sin(a)             # стад плеча
     crank.user_matrix = mat(0, MY, 0, c)
     arm.user_matrix = mat(0, AX, Z_ARM, a)
-    link.user_matrix = mat(cx, cy, Z_LINK, math.atan2(-(sx - cx), sy - cy))
+    link.user_matrix = mat(cx, cy, Z_LINK, c + lk)                # поза шатуна — прямо из MuJoCo
     lozhe.user_matrix = mat(LB * math.sin(a), CART_Y, Z_DECK + DECK_T - RUN, 0)
-    txt.SetText(2, "мотор до %.2f Н·м, палец %.0f Н против хода\nвремя %.2f с   кривошип %6.0f°\nложе %+5.1f мм   момент мотора %.3f Н·м%s"
-                % (run["t_lim"], run["force"], t, math.degrees(c), LB * math.sin(a), abs(f),
+    txt.SetText(2, "мотор до %.2f Н·м, палец %.0f Н против хода; шарниры MuJoCo расходятся не больше %.3f мм\nвремя %.2f с   кривошип %6.0f°\nложе %+5.1f мм   момент мотора %.3f Н·м%s"
+                % (run["t_lim"], run["force"], run["gap_max_mm"], t, math.degrees(c), LB * math.sin(a), abs(f),
                    "   — СРЫВ: мотор не тянет" if run["t_lim"] < 0.1 and abs(f) >= run["t_lim"] * 0.99 else ""))
     pl.update()
     if pl.render_window is None or getattr(pl, "_closed", False):

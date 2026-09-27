@@ -79,7 +79,7 @@ def xml(t_lim):
     return f"""
 <mujoco>
   <compiler angle="radian"/>
-  <option timestep="0.0002" gravity="0 0 0" integrator="implicitfast"/>
+  <option timestep="0.0001" gravity="0 0 0" integrator="implicitfast" iterations="200" tolerance="1e-12"/>
   <default><geom density="1270" contype="0" conaffinity="0"/><joint damping="0.00002"/></default>
   <worldbody>
     <body name="crank" pos="0 {MY*m2} 0">
@@ -99,7 +99,7 @@ def xml(t_lim):
     </body>
   </worldbody>
   <equality>
-    <connect site1="ls" site2="as" solref="0.002 1"/>
+    <connect site1="ls" site2="as" solref="0.0002 1" solimp="0.9999 0.9999 0.0001"/>   <!-- жёсткий шарнир: расхождение меряем ниже -->
   </equality>
   <actuator>
     <position name="motor" joint="crank" kp="5" kv="0.01" forcerange="{-t_lim} {t_lim}" ctrlrange="-100 100"/>
@@ -118,6 +118,7 @@ def run(t_lim, turns=3, rps=1.0, force=F, hold=False):
     ja = model.joint("arm").qposadr[0]
     da = model.joint("arm").dofadr[0]
     jc = model.joint("crank").qposadr[0]
+    jlk = model.joint("link").qposadr[0]
     phi0, (cx0, cy0), (sx0, sy0) = rocker(0.0)                  # начальная поза: кривошип 0°
     data.qpos[model.joint("arm").qposadr[0]] = phi0
     data.qpos[model.joint("link").qposadr[0]] = math.atan2(-(sx0 - cx0), sy0 - cy0)
@@ -140,7 +141,8 @@ def run(t_lim, turns=3, rps=1.0, force=F, hold=False):
         if not hold:
             lag = max(lag, math.degrees(abs(data.ctrl[0] - data.qpos[jc])))
         xs.append(LB * math.sin(data.qpos[ja]))
-        TRACE.append((t, data.qpos[jc], data.qpos[ja], data.actuator_force[0]))
+        TRACE.append((t, data.qpos[jc], data.qpos[ja], data.actuator_force[0], data.qpos[jlk],
+                      float(np.linalg.norm(data.site("ls").xpos - data.site("as").xpos)) / m2))
     return lag, min(xs), max(xs), math.degrees(data.qpos[jc])
 
 

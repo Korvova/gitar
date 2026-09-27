@@ -7,6 +7,9 @@ exec(src.split('print("\n=== MuJoCo: мотор крутит')[0].replace("print
 out = {}
 for key, tl in (("strong", 0.2), ("weak", 0.05)):
     run(tl, turns=2, rps=0.5)
-    out[key] = {"t_lim": tl, "force": F, "trace": [[round(t, 4), c, a, f] for t, c, a, f in TRACE[::25]]}
+    gap = max(r[5] for r in TRACE)
+    print(key, "расхождение шарнира шатун-плечо: макс %.4f мм" % gap)
+    out[key] = {"t_lim": tl, "force": F, "gap_max_mm": gap,
+                "trace": [[round(t, 4), c, a, f, lk] for t, c, a, f, lk, g in TRACE[::50]]}
 json.dump(out, open("trace_mini2.json", "w"))
 print("ok", {k: len(v["trace"]) for k, v in out.items()})
