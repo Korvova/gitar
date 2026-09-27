@@ -24,7 +24,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "Print", "Print")
 sys.path.insert(0, HERE)
 
-R_BIG = 7.5
+R_BIG = float(sys.argv[1]) if len(sys.argv) > 1 else 7.5       # 10 — под плечо 3 R16 (gitara_arm3_r16.py)
+SFX = "big" if R_BIG == 7.5 else "r%g" % R_BIG
 K = 3
 Z_FLOOR = [3, 8.4, 13.8, 19.2]
 FLANGE_Z = 0.0
@@ -38,7 +39,7 @@ DISK_R = R_BIG + PIN_R + 1.0
 SLOT_C = 0.15
 LANE, MY3 = 10, 678
 SLOT_X = (-(R_BIG + PIN_R + 0.3), -1.5)          # прорезь хвоста, от оси мотора (запад)
-SWEEP = 50                                        # рабочий сектор пальца: 180° ± 50°
+SWEEP = int(sys.argv[2]) if len(sys.argv) > 2 else 50                                       # рабочий сектор пальца: 180° ± 50°
 
 
 def BB(x0, x1, y0, y1, z0, z1):
@@ -108,7 +109,7 @@ t += BB(x_w, -4, yc - YOKE_HALF_Y, ln, 0, 1.6)
 t -= BB(SLOT_X[0] - LANE, SLOT_X[1] - LANE, yc - (PIN_R + SLOT_C), yc + (PIN_R + SLOT_C), -0.1, 1.7)
 tail = Part() + t
 
-for p, n in ((crank, "gdk_crank3_big"), (tail, "gdk_tail3_big")):
+for p, n in ((crank, "gdk_crank3_" + SFX), (tail, "gdk_tail3_" + SFX)):
     bb = p.bounding_box()
     print("%s: %.1f x %.1f x %.1f, solids %d" % (n, bb.size.X, bb.size.Y, bb.size.Z, len(p.solids())))
     export_stl(p, os.path.join(OUT, n + ".stl"))
@@ -128,8 +129,8 @@ for a in range(180 - SWEEP, 180 + SWEEP + 1, 10):
     dy = -R_BIG * math.sin(th - math.pi)           # палец на западе: y пальца = R sin(a), лента едет с ним
     ypin = R_BIG * math.sin(th)
     cn, tn = "cr%d" % a, "tl%d" % a
-    asm.add(cn, os.path.join(OUT, "gdk_crank3_big.stl"), loc=(0, MY3, 0), rz=a - 180)
-    asm.add(tn, os.path.join(OUT, "gdk_tail3_big.stl"), loc=(LANE, 480 + ypin, Z_FLOOR[K] + 0.05))
+    asm.add(cn, os.path.join(OUT, "gdk_crank3_" + SFX + ".stl"), loc=(0, MY3, 0), rz=a - 180)
+    asm.add(tn, os.path.join(OUT, "gdk_tail3_" + SFX + ".stl"), loc=(LANE, 480 + ypin, Z_FLOOR[K] + 0.05))
     for obst, need in (("d2", 0.3), ("d1", 0.3), ("tail2", 0.2)):
         clear.append((cn, obst, need))
         clear.append((tn, obst, need))
