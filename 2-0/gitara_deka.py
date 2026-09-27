@@ -17,12 +17,14 @@ v3 — ПОЛНЫЙ ОБОРОТ кривошипа (идея владельца
 Проверка сборки: модель мотора по чертежу (вал с допуском +0.5) и полный оборот
 всех кривошипов (вместе и со сдвигом 90°), зазоры на каждом шаге 30°.
 
-ДЕКА ×2 (27.09.2026, DEKA_X2=1) — под секцию-1 v3 (рычаг 36 : 18, лента ±11):
-  * кривошип R15 — не диск, а рычажок (ступица + плечо + палец): диск Ø37 задел бы гребёнку 634;
-    посадка на шестерню по зубьям (купон 66, зазор 0.10 — круглая проворачивалась);
-  * палец на западе, рабочий сектор 180° ± 48° (лента ±11), полного оборота нет — прошивка
-    держит мотор внутри откалиброванных струн; хвосты: кулиса только с запада;
-  * окно в дне Д1 под рычажок 0 — по сектору маха, а не кругом.
+ДЕКА ×2 (27.09.2026, DEKA_X2=1) — под секцию-1 v3 (рычаг 36 : 18):
+  * кривошип R10, полный диск Ø27 (владелец: струны 1–6 = пол-оборота, 180°); у этажей 1–3 тело
+    диска опускается до дна с зазором 0.35 — кривошип не перекосится на шестерне; посадка на
+    шестерню по зубьям (купон 66, зазор 0.10 — круглая проворачивалась);
+  * полный оборот разрешён, кулиса хвоста открыта в обе стороны — ничего не заклинит: лента ±10,
+    ложе ±20 — ровно до концов прорезей секции-1; струны 1 и 6 — в мёртвых точках (±90°);
+  * площадка-кулиса хвоста шире (перемычки по 3 мм вместо 1.5) — прорезь длиннее, меньше пружинит;
+  * окно в дне Д1 под диск 0 — кругом Ø28.
   Меняются: gdk1_base_x2, gdk_crank0..3_x2, gdk_tail0..3_x2; Д2, гребёнки, проставка — как v3.
   Запуск: set DEKA_X2=1 && .venv-b123d\\Scripts\\python gitara_deka.py
 
@@ -39,7 +41,6 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Print", "Print")
 os.makedirs(OUT, exist_ok=True)
 SWEEP = os.environ.get("DEKA_SWEEP", "1") != "0"   # DEKA_SWEEP=0 — только детали и статика
 X2 = os.environ.get("DEKA_X2", "0") == "1"         # дека ×2: кривошипы R15 рычажком (см. шапку)
-X2_SW = 48                                          # сектор пальца ×2: 180° ± 48°
 X2_NAMES = {"gdk1_base", "gdk_crank0", "gdk_crank1", "gdk_crank2", "gdk_crank3",
             "gdk_tail0", "gdk_tail1", "gdk_tail2", "gdk_tail3"}
 
@@ -67,7 +68,7 @@ SPACER = 4.0                           # проставка мотора 0
 FLANGE_Z = [-SPACER, 0.0, 0.0, 0.0]    # высота фланца мотора k
 
 # ---------------- кривошип (кулиса) ----------------
-R_CR = 15.0 if X2 else 4.8             # радиус пальца = ход ленты ±4.8 (×2: R15, сектор ±48° — лента ±11)
+R_CR = 10.0 if X2 else 4.8             # радиус пальца = ход ленты ±4.8 (×2: ±10 — ложе ±20)
 PIN_R = 2.5
 BORE_D = GEAR_D - 0.2                  # посадка на шестерню (купон 66, риска 2)
 HUB_R = GEAR_D / 2 + 1.2
@@ -75,17 +76,8 @@ DISK_R = R_CR + PIN_R + 1.0
 DISK_T = 1.8
 SLOT_C = 0.15                          # зазор пальца в прорези по Y
 SLOT_HALF = R_CR + PIN_R + 0.3         # полудлина прорези по X
-X2_SLOT = (-(R_CR + PIN_R + 0.3), -(R_CR * math.cos(math.radians(X2_SW)) - PIN_R - 0.3))   # ×2: кулиса только с запада
-X2_ARM_W = 7.0                         # ×2: ширина плеча кривошипа
-X2_T = [2.3, 3.0, 3.0, 3.0]            # ×2: толщина плеча (у этажа 0 — в окне дна над проставкой)
-
-
-def x2_arm2d(grow=0.0, h=1.0, z0=0.0):
-    """×2: плечо кривошипа (ступица + брусок + пад пальца) в системе оси, палец на −X."""
-    a = Pos(0, 0, z0 + h / 2) * Cylinder(HUB_R + 1.5 + grow, h)
-    a += Pos(-R_CR / 2, 0, z0 + h / 2) * Box(R_CR, X2_ARM_W + 2 * grow, h)
-    a += Pos(-R_CR, 0, z0 + h / 2) * Cylinder(PIN_R + 1.0 + grow, h)
-    return a
+X2_T0 = 2.3                            # ×2: толщина диска 0 (в окне дна над проставкой)
+X2_BODY_Z0 = 3.35                      # ×2: низ тела дисков 1–3 — над дном (верх дна z 3)
 
 
 def disk_top(k):
@@ -154,10 +146,7 @@ def deka_base(sec_y0, south_shelf, tumba_xy, lid_y, neck_mount=False):
         if not (sec_y0 <= my < sec_y0 + L):
             continue
         yl = my - sec_y0
-        if k == 0 and X2:                              # ×2: окно по сектору маха рычажка 0
-            for a in range(-X2_SW - 4, X2_SW + 5, 4):
-                b -= Pos(MOT_X, yl, 0) * Rot(0, 0, a) * x2_arm2d(0.6, 3.2, -0.1)
-        elif k == 0:                                   # окно диска 0 насквозь
+        if k == 0:                                     # окно диска 0 насквозь (×2: DISK_R = 18.5)
             b -= Pos(MOT_X, yl, 1.5) * Cylinder(DISK_R + 0.5, 3.2)
         else:
             b -= Pos(MOT_X, yl, PILOT_H / 2 + 0.05) * Cylinder(PILOT_R + 0.05, PILOT_H + 0.2)
@@ -234,15 +223,15 @@ def crank_part(k):
     fz = FLANGE_Z[k]
     hub_z0 = fz + 2.2
     dt = disk_top(k)
-    if X2:                                             # ×2: рычажок R15, посадка по зубьям
-        d0 = dt - X2_T[k]
-        c = x2_arm2d(0.0, X2_T[k], d0)
+    if X2:                                             # ×2: полный диск R10, тело до дна, посадка по зубьям
+        d0 = dt - X2_T0 if k == 0 else X2_BODY_Z0
+        c = Pos(0, 0, (d0 + dt) / 2) * Cylinder(DISK_R, dt - d0)
         if d0 > hub_z0:
             c += Pos(0, 0, (hub_z0 + d0) / 2) * Cylinder(HUB_R, d0 - hub_z0)
         bore_top = fz + SHAFT_OUT + 0.2
         c -= star_hole(0.10, bore_top - hub_z0 + 0.1, hub_z0 - 0.1)
         pin_top = Z_FLOOR[k] + 1.45
-        c += Pos(-R_CR, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
+        c += Pos(R_CR, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
         return c
     d0 = dt - DISK_T
     c = Pos(0, 0, d0 + DISK_T / 2) * Cylinder(DISK_R, DISK_T)
@@ -282,7 +271,7 @@ def lap_bot(seg, y1):
 ext = lap_bot(lap_top(BB(-4, 4, 0, 178, 0, 1.6), 0), 178)
 
 # хвост v3: лента до мотора, на конце — площадка с ПОПЕРЕЧНОЙ прорезью (кулиса)
-YOKE_HALF_Y = PIN_R + SLOT_C + 1.5
+YOKE_HALF_Y = PIN_R + SLOT_C + (3.0 if X2 else 1.5)   # ×2: перемычки кулисы 3 мм — длинная прорезь меньше пружинит
 tails = []
 for k in range(4):
     yc = MY[k] - 480
@@ -290,8 +279,7 @@ for k in range(4):
     t = lap_top(BB(-4, 4, 0, ln, 0, 1.6), 0)
     x_w = MOT_X - SLOT_HALF - 1.2 - LANE               # западный край площадки (лок)
     t += BB(x_w, -4, yc - YOKE_HALF_Y, ln, 0, 1.6)
-    sx0, sx1 = X2_SLOT if X2 else (-SLOT_HALF, SLOT_HALF)
-    t -= BB(MOT_X + sx0 - LANE, MOT_X + sx1 - LANE,
+    t -= BB(MOT_X - SLOT_HALF - LANE, MOT_X + SLOT_HALF - LANE,
             yc - (PIN_R + SLOT_C), yc + (PIN_R + SLOT_C), -0.1, 1.7)
     tails.append(t)
 
@@ -387,7 +375,7 @@ def dk_of(y):
 
 def place(k, angle):
     """Кривошип k повернуть на angle, ленту k сдвинуть на R·sin — без перезагрузки."""
-    T = trimesh.transformations.rotation_matrix(math.radians(angle - (180 if X2 else 0)), [0, 0, 1])   # ×2: палец рычажка уже на −X
+    T = trimesh.transformations.rotation_matrix(math.radians(angle), [0, 0, 1])
     T[:3, 3] = (MOT_X, MY[k], 0)
     c = RAW_CR[k].copy()
     c.apply_transform(T)
@@ -442,14 +430,10 @@ for i, yg in enumerate(COMB_Y):
 # полный оборот: все вместе и со сдвигом 90° по этажам
 if SWEEP:
     modes = {"вместе": [0, 0, 0, 0], "сдвиг 90°": [0, 90, 180, 270]}
-    steps = range(0, 360, 30)
-    if X2:                                              # ×2: только рабочий сектор 180° ± 48°
-        modes = {"вместе": [1, 1, 1, 1], "вразнобой": [1, -1, 1, -1]}
-        steps = range(-X2_SW, X2_SW + 1, 12)
     for mode, ph in modes.items():
-        for th0 in steps:
+        for th0 in range(0, 360, 30):
             for k in range(4):
-                place(k, 180 + ph[k] * th0 if X2 else th0 + ph[k])
+                place(k, th0 + ph[k])
             where = f"{mode} {th0}°"
             for k in range(4):
                 need(f"cr{k}", dk_of(MY[k]), 0.3, where, "кривошип/дно")
@@ -475,7 +459,7 @@ else:
 print("минимальные зазоры (мм):")
 for key in sorted(worst):
     print(f"  {key:34s} {worst[key]:.2f}")
-print(f"ход ленты ±{R_CR * math.sin(math.radians(X2_SW)) if X2 else R_CR:.2f} мм; уши моторов: {EAR_SIGN}")
+print(f"ход ленты ±{R_CR} мм за оборот; уши моторов: {EAR_SIGN}")
 if bad:
     print("!! НАРУШЕНИЯ:")
     for line in bad[:40]:

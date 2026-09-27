@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Симуляция: весь гриф в режиме ×2 (27.09.2026) — дека ×2 (кривошипы R15 рычажком) + ленты через
-секции 2–3 + секция-1 v3 (плечо 36 : 18) + 4 ложа. Каждый палец ходит своим ритмом.
-Цепочка: кривошип θ → лента u = −15·sin θ → плечо sin φ = u / 18 → ложе x = 36·sin φ = 2u.
+"""Симуляция: весь гриф в режиме ×2 (27.09.2026) — дека ×2 (кривошипы R10, полный диск) + ленты через
+секции 2–3 + секция-1 v3 (плечо 36 : 18) + 4 ложа. Кривошипы крутятся полными оборотами, каждый своим
+темпом: струны 1–6 = пол-оборота (180°), ничего не заклинивает.
+Цепочка: кривошип θ → лента u = 10·sin θ → плечо sin φ = u / 18 → ложе x = 36·sin φ = 2u (±20).
 Детали — из Print/Print (gitara_deka.py с DEKA_X2=1, gitara_sec1_v3.py). Секции 2–3 — прозрачным брусом.
 Запуск: blender -b -P 2-0\\scene_x2.py
 """
@@ -21,11 +22,10 @@ AXES_Y = [y + LB for y in CARTS_Y]
 Z_FLOOR = [3, 8.4, 13.8, 19.2]
 FLOOR, Z_DECK, DECK_T, RUN = 1.6, 23.0, 3.0, 2.9
 # дека ×2
-R_CR, LANE, DK_Y0 = 15.0, 10.0, 480.0
+R_CR, LANE, DK_Y0 = 10.0, 10.0, 480.0
 MY = [515, 565, 615, 678]
 FLANGE_Z = [-4.0, 0.0, 0.0, 0.0]
 COMB_Y = (540, 590, 634)
-TH_MAX = math.degrees(math.asin(10 / R_CR))      # ложе ±20 → лента ±10 → кривошип ±41.8°
 FINGER = ["мизинец", "безымянный", "средний", "указательный"]   # этаж 3..0 → палец; этаж k = FINGER[3 − k]
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -77,7 +77,7 @@ C_ARM = mat("плечи 36:18", (0.25, 0.45, 0.80, 1))
 C_RIB = [mat("лента этаж %d" % k, c) for k, c in enumerate(
     [(0.85, 0.38, 0.18, 1), (0.30, 0.65, 0.35, 1), (0.60, 0.35, 0.75, 1), (0.90, 0.75, 0.20, 1)])]
 C_LOZHE = mat("ложа", (0.95, 0.72, 0.30, 1))
-C_CRANK = mat("кривошипы R15", (0.25, 0.45, 0.80, 1))
+C_CRANK = mat("кривошипы R10", (0.25, 0.45, 0.80, 1))
 C_MOT = mat("моторы", (0.25, 0.27, 0.30, 1))
 C_COMB = mat("гребёнки", (0.55, 0.55, 0.6, 1))
 
@@ -104,18 +104,18 @@ for k in range(4):
     lozhes.append(stl("gs1_lozhe_v3", "ложе %d — %s" % (k, who), C_LOZHE, (0, CARTS_Y[k], Z_DECK + DECK_T - RUN)))
     mids.append(box("лента %d через секции 2–3" % k, LANE - 4, LANE + 4, 178, 480, Z_FLOOR[k] + 0.05, Z_FLOOR[k] + 1.65, C_RIB[k]))
     stl("gdk_motor%d_model" % k, "мотор %d (%s)" % (k, who), C_MOT, (0, MY[k], FLANGE_Z[k]))
-    cranks.append(stl("gdk_crank%d_x2" % k, "кривошип %d R15" % k, C_CRANK, (0, MY[k], 0)))
+    cranks.append(stl("gdk_crank%d_x2" % k, "кривошип %d R10" % k, C_CRANK, (0, MY[k], 0)))
     tails.append(stl("gdk_tail%d_x2" % k, "хвост %d" % k, C_RIB[k], (LANE, DK_Y0, Z_FLOOR[k] + 0.05)))
 bpy.context.view_layer.update()
 
-# ритм: каждый палец прыгает по струнам своим темпом (кривошип ±41.8° = ложе ±20)
-SPEED = [1.0, 1.5, 0.75, 2.0]
+# каждый кривошип крутится полными оборотами своим темпом: пол-оборота = струны 1–6
+SPEED = [1.0, 2.0, 1.0, 3.0]                 # полных оборотов за ролик
 PHASE = [0.0, 0.8, 1.9, 2.7]
 for f in range(1, FRAMES + 1, 2):
     t = (f - 1) / (FRAMES - 1)
     for k in range(4):
-        th = math.radians(TH_MAX) * math.sin(2 * math.pi * SPEED[k] * t + PHASE[k])
-        u = -R_CR * math.sin(th)                       # лента
+        th = 2 * math.pi * SPEED[k] * t + PHASE[k]      # полный оборот
+        u = R_CR * math.sin(th)                        # лента (палец кривошипа на +X)
         phi = math.asin(u / RS)
         cranks[k].rotation_euler = (0, 0, th)
         cranks[k].keyframe_insert("rotation_euler", frame=f)
