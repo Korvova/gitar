@@ -58,10 +58,11 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **Сейчас в работе**
 
-* [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
+* [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — как устроен привод, почему палец плохо чувствует ход, что примеряли, рычаг ×3.25 на мизинце и переход на ×2
 
 **В работе и в планах**
 
+* [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
 * [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
