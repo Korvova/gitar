@@ -61,7 +61,31 @@ c += Pos(0, 0, start + height / 2) * Cone(HUB_R, DISK_R, height)
 if d0 > start + height:
     c += Pos(0, 0, (start + height + d0) / 2) * Cylinder(DISK_R, d0 - start - height)
 top = FLANGE_Z + SHAFT_OUT + 0.2
-c -= Pos(0, 0, (hub_z0 - 0.1 + top) / 2) * Cylinder(BORE_D / 2, top - hub_z0 + 0.1)
+# посадка на шестерню z10 Ø6.0: круглое Ø5.8 проворачивалось (владелец 27.09) — теперь по зубьям.
+# Профиль — star_hole из gitara_deka.py (купон 66, «звёздочка»), зазор STAR_C по радиусу
+STAR_C = 0.10
+GEAR_Z = 10
+GEAR_M = GEAR_D / (GEAR_Z + 2)
+R_TIP, R_ROOT = GEAR_D / 2, GEAR_D / 2 - 2.25 * GEAR_M
+TOOTH_TIP_HALF, TOOTH_ROOT_HALF = 3.8, 15.0
+
+
+def star_hole(cl, h, z0):
+    pts = []
+    pitch = 360.0 / GEAR_Z
+    for i in range(GEAR_Z):
+        a = i * pitch
+        ra, rt = R_ROOT + cl, R_TIP + cl
+        dr, dtt = math.degrees(cl / ra), math.degrees(cl / rt)
+        hr = min(TOOTH_ROOT_HALF + dr, pitch / 2 - 1.0)      # не больше полушага — иначе контур пересекает сам себя
+        ht = min(TOOTH_TIP_HALF + dtt, hr - 1.0)
+        for ang, r in ((a - hr, ra), (a - ht, rt), (a + ht, rt), (a + hr, ra)):
+            pts.append((r * math.cos(math.radians(ang)), r * math.sin(math.radians(ang))))
+    pts.append(pts[0])
+    return Pos(0, 0, z0) * extrude(make_face(Polyline(*pts)), h)
+
+
+c -= star_hole(STAR_C, top - hub_z0 + 0.1, hub_z0 - 0.1)
 pin_top = Z_FLOOR[K] + 1.45
 c += Pos(-R_BIG, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
 crank = Part() + c

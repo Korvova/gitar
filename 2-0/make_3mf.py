@@ -208,6 +208,8 @@ plates = [
      prep("gs1_cart_lozhe_plosk", FLIP)),
     ("78_crank3_big", p020_j,              # кривошип 3 R7.5 (пальцем вниз, поддержки от стола под диском) + хвост 3 под него
      prep("gdk_crank3_big", FLIP) + prep("gdk_tail3_big", ID)),
+    ("79_crank3_big_zub", p020_j,          # только кривошип 3 R7.5, посадка по зубьям шестерни z10 (круглая проворачивалась)
+     prep("gdk_crank3_big", FLIP)),
     ("77_lozhe_v2_plosk", p020_j,          # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
