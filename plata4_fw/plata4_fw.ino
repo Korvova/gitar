@@ -5,7 +5,7 @@
 //   deg <°> [об/мин]      — повернуть выбранный мотор
 //   sw <полуугол> [rpm]   — качание туда-сюда, sw 0 = стоп
 //   stop | hold | free    — стоп / держать / отпустить (выбранный); off — отпустить все
-//   cur <мА>              — ток всех драйверов (100..900)
+//   cur <мА>              — ток всех драйверов (100..900); holdpct <10..100> — ток удержания в покое, % рабочего
 //   init                  — заново настроить все драйверы (после включения питания моторов)
 //   diag                  — опрос всех 4 адресов; diag N — полный тест драйвера N с катушками
 //   status
@@ -27,7 +27,7 @@ TMC2209Stepper* DRV[4] = {&d0, &d1, &d2, &d3};
 
 const long STEPS_PER_REV = 1600;      // 200 * 1/8
 int curMA = 350;
-const float HOLD_MULT = 0.2;          // ток удержания в покое = 20% рабочего (иначе моторы и драйверы греются стоя)
+float HOLD_MULT = 0.2;                // ток удержания в покое, доля рабочего: команда holdpct 20/50/100 (палец проворачивает мотор при 20%)
 uint8_t sel = 0;
 float posDeg[4] = {0, 0, 0, 0};
 long posStep[4] = {0, 0, 0, 0};       // положение вала в шагах от включения (или от сверки)
@@ -194,6 +194,13 @@ void execCmd(String line) {
   }
   else if (cmd == "stop") { swHalf = 0; abortMove = true; reply("ok стоп"); }
   else if (cmd == "free") { swHalf = 0; digitalWrite(P_EN[sel], HIGH); reply("ok мотор " + String(sel) + " отпущен"); }
+  else if (cmd == "holdpct") {
+    int pc = rest.toInt();
+    if (pc < 10 || pc > 100) { reply("holdpct 10..100"); return; }
+    HOLD_MULT = pc / 100.0;
+    for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA, HOLD_MULT);
+    reply("ok удержание " + String(pc) + "% (" + String((int)(curMA * HOLD_MULT)) + " мА)");
+  }
   else if (cmd == "off") { swHalf = 0; for (uint8_t i = 0; i < 4; i++) digitalWrite(P_EN[i], HIGH); reply("ok все моторы отпущены"); }
   else if (cmd == "hold") { digitalWrite(P_EN[sel], LOW); reply("ok мотор " + String(sel) + " держит"); }
   else if (cmd == "cur") {

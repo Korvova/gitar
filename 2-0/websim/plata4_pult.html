@@ -49,6 +49,8 @@
     <select id="cur">
       <option>200</option><option selected>350</option><option>500</option><option>700</option>
     </select> мА</label>
+  <label style="font-size:13px">удержание
+    <select id="holdp"><option>20</option><option selected>50</option><option>100</option></select> %</label>
   <button class="stop" id="bStop">СТОП</button>
   <button id="bOff" title="Снять ток со всех моторов — не греются">Отпустить все</button>
   <span id="st">не подключено</span>
@@ -181,6 +183,7 @@ document.getElementById('bConn').onclick = async () => {
     readLoop();
     setTimeout(() => write('status'), 300);
     setTimeout(() => write('cal'), 700);
+    setTimeout(() => write('holdpct ' + document.getElementById('holdp').value), 1000);
   } catch (e) { log('ошибка: ' + e.message); }
 };
 
@@ -297,6 +300,7 @@ document.getElementById('bPlay').onclick = async () => {
 };
 document.getElementById('bStopMel').onclick = () => { playing = false; write('stop'); };
 document.getElementById('cur').onchange = e => write('cur ' + e.target.value);
+document.getElementById('holdp').onchange = e => write('holdpct ' + e.target.value);
 document.getElementById('bSend').onclick = () => { const v = document.getElementById('cmd').value.trim(); if (v) write(v); };
 document.getElementById('cmd').onkeydown = e => { if (e.key === 'Enter') document.getElementById('bSend').click(); };
 </script>
