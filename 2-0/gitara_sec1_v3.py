@@ -233,7 +233,8 @@ lz -= BB(-PIN_CH / 2, PIN_CH / 2, -2.8, LZ_Y1 + 0.1, -0.1, LZ_T + 0.1)     # д�
 lz += BB(-LZ_HX, -LZ_HX + RIM_T, LZ_Y0, LZ_Y1, LZ_T, LZ_T + RIM_H)
 lz += BB(LZ_HX - RIM_T, LZ_HX, LZ_Y0, LZ_Y1, LZ_T, LZ_T + RIM_H)
 lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y0, LZ_Y0 + LIP_T, LZ_T, LZ_T + LIP_H)
-lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y1 - LIP_T, LZ_Y1, LZ_T, LZ_T + LIP_H)
+for x0, x1 in ((-LZ_HX + RIM_T, -4.5), (4.5, LZ_HX - RIM_T)):              # южный бортик с разрывом ±4.5:
+    lz += BB(x0, x1, LZ_Y1 - LIP_T, LZ_Y1, LZ_T, LZ_T + LIP_H)            # шайба на штыре (стенд) проходит
 for sx in (1, -1):
     lz += BB(sx * PIN_CH / 2, sx * 4.4, -3.0, LZ_Y1, -RUN, 0)             # полозья в прорезь палубы
 lozhe = Pos(0, 0, RUN) * lz                                                # низ полозьев — z 0

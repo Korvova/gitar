@@ -10,7 +10,7 @@
     кривошип и шатун на одной линии»;
   * слои: плечо на полу (стад вверх) → шатун над ним на стаде плеча и пальце кривошипа;
     кривошип свой (палец выше, чем у gdk_crank0_x2, — под шатун), проставка — gdk_spacer0_x2;
-  * всё печатается без поддержек; высота до палубы — 24, потолок как у v1.
+  * всё печатается без поддержек; высота до палубы — 24; штырьки торчат над деталями на 1.5 (потолок 8.3).
 В полном грифе так нельзя: мотор в деке в 50 см от плеча — там лента остаётся.
 Запуск: .venv-b123d\\Scripts\\python gitara_mini2.py
 """
@@ -31,7 +31,9 @@ FIT_D, HOLE_D = 5.1, 5.2        # на стад оси — плотно; дыр�
 Z_FL = 3.0
 Z_ARM = Z_FL + 0.2              # плечо на полу
 Z_LINK = Z_ARM + 1.6 + 0.2      # шатун: 5.0
-Z_CEIL = Z_LINK + 1.6 + 0.2     # потолок: 6.8
+STICK = 1.5                     # штырьки торчат над своей деталью (владелец: впритык могут выскочить)
+Z_TOP = Z_LINK + 1.6 + STICK    # верх пальца кривошипа и стада плеча: 8.1
+Z_CEIL = Z_TOP + 0.2            # потолок: 8.3
 CEIL_T = 1.6
 Z_DECK, DECK_T = 21.0, 3.0      # палуба: верх 24
 RUN = 2.9
@@ -92,7 +94,7 @@ SLOT = BB(-24.5, 24.5, CART_Y - 3.5, CART_Y + max(LB * (1 - math.cos(PHI_MAX)) +
 
 # ---------------- дно ----------------
 base = BB(-26, 26, 0, L, 0, Z_FL) + walls(Z_FL, Z_CEIL)
-base += Pos(0, AX, (Z_FL + Z_ARM + 1.6 + 0.05) / 2) * Cylinder(2.5, Z_ARM + 1.6 + 0.05 - Z_FL)   # стад оси: чуть выше плеча, под шатуном
+base += Pos(0, AX, (Z_FL + Z_ARM + 1.6 + STICK) / 2) * Cylinder(2.5, Z_ARM + 1.6 + STICK - Z_FL)   # стад оси: торчит над плечом на 1.5
 base -= Pos(0, MY, Z_FL / 2) * Cylinder(DISK_R + 0.5, Z_FL + 0.2)  # окно кривошипа
 for ex, ey in ear_holes():
     base -= Pos(ex, ey, Z_FL / 2) * Cylinder(1.7, Z_FL + 0.2)
@@ -116,14 +118,19 @@ for sx in (-22.0, -13.2, -4.4, 4.4, 13.2, 22.0):
     deck += r
 
 # ---------------- плечо: на полу, круглая дырка на оси, стад вверх под шатун, штырь в ложе ----------------
-PIN_TOP = Z_DECK + DECK_T + 1.8
+LZ_T = 2.0                                                          # дно ложа v3
+PIN_TOP = Z_DECK + DECK_T + LZ_T + 0.3                              # штырь на 0.3 выше дна ложа: шайба держит ложе, не зажимая
+SCREW_D, SCREW_H = 2.6, 10.0                                        # дырка под самонарез М3 с шайбой (владелец)
+WASHER_R, HEAD_R, HEAD_H = 3.5, 2.75, 2.2                           # шайба М3 Ø7, головка — для проверки
 arm = Pos(0, 0, 0.8) * Cylinder(5, 1.6)
 arm += BB(-2.5, 2.5, -LB, 0, 0, 1.6) + Pos(0, -LB, 0.8) * Cylinder(3.5, 1.6)
 arm += BB(0, RS, -2.5, 2.5, 0, 1.6) + Pos(RS, 0, 0.8) * Cylinder(4, 1.6)
 arm -= Pos(0, 0, 0.8) * Cylinder(FIT_D / 2, 1.8)
-arm += Pos(RS, 0, 1.6 + (Z_LINK + 1.6 - Z_ARM - 1.6) / 2) * Cylinder(2.5, Z_LINK + 1.6 - Z_ARM - 1.6)
+arm += Pos(RS, 0, 1.6 + (Z_TOP - Z_ARM - 1.6) / 2) * Cylinder(2.5, Z_TOP - Z_ARM - 1.6)   # стад под шатун, торчит на 1.5
 pin_h = PIN_TOP - (Z_ARM + 1.6)
 arm += Pos(0, -LB, 1.6 + pin_h / 2) * Cylinder(2.5, pin_h)
+arm -= Pos(0, -LB, 1.6 + pin_h - SCREW_H / 2 + 0.05) * Cylinder(SCREW_D / 2, SCREW_H + 0.1)
+screw = Pos(0, 0, 0.25) * Cylinder(WASHER_R, 0.5) + Pos(0, 0, 0.5 + HEAD_H / 2) * Cylinder(HEAD_R, HEAD_H)   # шайба + головка (только проверка)
 
 # ---------------- шатун: дырка у кривошипа (0, 0), у плеча (0, LC) ----------------
 link = Pos(0, 0, 0.8) * Cylinder(4.4, 1.6) + Pos(0, LC, 0.8) * Cylinder(4.4, 1.6)
@@ -154,10 +161,10 @@ def star_hole(c, h, z0):
 D0, DT = -2.2, Z_FL - 0.35                                          # как gdk_crank0_x2: над пилотом мотора, под полом
 crank = Pos(0, 0, (D0 + DT) / 2) * Cylinder(DISK_R, DT - D0)
 crank -= star_hole(0.10, DT - D0 + 0.2, D0 - 0.1)
-crank += Pos(R_CR, 0, (DT + Z_LINK + 1.6) / 2) * Cylinder(PIN_R, Z_LINK + 1.6 - DT)
+crank += Pos(R_CR, 0, (DT + Z_TOP) / 2) * Cylinder(PIN_R, Z_TOP - DT)                 # палец: торчит над шатуном на 1.5
 
 parts = [("mini2_base", base), ("mini2_mid", mid), ("mini2_deck", deck), ("mini2_arm", arm),
-         ("mini2_shatun", link), ("mini2_crank", crank)]
+         ("mini2_shatun", link), ("mini2_crank", crank), ("mini2_vint_proverka", screw)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -206,6 +213,9 @@ for thd in range(0, 360, 15):
     asm.add(a, S("mini2_arm"), loc=(0, AX, Z_ARM), rz=math.degrees(phi))
     asm.add(k, S("mini2_shatun"), loc=(cx, cy, Z_LINK), rz=alpha)
     asm.add(z, S("gs1_lozhe_v3"), loc=(LB * math.sin(phi), CART_Y, Z_DECK + DECK_T - RUN))
+    w = "sc%d" % thd
+    asm.add(w, S("mini2_vint_proverka"), loc=(LB * math.sin(phi), AX - LB * math.cos(phi), PIN_TOP))
+    clear += [(w, z, 0.1)]                                          # шайба над дном ложа и мимо бортиков
     clear += [(c, "base", 0.3), (c, "spacer", 0.3), (c, "mid", 0.15), (c, a, 0.5),
               (a, "base", 0.01), (a, "mid", 0.15), (a, "deck", 0.15), (a, z, 0.0),
               (k, "base", 0.1), (k, "mid", 0.15), (k, z, 0.3)]
