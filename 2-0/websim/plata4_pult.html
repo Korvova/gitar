@@ -64,6 +64,7 @@
       <input type="range" id="bpm" min="20" max="120" value="40" style="width:200px"></label>
     <label style="font-size:13px">переезд <b id="mvv">60</b> об/мин
       <input type="range" id="mv" min="20" max="150" value="60" style="width:160px"></label>
+    <label style="font-size:13px"><input type="checkbox" id="loop"> по кругу</label>
     <label style="font-size:13px"><input type="checkbox" id="snd" checked> звук</label>
   </div>
   <div id="notes"></div>
@@ -281,6 +282,7 @@ document.getElementById('bPlay').onclick = async () => {
   const need = SONG.filter(n => !(calOk[n[2]] || [])[n[3] - 1]);
   if (need.length && !confirm('Не все нужные струны откалиброваны. Играть всё равно (только звук у неоткалиброванных)?')) return;
   playing = true;
+  do {
   for (let i = 0; i < SONG.length && playing; i++) {
     const n = SONG[i], beat = 60000 / (+bpm.value);
     document.querySelectorAll('#notes span').forEach(e => e.classList.remove('now'));
@@ -289,6 +291,7 @@ document.getElementById('bPlay').onclick = async () => {
     pluck(n[1], n[4] * beat / 1000);
     await sleep(n[4] * beat);
   }
+  } while (playing && document.getElementById('loop').checked);
   playing = false;
   document.querySelectorAll('#notes span').forEach(e => e.classList.remove('now'));
 };
