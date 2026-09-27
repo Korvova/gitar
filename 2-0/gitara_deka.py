@@ -78,6 +78,7 @@ SLOT_C = 0.15                          # зазор пальца в прорез
 SLOT_HALF = R_CR + PIN_R + 0.3         # полудлина прорези по X
 X2_T0 = 2.3                            # ×2: толщина диска 0 (в окне дна над проставкой)
 X2_BODY_Z0 = 3.35                      # ×2: низ тела дисков 1–3 — над дном (верх дна z 3)
+X2_PIN_UP = [3.5, 3.5, 3.5, 3.0]        # ×2: верх пальца над полом этажа: торчит над лентой на 1.8 (у этажа 3 — 1.3, выше крышка деки); до ленты этажа выше ≥ 1.9
 
 
 def disk_top(k):
@@ -230,7 +231,7 @@ def crank_part(k):
             c += Pos(0, 0, (hub_z0 + d0) / 2) * Cylinder(HUB_R, d0 - hub_z0)
         bore_top = fz + SHAFT_OUT + 0.2
         c -= star_hole(0.10, bore_top - hub_z0 + 0.1, hub_z0 - 0.1)
-        pin_top = Z_FLOOR[k] + 1.45
+        pin_top = Z_FLOOR[k] + X2_PIN_UP[k]         # ×2: палец выше ленты, чтобы кулиса не соскакивала
         c += Pos(R_CR, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
         return c
     d0 = dt - DISK_T
@@ -449,7 +450,7 @@ if SWEEP:
                     need(f"cr{k}", f"comb{i}", 0.5, where, "кривошип/гребёнка")
                     if MY[k] - 12 > yg:
                         need(f"tl{k}", f"comb{i}", 0.1, where, "лента/гребёнка")
-                if asm.meshes[f"cr{k}"].bounds[1][2] > Z_FLOOR[k] + 1.65:
+                if asm.meshes[f"cr{k}"].bounds[1][2] > Z_FLOOR[k] + (X2_PIN_UP[k] + 0.05 if X2 else 1.65):
                     bad.append(f"{where}: кривошип {k} выше ленты своего этажа")
             gc.collect()
             print(f"  шаг {where}: ок, нарушений всего {len(bad)}", flush=True)
