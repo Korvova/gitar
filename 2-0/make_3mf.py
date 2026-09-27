@@ -212,10 +212,10 @@ plates = [
      prep("gdk_crank3_big", FLIP)),
     ("80_etazh3_r16", p012_j,              # этаж 3 (мизинец), рычаг 52:16: плечо + спица секции-1, кривошип 3 R10 (пальцем вниз) + хвост 3 R10
      prep("gs1_arm3_r16") + prep("gs1_spica3_r16") + prep("gdk_crank3_r10", FLIP) + prep("gdk_tail3_r10", ID)),
-    ("81_stend_odin_palec", p020_j,        # стенд одного пальца (указательный, ×2): дно, середина, палуба, плечо, лента (голова — поддержки),
+    ("81_stend_odin_palec", p020_j,        # стенд одного пальца (указательный, ×2), всё без поддержек: дно, середина, палуба, плечо, лента,
      prep("mini1_base", ID) + prep("mini1_mid", ID) + prep("mini1_deck", ID) + prep("mini1_arm", ID) +
-     prep("mini1_lenta", ID) + prep("gdk_crank0_x2", FLIP) + prep("gdk_spacer0_v3", FLIP) + prep("gs1_lozhe_v3", FLIP)),
-     # ↑ кривошип R10 пальцем вниз, поддержки от стола; ложе бортиками на стол
+     prep("mini1_lenta", ID) + prep("gdk_crank0_x2", ID) + prep("gdk_spacer0_x2", ID) + prep("gs1_lozhe_v3", FLIP)),
+     # ↑ кривошип R10 плоским дном на стол, пальцем вверх; проставка-кольцо; ложе бортиками на стол (дно мостом)
     ("77_lozhe_v2_plosk", p020_j,        # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)

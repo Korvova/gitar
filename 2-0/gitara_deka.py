@@ -24,7 +24,9 @@ v3 — ПОЛНЫЙ ОБОРОТ кривошипа (идея владельца
   * полный оборот разрешён, кулиса хвоста открыта в обе стороны — ничего не заклинит: лента ±10,
     ложе ±20 — ровно до концов прорезей секции-1; струны 1 и 6 — в мёртвых точках (±90°);
   * площадка-кулиса хвоста шире (перемычки по 3 мм вместо 1.5) — прорезь длиннее, меньше пружинит;
-  * окно в дне Д1 под диск 0 — кругом Ø28.
+  * окно в дне Д1 под диск 0 — кругом Ø28;
+  * печать без поддержек (владелец): кривошип — цилиндр с плоским дном и пальцем сверху, без ступицы
+    снизу; проставка мотора 0 — кольцо вокруг диска 0 с ушами (gdk_spacer0_x2).
   Меняются: gdk1_base_x2, gdk_crank0..3_x2, gdk_tail0..3_x2; Д2, гребёнки, проставка — как v3.
   Запуск: set DEKA_X2=1 && .venv-b123d\\Scripts\\python gitara_deka.py
 
@@ -42,7 +44,7 @@ os.makedirs(OUT, exist_ok=True)
 SWEEP = os.environ.get("DEKA_SWEEP", "1") != "0"   # DEKA_SWEEP=0 — только детали и статика
 X2 = os.environ.get("DEKA_X2", "0") == "1"         # дека ×2: кривошипы R15 рычажком (см. шапку)
 X2_NAMES = {"gdk1_base", "gdk_crank0", "gdk_crank1", "gdk_crank2", "gdk_crank3",
-            "gdk_tail0", "gdk_tail1", "gdk_tail2", "gdk_tail3"}
+            "gdk_tail0", "gdk_tail1", "gdk_tail2", "gdk_tail3", "gdk_spacer0"}
 
 
 def nm(base):
@@ -76,7 +78,7 @@ DISK_R = R_CR + PIN_R + 1.0
 DISK_T = 1.8
 SLOT_C = 0.15                          # зазор пальца в прорези по Y
 SLOT_HALF = R_CR + PIN_R + 0.3         # полудлина прорези по X
-X2_T0 = 2.3                            # ×2: толщина диска 0 (в окне дна над проставкой)
+X2_Z0_0 = -2.2                         # ×2: низ диска 0 — над пилотом мотора 0 (−2.5); проставка — кольцо вокруг диска
 X2_BODY_Z0 = 3.35                      # ×2: низ тела дисков 1–3 — над дном (верх дна z 3)
 X2_PIN_UP = [3.5, 3.5, 3.5, 3.0]        # ×2: верх пальца над полом этажа: торчит над лентой на 1.8 (у этажа 3 — 1.3, выше крышка деки); до ленты этажа выше ≥ 1.9
 
@@ -206,7 +208,17 @@ def motor_model(sign):
 
 
 def spacer_part(sign):
-    """Проставка мотора 0 (мир z −4..0): пилот снизу, ступица насквозь, уши."""
+    """Проставка мотора 0 (мир z −4..0): пилот снизу, ступица насквозь, уши.
+    ×2: кольцо вокруг диска 0 (внутри R14.2) + уши — плоская, без поддержек."""
+    if X2:
+        s = Pos(0, 0, -SPACER / 2) * Cylinder(MOT_R, SPACER)
+        s += ear_plate(sign, -SPACER, 0.0, 4.2)
+        s -= Pos(0, 0, -SPACER / 2) * Cylinder(DISK_R + 0.7, SPACER + 0.2)
+        a = math.radians(EAR_ANG)
+        for q in (1, -1):
+            s -= Pos(q * sign * EAR_R * math.sin(a), q * EAR_R * math.cos(a), -SPACER / 2) * \
+                Cylinder(1.7, SPACER + 0.2)
+        return s
     s = Pos(0, 0, -SPACER / 2) * Cylinder(11.0, SPACER)
     s += ear_plate(sign, -SPACER, 0.0, 4.2)
     s -= Pos(0, 0, -SPACER + (PILOT_H + 0.1) / 2 - 0.05) * Cylinder(PILOT_R + 0.05, PILOT_H + 0.2)
@@ -224,13 +236,11 @@ def crank_part(k):
     fz = FLANGE_Z[k]
     hub_z0 = fz + 2.2
     dt = disk_top(k)
-    if X2:                                             # ×2: полный диск R10, тело до дна, посадка по зубьям
-        d0 = dt - X2_T0 if k == 0 else X2_BODY_Z0
-        c = Pos(0, 0, (d0 + dt) / 2) * Cylinder(DISK_R, dt - d0)
-        if d0 > hub_z0:
-            c += Pos(0, 0, (hub_z0 + d0) / 2) * Cylinder(HUB_R, d0 - hub_z0)
+    if X2:                                             # ×2: цилиндр R13.5 с плоским дном + палец сверху — печать без поддержек
+        d0 = X2_Z0_0 if k == 0 else X2_BODY_Z0         # ступицы снизу нет: шестерню держит само тело
+        c = Pos(0, 0, (d0 + dt) / 2) * Cylinder(DISK_R, dt - d0)   # (зацеп 0: вся шестерня; 1–3: 3.2 из 4 мм)
         bore_top = fz + SHAFT_OUT + 0.2
-        c -= star_hole(0.10, bore_top - hub_z0 + 0.1, hub_z0 - 0.1)
+        c -= star_hole(0.10, bore_top - d0 + 0.1, d0 - 0.1)
         pin_top = Z_FLOOR[k] + X2_PIN_UP[k]         # ×2: палец выше ленты, чтобы кулиса не соскакивала
         c += Pos(R_CR, 0, (dt + pin_top) / 2) * Cylinder(PIN_R, pin_top - dt)
         return c
@@ -324,7 +334,7 @@ for i, (kind, val) in enumerate((("o", -0.4), ("o", -0.2), ("o", 0.0), ("o", 0.2
 parts = [(nm("gdk1_base"), deka_base(DK1_Y0, True, TUMBA1, (40, 100, 135), neck_mount=True)),
          ("gdk2_base_v3", deka_base(DK2_Y0, False, TUMBA2, (75, 120))),
          ("gdk_comb_v3", comb), ("gdk_ext", ext), ("gdk_kupon_shesternya", kupon),
-         ("gdk_spacer0_v3", spacer_part(EAR_SIGN[0])), ("gdk_comb_key_v3", comb_key)]
+         (nm("gdk_spacer0"), spacer_part(EAR_SIGN[0])), ("gdk_comb_key_v3", comb_key)]
 parts += [(nm(f"gdk_crank{k}"), crank_part(k)) for k in range(4)]
 parts += [(nm(f"gdk_tail{k}"), tails[k]) for k in range(4)]
 parts += [(f"gdk_motor{k}_model", motor_model(EAR_SIGN[k])) for k in range(4)]
@@ -349,7 +359,7 @@ def stl(name):
 asm = Assembly()
 asm.add("dk1", stl(nm("gdk1_base")), loc=(0, DK1_Y0, 0))
 asm.add("dk2", stl("gdk2_base_v3"), loc=(0, DK2_Y0, 0))
-asm.add("sp0", stl("gdk_spacer0_v3"), loc=(MOT_X, MY[0], 0))
+asm.add("sp0", stl(nm("gdk_spacer0")), loc=(MOT_X, MY[0], 0))
 for k in range(4):
     asm.add(f"mot{k}", stl(f"gdk_motor{k}_model"), loc=(MOT_X, MY[k], FLANGE_Z[k]))
 for i, yg in enumerate(COMB_Y):

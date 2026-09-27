@@ -91,7 +91,7 @@ box("секции 2–3 (условно)", -26, 26, 160, 480, 0, 23, C_NECK)
 # дека ×2
 stl("gdk1_base_x2", "дека Д1 (×2: окно рычажка 0)", C_GLASS, (0, DK_Y0, 0))
 stl("gdk2_base_v3", "дека Д2", C_GLASS, (0, 640, 0))
-stl("gdk_spacer0_v3", "проставка мотора 0", C_COMB, (0, MY[0], 0))
+stl("gdk_spacer0_x2", "проставка мотора 0 (кольцо)", C_COMB, (0, MY[0], 0))
 for i, yg in enumerate(COMB_Y):
     stl("gdk_comb_v3", "гребёнка %d" % i, C_COMB, (0, yg, 0))
 
