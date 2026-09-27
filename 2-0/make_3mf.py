@@ -216,7 +216,10 @@ plates = [
      prep("mini1_base", ID) + prep("mini1_mid", ID) + prep("mini1_deck", ID) + prep("mini1_arm", ID) +
      prep("mini1_lenta", ID) + prep("gdk_crank0_x2", ID) + prep("gdk_spacer0_x2", ID) + prep("gs1_lozhe_v3", FLIP)),
      # ↑ кривошип R10 плоским дном на стол, пальцем вверх; проставка-кольцо; ложе бортиками на стол (дно мостом)
-    ("77_lozhe_v2_plosk", p020_j,        # 4 плоских ложа под секцию-1 v2, бортиками на стол
+    ("82_stend_shatun", p020_j,            # стенд одного пальца v2: шатун прямо на кривошипе, без ленты и прорезей, всё без поддержек
+     prep("mini2_base", ID) + prep("mini2_mid", ID) + prep("mini2_deck", ID) + prep("mini2_arm", ID) +
+     prep("mini2_shatun", ID) + prep("mini2_crank", ID) + prep("gdk_spacer0_x2", ID) + prep("gs1_lozhe_v3", FLIP)),
+    ("77_lozhe_v2_plosk", p020_j,       # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
      prep("gs1_cart_lozhe_plosk", FLIP, copies=2) + prep("gs1_cart_lozhe_plosk_kraj", FLIP)),
