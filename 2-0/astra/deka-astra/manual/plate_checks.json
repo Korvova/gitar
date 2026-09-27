@@ -1,0 +1,10 @@
+{
+  "plate_files": [
+    "01_A2_D1_and_3_guides.3mf",
+    "02_v3_cranks_and_spacer_optional.3mf",
+    "03_v3_tails_optional.3mf",
+    "04_A3_reinforced_cranks_1_2_3.3mf"
+  ],
+  "format": "generic 3MF, millimetres, separate named objects; no printer/material/slicer preset",
+  "scope": "Geometry only. Slice with the actual printer and previously successful material profile."
+}

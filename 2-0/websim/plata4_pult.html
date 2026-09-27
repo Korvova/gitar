@@ -123,7 +123,8 @@ for (let m = 0; m < 4; m++) {
     '<div class="lbl">Ехать на струну</div><div class="row">' +
       [1, 2, 3, 4, 5, 6].map(n => '<button data-m="' + m + '" data-go="' + n + '">→' + n + '</button>').join('') +
     '</div>' +
-    '<div class="row"><button data-m="' + m + '" data-ref="1">Сверка: это струна 1</button></div>' +
+    '<div class="row"><button data-m="' + m + '" data-ref="1">Сверка: это струна 1</button>' +
+      '<button data-m="' + m + '" data-clr="1" title="После замены кривошипа или ленты">Стереть калибровку</button></div>' +
     '<div class="calv" id="calv' + m + '">калибровка: —</div></div>';
   cards.appendChild(c);
   const r = c.querySelector('#rpm' + m);
@@ -144,7 +145,8 @@ function toMotor(m, line) {
 cards.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const m = +b.dataset.m, rpm = document.getElementById('rpm' + m).value;
-  if (b.dataset.save) toMotor(m, 'save ' + b.dataset.save);
+  if (b.dataset.clr) { if (confirm('Стереть калибровку мотора ' + m + '?')) { toMotor(m, 'calclr'); write('cal'); } }
+  else if (b.dataset.save) toMotor(m, 'save ' + b.dataset.save);
   else if (b.dataset.go) toMotor(m, 'go ' + b.dataset.go + ' ' + rpm);
   else if (b.dataset.ref) toMotor(m, 'ref ' + b.dataset.ref);
   else if (b.dataset.deg) toMotor(m, 'deg ' + b.dataset.deg + ' ' + (Math.abs(+b.dataset.deg) <= 5 ? 10 : rpm));

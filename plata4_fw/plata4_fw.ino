@@ -122,8 +122,19 @@ void doSteps(uint8_t m, long n, bool fwd, float sps) {
   posStep[m] += (fwd ? 1 : -1) * done;
 }
 
+bool calRange(uint8_t m, long &lo, long &hi);
 void doDeg(uint8_t m, float deg, float rpm) {
   if (fabs(deg) < 0.5) return;
+  // границы хода: если у мотора запомнены струны 1 и 6 — не уезжать за них дальше LIM_MARGIN шагов
+  // (кривошип больше не делает полный оборот: иначе тележка упрётся в концы прорези секции-1)
+  long lo, hi;
+  if (calRange(m, lo, hi)) {
+    long tgt = posStep[m] + (long)(deg / 360.0 * STEPS_PER_REV);
+    if (tgt < lo) tgt = lo;
+    if (tgt > hi) tgt = hi;
+    deg = (tgt - posStep[m]) * 360.0 / STEPS_PER_REV;
+    if (fabs(deg) < 0.2) return;
+  }
   float sps = rpm / 60.0 * STEPS_PER_REV;
   if (sps < 40) sps = 40;
   doSteps(m, (long)(fabs(deg) / 360.0 * STEPS_PER_REV), deg > 0, sps);
@@ -144,6 +155,14 @@ void calSave(uint8_t m, uint8_t n) {
   char k[8]; snprintf(k, sizeof(k), "c%u_%u", m, n);
   if (cal[m][n] == NOCAL) prefs.remove(k); else prefs.putLong(k, cal[m][n]);
   prefs.end();
+}
+
+const long LIM_MARGIN = 40;             // ~9° за крайние струны
+bool calRange(uint8_t m, long &lo, long &hi) {
+  if (cal[m][1] == NOCAL || cal[m][6] == NOCAL) return false;
+  lo = min(cal[m][1], cal[m][6]) - LIM_MARGIN;
+  hi = max(cal[m][1], cal[m][6]) + LIM_MARGIN;
+  return true;
 }
 
 String calStr(uint8_t m) {

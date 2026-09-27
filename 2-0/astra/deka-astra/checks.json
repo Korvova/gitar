@@ -1,0 +1,774 @@
+{
+  "revision": "A3 reinforced cranks; A2 base and guides",
+  "upstream_commit": "d9bc50e86047fa114c1673d9b758f7fd454ea29f",
+  "source_sha256": "78566254d03d2a83ea0eef54e15b3aa824e495683371c26869d7e72eb93df7de",
+  "socket_clearance_per_side_mm": 0.15,
+  "parts": [
+    {
+      "name": "astra_d1",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 46778.51
+    },
+    {
+      "name": "reference_d2_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 50051.071
+    },
+    {
+      "name": "astra_closed_guide",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 3205.958
+    },
+    {
+      "name": "astra_test_base",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 3530.926
+    },
+    {
+      "name": "reference_crank0_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 454.191
+    },
+    {
+      "name": "reference_tail0_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 451.526
+    },
+    {
+      "name": "astra_crank1_A3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 734.804
+    },
+    {
+      "name": "reference_tail1_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 1091.526
+    },
+    {
+      "name": "astra_crank2_A3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 1791.864
+    },
+    {
+      "name": "reference_tail2_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 1731.526
+    },
+    {
+      "name": "astra_crank3_A3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 2960.556
+    },
+    {
+      "name": "reference_tail3_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 2537.926
+    },
+    {
+      "name": "reference_spacer0_v3",
+      "valid": true,
+      "solids": 1,
+      "watertight": true,
+      "volume_mm3": 1929.816
+    }
+  ],
+  "checks": [
+    {
+      "name": "yoke0_guide540_continuous_Y",
+      "actual_mm": 13.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank0_guide540_continuous_Y",
+      "actual_mm": 13.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke0_guide590_continuous_Y",
+      "actual_mm": 63.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank0_guide590_continuous_Y",
+      "actual_mm": 63.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke0_guide634_continuous_Y",
+      "actual_mm": 107.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank0_guide634_continuous_Y",
+      "actual_mm": 107.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke1_guide540_continuous_Y",
+      "actual_mm": 13.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank1_guide540_continuous_Y",
+      "actual_mm": 13.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke1_guide590_continuous_Y",
+      "actual_mm": 13.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank1_guide590_continuous_Y",
+      "actual_mm": 13.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke1_guide634_continuous_Y",
+      "actual_mm": 57.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank1_guide634_continuous_Y",
+      "actual_mm": 57.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke2_guide540_continuous_Y",
+      "actual_mm": 63.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank2_guide540_continuous_Y",
+      "actual_mm": 63.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke2_guide590_continuous_Y",
+      "actual_mm": 13.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank2_guide590_continuous_Y",
+      "actual_mm": 13.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke2_guide634_continuous_Y",
+      "actual_mm": 7.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank2_guide634_continuous_Y",
+      "actual_mm": 7.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke3_guide540_continuous_Y",
+      "actual_mm": 126.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank3_guide540_continuous_Y",
+      "actual_mm": 126.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke3_guide590_continuous_Y",
+      "actual_mm": 76.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank3_guide590_continuous_Y",
+      "actual_mm": 76.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "yoke3_guide634_continuous_Y",
+      "actual_mm": 32.05,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "crank3_guide634_continuous_Y",
+      "actual_mm": 32.7,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "band_left_right_clearance",
+      "actual_mm": 0.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "band_bottom_clearance",
+      "actual_mm": 0.2,
+      "required_mm": 0.15,
+      "passed": true
+    },
+    {
+      "name": "band_top_clearance",
+      "actual_mm": 0.3,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "closed_bottom_rail_thickness",
+      "actual_mm": 0.75,
+      "required_mm": 0.7,
+      "passed": true
+    },
+    {
+      "name": "rail_floor_clearance",
+      "actual_mm": 0.1,
+      "required_mm": 0.09,
+      "passed": true
+    },
+    {
+      "name": "guide_0_motor_0",
+      "actual_mm": 5.95242,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_0_motor_1",
+      "actual_mm": 4.22272,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_0_motor_2",
+      "actual_mm": 53.83366,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_0_motor_3",
+      "actual_mm": 116.78854,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_0_base_no_overlap",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "guide_1_motor_0",
+      "actual_mm": 54.16966,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_1_motor_1",
+      "actual_mm": 4.22272,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_1_motor_2",
+      "actual_mm": 4.22272,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_1_motor_3",
+      "actual_mm": 66.81738,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_1_base_no_overlap",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "guide_2_motor_0",
+      "actual_mm": 98.00032,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_2_motor_1",
+      "actual_mm": 47.84415,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_2_motor_2",
+      "actual_mm": 0.2,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_2_motor_3",
+      "actual_mm": 22.94695,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "guide_2_base_no_overlap",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "tail1_threading_height",
+      "actual_mm": 0.5,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "tail1_threading_width",
+      "actual_mm": 0.8,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "tail2_threading_height",
+      "actual_mm": 0.5,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "tail2_threading_width",
+      "actual_mm": 0.8,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "tail3_threading_height",
+      "actual_mm": 0.5,
+      "required_mm": 0.2,
+      "passed": true
+    },
+    {
+      "name": "tail3_threading_width",
+      "actual_mm": 0.8,
+      "required_mm": 0.5,
+      "passed": true
+    },
+    {
+      "name": "solid_guide_body_at_former_nut_pockets",
+      "actual_mm": 326.58348,
+      "required_mm": 300,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_volume",
+      "actual_mm": 204.34961,
+      "required_mm": 1,
+      "passed": true
+    },
+    {
+      "name": "crank1_lower_interface_unchanged",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank1_original_geometry_preserved",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_D1",
+      "actual_mm": 0.61383,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_D2",
+      "actual_mm": 66.77913,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_guide_0",
+      "actual_mm": 13.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_guide_1",
+      "actual_mm": 13.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_guide_2",
+      "actual_mm": 57.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_motor_0",
+      "actual_mm": 25.59228,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_crank_0",
+      "actual_mm": 33.44847,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_tail_0",
+      "actual_mm": 32.78906,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_motor_1",
+      "actual_mm": 1.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_tail_1",
+      "actual_mm": 2.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_motor_2",
+      "actual_mm": 24.2686,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_crank_2",
+      "actual_mm": 33.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_tail_2",
+      "actual_mm": 7.6,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_motor_3",
+      "actual_mm": 86.67563,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_crank_3",
+      "actual_mm": 96.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_tail_3",
+      "actual_mm": 13.0,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank1_added_sweep_spacer_0",
+      "actual_mm": 30.04607,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_volume",
+      "actual_mm": 962.15411,
+      "required_mm": 1,
+      "passed": true
+    },
+    {
+      "name": "crank2_lower_interface_unchanged",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank2_original_geometry_preserved",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_D1",
+      "actual_mm": 0.6364,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_D2",
+      "actual_mm": 17.29566,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_guide_0",
+      "actual_mm": 63.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_guide_1",
+      "actual_mm": 13.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_guide_2",
+      "actual_mm": 7.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_motor_0",
+      "actual_mm": 74.34482,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_crank_0",
+      "actual_mm": 83.45575,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_tail_0",
+      "actual_mm": 82.79906,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_motor_1",
+      "actual_mm": 24.62016,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_crank_1",
+      "actual_mm": 33.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_tail_1",
+      "actual_mm": 32.75,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_motor_2",
+      "actual_mm": 1.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_tail_2",
+      "actual_mm": 2.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_motor_3",
+      "actual_mm": 37.21361,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_crank_3",
+      "actual_mm": 46.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_tail_3",
+      "actual_mm": 7.6,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank2_added_sweep_spacer_0",
+      "actual_mm": 77.46662,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_volume",
+      "actual_mm": 1831.58988,
+      "required_mm": 1,
+      "passed": true
+    },
+    {
+      "name": "crank3_lower_interface_unchanged",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank3_original_geometry_preserved",
+      "actual_mm": 1e-05,
+      "required_mm": 0,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_D1",
+      "actual_mm": 13.14876,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_D2",
+      "actual_mm": 0.6364,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_guide_0",
+      "actual_mm": 126.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_guide_1",
+      "actual_mm": 76.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_guide_2",
+      "actual_mm": 32.7,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_motor_0",
+      "actual_mm": 136.93375,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_crank_0",
+      "actual_mm": 146.43177,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_tail_0",
+      "actual_mm": 145.77786,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_motor_1",
+      "actual_mm": 86.77472,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_crank_1",
+      "actual_mm": 96.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_tail_1",
+      "actual_mm": 95.75,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_motor_2",
+      "actual_mm": 37.21361,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_crank_2",
+      "actual_mm": 46.4,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_tail_2",
+      "actual_mm": 45.75,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_motor_3",
+      "actual_mm": 1.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_tail_3",
+      "actual_mm": 2.2,
+      "required_mm": 0.3,
+      "passed": true
+    },
+    {
+      "name": "crank3_added_sweep_spacer_0",
+      "actual_mm": 139.53335,
+      "required_mm": 0.3,
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "limitations": [
+    "Old D5.7/D6.0 guide fit reused from user-tested deck; A3 assembly not physically tested",
+    "No dynamic force or strength validation",
+    "Motor body drawing envelope only; connector/cable clearance unverified",
+    "Original round 5.8 mm gear bore and drive pin retained; fit still requires physical verification"
+  ]
+}
