@@ -54,9 +54,9 @@
   <span id="st">не подключено</span>
 </header>
 <section id="melody">
-  <h2>Мелодия: «Ода к радости» (V позиция)</h2>
-  <div class="calv">Нужна калибровка: мотор 3 (указательный) — струны 2 и 3, мотор 2 (средний) — струна 2, мотор 1 (безымянный) — струна 3, мотор 0 (мизинец) — струна 2.
-    Перед игрой — сверка: каждую тележку на струну 1 и «Сверка: это струна 1».</div>
+  <h2>Мелодия / упражнение (V позиция)
+    <select id="song" style="font:inherit; margin-left:8px; padding:4px 6px"></select></h2>
+  <div class="calv" id="songInfo"></div>
   <div class="row" style="align-items:center">
     <button class="big" id="bPlay">▶ Играть</button>
     <button id="bStopMel">■ Стоп</button>
@@ -200,20 +200,57 @@ document.getElementById('bDiag').onclick = () => write('diag');
 document.getElementById('bStop').onclick = () => write('stop');
 document.getElementById('bOff').onclick = () => write('off');
 
-// ---------- мелодия: «Ода к радости», V позиция (Т. Тележки 11.10) ----------
+// ---------- мелодии и упражнения, V позиция (Т. Тележки 11.10) ----------
 const calOk = [[], [], [], []];
-// нота: имя, частота, мотор, струна, длительность в долях. Мотор = палец: 0 мизинец, 1 безымянный, 2 средний, 3 указательный
-const ODA = [
-  ['ми', 329.63, 3, 2, 1], ['ми', 329.63, 3, 2, 1], ['фа', 349.23, 2, 2, 1], ['соль', 392.00, 0, 2, 1],
-  ['соль', 392.00, 0, 2, 1], ['фа', 349.23, 2, 2, 1], ['ми', 329.63, 3, 2, 1], ['ре', 293.66, 1, 3, 1],
-  ['до', 261.63, 3, 3, 1], ['до', 261.63, 3, 3, 1], ['ре', 293.66, 1, 3, 1], ['ми', 329.63, 3, 2, 1],
-  ['ми', 329.63, 3, 2, 1.5], ['ре', 293.66, 1, 3, 0.5], ['ре', 293.66, 1, 3, 2]];
+// мотор = палец (сборка владельца 27.09): 0 мизинец, 1 безымянный, 2 средний, 3 указательный
+// V позиция: палец стоит на своём ладу — указательный 5, средний 6, безымянный 7, мизинец 8
+const FRET_MOTOR = { 5: 3, 6: 2, 7: 1, 8: 0 };
 const FINGER = ['мизин.', 'безым.', 'сред.', 'указ.'];   // по номеру мотора
+const OPEN = { 1: 64, 2: 59, 3: 55, 4: 50, 5: 45, 6: 40 };   // MIDI открытых струн EADGBE
+const NAME = ['до', 'до#', 'ре', 'ре#', 'ми', 'фа', 'фа#', 'соль', 'соль#', 'ля', 'ля#', 'си'];
+// нота [струна, лад, доли] -> [имя, частота, мотор, струна, доли]
+function N(str, fret, beats) {
+  const midi = OPEN[str] + fret;
+  return [NAME[midi % 12], 440 * Math.pow(2, (midi - 69) / 12), FRET_MOTOR[fret], str, beats || 1];
+}
+const SONGS = {
+  oda: { title: '«Ода к радости»', info: 'Мелодия. Работают все 4 пальца, струны 2 и 3; между струнами ходит только указательный.',
+    notes: [N(2, 5), N(2, 5), N(2, 6), N(2, 8), N(2, 8), N(2, 6), N(2, 5), N(3, 7),
+            N(3, 5), N(3, 5), N(3, 7), N(2, 5), N(2, 5, 1.5), N(3, 7, 0.5), N(3, 7, 2)] },
+  pauk: { title: '«Паучок» 6 → 1 → 6', info: 'Упражнение. На каждой струне по очереди указательный, средний, безымянный, мизинец; вверх до струны 1 и обратно. Каждый палец проходит все 6 струн.',
+    notes: (() => {
+      const r = [];
+      for (let st = 6; st >= 1; st--) [5, 6, 7, 8].forEach(f => r.push(N(st, f)));
+      for (let st = 1; st <= 6; st++) [8, 7, 6, 5].forEach(f => r.push(N(st, f)));
+      return r;
+    })() },
+  penta: { title: 'Ля-минорная пентатоника', info: 'Гамма, основа гитарных соло. Все 6 струн вверх и обратно; указательный, безымянный и мизинец, средний отдыхает.',
+    notes: (() => {
+      const up = [[6, 5], [6, 8], [5, 5], [5, 7], [4, 5], [4, 7], [3, 5], [3, 7], [2, 5], [2, 8], [1, 5], [1, 8]];
+      const all = up.concat(up.slice(0, -1).reverse());
+      return all.map(x => N(x[0], x[1]));
+    })() },
+};
+const songSel = document.getElementById('song');
+Object.keys(SONGS).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = SONGS[k].title; songSel.appendChild(o); });
 const notesEl = document.getElementById('notes');
-ODA.forEach((n, i) => {
-  const e = document.createElement('span'); e.id = 'nt' + i;
-  e.textContent = n[0] + ' · ' + FINGER[n[2]] + ' · стр ' + n[3]; notesEl.appendChild(e);
-});
+function needText(notes) {
+  const need = [[], [], [], []];
+  notes.forEach(n => { if (!need[n[2]].includes(n[3])) need[n[2]].push(n[3]); });
+  return need.map((v, m) => v.length ? 'мотор ' + m + ' (' + FINGER[m] + ') — стр ' + v.sort().join(', ') : '').filter(x => x).join('; ');
+}
+function showSong() {
+  const sg = SONGS[songSel.value];
+  notesEl.innerHTML = '';
+  sg.notes.forEach((n, i) => {
+    const e = document.createElement('span'); e.id = 'nt' + i;
+    e.textContent = n[0] + ' · ' + FINGER[n[2]] + ' · стр ' + n[3]; notesEl.appendChild(e);
+  });
+  document.getElementById('songInfo').textContent = sg.info + ' Нужна калибровка: ' + needText(sg.notes) +
+    '. После включения — «Сверка: это струна 1» у каждого мотора.';
+}
+songSel.onchange = showSong;
+showSong();
 const bpm = document.getElementById('bpm');
 bpm.oninput = () => { document.getElementById('bpmv').textContent = bpm.value; };
 let actx = null, playing = false;
@@ -229,14 +266,15 @@ function pluck(f, dur) {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 document.getElementById('bPlay').onclick = async () => {
-  const need = ODA.filter(n => !(calOk[n[2]] || [])[n[3] - 1]);
+  const SONG = SONGS[songSel.value].notes;
+  const need = SONG.filter(n => !(calOk[n[2]] || [])[n[3] - 1]);
   if (need.length && !confirm('Не все нужные струны откалиброваны. Играть всё равно (только звук у неоткалиброванных)?')) return;
   playing = true;
-  for (let i = 0; i < ODA.length && playing; i++) {
-    const n = ODA[i], beat = 60000 / (+bpm.value);
+  for (let i = 0; i < SONG.length && playing; i++) {
+    const n = SONG[i], beat = 60000 / (+bpm.value);
     document.querySelectorAll('#notes span').forEach(e => e.classList.remove('now'));
     document.getElementById('nt' + i).classList.add('now');
-    write('to ' + n[2] + ' ' + n[3] + ' 120');
+    write('to ' + n[2] + ' ' + n[3] + ' 60');
     pluck(n[1], n[4] * beat / 1000);
     await sleep(n[4] * beat);
   }
