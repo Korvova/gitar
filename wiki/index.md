@@ -62,6 +62,7 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **В работе и в планах**
 
+* [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — линейный мотор в грифе: катушки в русле, тележка — скоба с магнитами; без лент, рычагов и люфта
 * [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
