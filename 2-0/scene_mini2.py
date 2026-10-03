@@ -79,7 +79,7 @@ stl("gdk_motor0_model", "мотор (указательный)", C_MOT, (0, MY, 
 cr = stl("mini2_crank", "кривошип R10", C_CR, (0, MY, 0))
 arm = stl("mini2_arm", "плечо", C_ARM, (0, AX, Z_ARM))
 sh = stl("mini2_shatun", "шатун", C_LINK, (0, 0, Z_LINK))
-lz = stl("gs1_lozhe_v3", "ложе указательного", C_LZ, (0, CART_Y, Z_DECK + DECK_T - RUN))
+lz = stl("mini2_lozhe", "ложе указательного", C_LZ, (0, CART_Y, Z_DECK + DECK_T - RUN))
 
 for f in range(1, FRAMES + 1, 2):
     th = 2 * math.pi * 2 * (f - 1) / (FRAMES - 1)                  # 2 полных оборота

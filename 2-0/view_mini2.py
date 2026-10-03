@@ -46,7 +46,7 @@ sp.user_matrix = mat(0, MY, 0, 0)
 crank = pl.add_mesh(mesh("mini2_crank"), color="#d9612e")
 arm = pl.add_mesh(mesh("mini2_arm"), color="#3f73cc")
 link = pl.add_mesh(mesh("mini2_shatun"), color="#40b35a")
-lozhe = pl.add_mesh(mesh("gs1_lozhe_v3"), color="#f2b84b")
+lozhe = pl.add_mesh(mesh("mini2_lozhe"), color="#f2b84b")
 txt = pl.add_text("", position="upper_left", font_size=12, color="black")
 pl.add_text("1 — мотор 0.2 Н·м   2 — мотор 0.05 Н·м   пробел — пауза", position="lower_left", font_size=10, color="black")
 pl.camera_position = [(60, -40, 170), (0, 55, 8), (0, 0, 1)]

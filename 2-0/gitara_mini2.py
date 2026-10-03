@@ -37,6 +37,10 @@ Z_CEIL = Z_TOP + 0.2            # потолок: 8.3
 CEIL_T = 1.6
 Z_DECK, DECK_T = 21.0, 3.0      # палуба: верх 24
 RUN = 2.9
+# ложе стенда (03.10, владелец: ложе 20 мм висело над прорезью одним концом и проваливалось в «яму»,
+# в конце хода цеплялось): длиннее к деке — лежит на палубе ПО ОБЕ стороны прорези
+LZ_Y0, LZ_Y1 = -10.2, 15.2           # от центра ложа; прорезь палубы −3.5 … +10.7 — опора 4.5 мм за ней
+RAIL_S = LZ_Y1 + 0.3 + 1.5           # южный бортик русла сдвинут под длинное ложе (был +12)
 TRAVEL = 20.0                   # ложе ±20
 EAR_R, EAR_ANG, EAR_SIGN = 43.85 / 2, 56.0, 1
 
@@ -105,11 +109,11 @@ mid = BB(-26, 26, 0, L, 0, CEIL_T) + walls(CEIL_T, Z_DECK - Z_CEIL)
 mid -= SLOT
 mid = ties(mid, 0, Z_DECK - Z_CEIL, 1.7)
 deck = BB(-26, 26, 0, L, 0, DECK_T) - SLOT
-for ry in (CART_Y - 12, CART_Y + 12):
+for ry in (CART_Y - 12, CART_Y + RAIL_S):
     deck += BB(-26, 26, ry - 1.5, ry + 1.5, DECK_T, DECK_T + 4)
 deck = ties(deck, 0, DECK_T + 4, 1.7)
 for sx in (-22.0, -13.2, -4.4, 4.4, 13.2, 22.0):
-    y0, y1 = CART_Y + 13.5 + 1.5, L - 1
+    y0, y1 = CART_Y + RAIL_S + 1.5 + 1.5, L - 1
     r = Pos(sx, (y0 + y1) / 2, DECK_T) * Rot(90, 0, 0) * Cylinder(0.6, y1 - y0)
     r -= BB(sx - 1, sx + 1, y0 - 1, y1 + 1, DECK_T - 0.7, DECK_T)
     for tx, ty in TIE:
@@ -163,8 +167,21 @@ crank = Pos(0, 0, (D0 + DT) / 2) * Cylinder(DISK_R, DT - D0)
 crank -= star_hole(0.10, DT - D0 + 0.2, D0 - 0.1)
 crank += Pos(R_CR, 0, (DT + Z_TOP) / 2) * Cylinder(PIN_R, Z_TOP - DT)                 # палец: торчит над шатуном на 1.5
 
+# ---------------- ложе стенда: как gs1_lozhe_v3 (плоское), длиннее к деке, дырка под штырь закрыта ----------------
+LZ_HX, RIM_T, RIM_H, LIP_T, LIP_H, PIN_CH = 12.0, 1.6, 5.0, 0.8, 1.5, 5.3
+PIN_DY = LB * (1 - math.cos(PHI_MAX))                               # штырь уходит к оси: 6.9
+lz = BB(-LZ_HX, LZ_HX, LZ_Y0, LZ_Y1, 0, LZ_T)
+lz -= BB(-PIN_CH / 2, PIN_CH / 2, -2.8, PIN_DY + 2.5 + 0.6, -0.1, LZ_T + 0.1)   # дырка под штырь — закрыта с обеих сторон
+lz += BB(-LZ_HX, -LZ_HX + RIM_T, LZ_Y0, LZ_Y1, LZ_T, LZ_T + RIM_H)
+lz += BB(LZ_HX - RIM_T, LZ_HX, LZ_Y0, LZ_Y1, LZ_T, LZ_T + RIM_H)
+lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y0, LZ_Y0 + LIP_T, LZ_T, LZ_T + LIP_H)
+lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y1 - LIP_T, LZ_Y1, LZ_T, LZ_T + LIP_H)
+for sx in (1, -1):
+    lz += BB(sx * PIN_CH / 2, sx * 4.4, -3.0, 10.2, -RUN, 0)        # полозья в прорезь палубы (как v3)
+lozhe = Pos(0, 0, RUN) * lz
+
 parts = [("mini2_base", base), ("mini2_mid", mid), ("mini2_deck", deck), ("mini2_arm", arm),
-         ("mini2_shatun", link), ("mini2_crank", crank), ("mini2_vint_proverka", screw)]
+         ("mini2_shatun", link), ("mini2_crank", crank), ("mini2_vint_proverka", screw), ("mini2_lozhe", lozhe)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -212,7 +229,7 @@ for thd in range(0, 360, 15):
     asm.add(c, S("mini2_crank"), loc=(0, MY, 0), rz=thd)
     asm.add(a, S("mini2_arm"), loc=(0, AX, Z_ARM), rz=math.degrees(phi))
     asm.add(k, S("mini2_shatun"), loc=(cx, cy, Z_LINK), rz=alpha)
-    asm.add(z, S("gs1_lozhe_v3"), loc=(LB * math.sin(phi), CART_Y, Z_DECK + DECK_T - RUN))
+    asm.add(z, S("mini2_lozhe"), loc=(LB * math.sin(phi), CART_Y, Z_DECK + DECK_T - RUN))
     w = "sc%d" % thd
     asm.add(w, S("mini2_vint_proverka"), loc=(LB * math.sin(phi), AX - LB * math.cos(phi), PIN_TOP))
     clear += [(w, z, 0.1)]                                          # шайба над дном ложа и мимо бортиков
