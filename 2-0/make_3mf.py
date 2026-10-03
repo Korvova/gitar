@@ -221,7 +221,9 @@ plates = [
      prep("mini2_shatun", ID) + prep("mini2_crank", ID) + prep("gdk_spacer0_x2", ID) + prep("gs1_lozhe_v3", FLIP)),
     ("83_stend_shatun_dyrki", p020_j,      # стенд v2: перепечатка шатуна и плеча — дырки шире (5.5 / 5.4), напечатанные туго
      prep("mini2_arm", ID) + prep("mini2_shatun", ID)),
-    ("77_lozhe_v2_plosk", p020_j,      # 4 плоских ложа под секцию-1 v2, бортиками на стол
+    ("84_stad_osi_zapas", p012fin_j,       # стенд v2: 3 запасных стада оси плеча Ø5 × 3.3 (отломился — клеить на место), плотные
+     prep("mini2_stad_osi", ID, copies=3), "cool"),
+    ("77_lozhe_v2_plosk", p020_j,     # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
      prep("gs1_cart_lozhe_plosk", FLIP, copies=2) + prep("gs1_cart_lozhe_plosk_kraj", FLIP)),

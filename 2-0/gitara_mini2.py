@@ -223,3 +223,8 @@ for thd in range(0, 360, 15):
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("стенд с шатуном: LB %.2f, шатун %.2f, ось плеча y %.2f; ложе ±%.1f; мин. угол передачи %.0f°"
       % (LB, LC, AX, worst, tr_min))
+
+# ---------------- запасной стад оси плеча (03.10: напечатанный отломился — клеить на место) ----------------
+stud = Pos(0, 0, (Z_ARM + 1.6 + STICK - Z_FL) / 2) * Cylinder(2.5, Z_ARM + 1.6 + STICK - Z_FL)   # Ø5 × 3.3, как на дне
+export_stl(Part() + stud, os.path.join(OUT, "mini2_stad_osi.stl"))
+print("mini2_stad_osi: Ø5 x %.1f" % (Z_ARM + 1.6 + STICK - Z_FL))
