@@ -230,7 +230,7 @@ plates = [
      prep("mag_osnova", ID) + prep("mag_skoba", ID)),
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_kasseta", ID, copies=10) + prep("sz_zaglushka", ID, copies=2) + prep("sz_zhelob", ID) +   # кондуктор, 2 гильзы катушки,
-     prep("sz_katushka", ID, copies=2) + prep("sz_lozhe", ID) + prep("sz_osnova", ID)),                 # ложе, основа — без поддержек
+     prep("sz_katushka", ID, copies=2) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("77_lozhe_v2_plosk", p020_j,     # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
