@@ -123,12 +123,13 @@ void doSteps(uint8_t m, long n, bool fwd, float sps) {
 }
 
 bool calRange(uint8_t m, long &lo, long &hi);
+// границы хода по калибровке (струны 1 и 6 ± LIM_MARGIN) — для кривошипов с сектором (R7.5, R10 ×3.25).
+// По умолчанию ВЫКЛ (03.10): стенд с шатуном и гриф ×2 крутятся полным оборотом. Включить: «lim 1».
+bool useLim = false;
 void doDeg(uint8_t m, float deg, float rpm) {
   if (fabs(deg) < 0.5) return;
-  // границы хода: если у мотора запомнены струны 1 и 6 — не уезжать за них дальше LIM_MARGIN шагов
-  // (кривошип больше не делает полный оборот: иначе тележка упрётся в концы прорези секции-1)
   long lo, hi;
-  if (calRange(m, lo, hi)) {
+  if (useLim && calRange(m, lo, hi)) {
     long tgt = posStep[m] + (long)(deg / 360.0 * STEPS_PER_REV);
     if (tgt < lo) tgt = lo;
     if (tgt > hi) tgt = hi;
@@ -251,6 +252,7 @@ void execCmd(String line) {
     reply(goString(m, n, rpm) ? "ok to " + String(m) + " " + String(n) : "струна " + String(n) + " у мотора " + String(m) + " не откалибрована");
   }
   else if (cmd == "cal") { for (uint8_t m = 0; m < 4; m++) reply(calStr(m)); }
+  else if (cmd == "lim") { useLim = a1 > 0; reply(String("ok границы хода по калибровке ") + (useLim ? "вкл" : "выкл")); }
   else if (cmd == "calclr") { for (uint8_t n = 1; n <= 6; n++) { cal[sel][n] = NOCAL; calSave(sel, n); } reply("ok калибровка мотора " + String(sel) + " стёрта"); }
   else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
   else if (cmd == "sw") {
