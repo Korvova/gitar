@@ -58,12 +58,10 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **Сейчас в работе**
 
-* [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — линейный мотор в грифе: катушки в русле, тележка — скоба с магнитами; без лент, рычагов и люфта
-* [Т. Инструкция по сборке: магнитное русло (проба)](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-magnit) — стол 86: оправка, намотка 8 катушек, пайка в две фазы, скоба с магнитами, пуск от нашей платы
+* [Т. Магнитная версия 2.0](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija-2) — магнитный стержень + бегущая катушка: сравнение схем, расчёт Ø15×5, опыт на дисках 4×2 (стол 87), планы
 
 **В работе и в планах**
 
-* [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — как устроен привод, почему палец плохо чувствует ход, что примеряли, рычаг ×3.25 на мизинце и переход на ×2
 * [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
@@ -79,6 +77,9 @@ AeroBand AG01 показывают или слушают, но руку не в�
 * [Архитектура и стек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/arxitektura) — как устроен код моделей
 * [Печать и сборка](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/pechat-sborka) — столы печати и крепёж
 * [Прошивка ESP32](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/proshivka-esp32) — заливка без BOOT, окружение машин, чтение Serial
+* 💤 [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — отложено 03.10: механика рычагом и шатуном (стенды 81, 82, 85)
+* 💤 [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — отложено 03.10: плоское русло со скобой 20×10×5, запасной путь
+* 💤 [Т. Инструкция по сборке: магнитное русло (проба)](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-magnit) — отложено 03.10: стол 86
 
 **Готово ✅**
 
