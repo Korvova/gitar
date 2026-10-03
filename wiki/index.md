@@ -58,11 +58,12 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **Сейчас в работе**
 
-* [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — как устроен привод, почему палец плохо чувствует ход, что примеряли, рычаг ×3.25 на мизинце и переход на ×2
+* [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — линейный мотор в грифе: катушки в русле, тележка — скоба с магнитами; без лент, рычагов и люфта
+* [Т. Инструкция по сборке: магнитное русло (проба)](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-magnit) — стол 86: оправка, намотка 8 катушек, пайка в две фазы, скоба с магнитами, пуск от нашей платы
 
 **В работе и в планах**
 
-* [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — линейный мотор в грифе: катушки в русле, тележка — скоба с магнитами; без лент, рычагов и люфта
+* [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — как устроен привод, почему палец плохо чувствует ход, что примеряли, рычаг ×3.25 на мизинце и переход на ×2
 * [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
