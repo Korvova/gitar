@@ -225,6 +225,9 @@ plates = [
      prep("mini2_stad_osi", ID, copies=3), "cool"),
     ("85_stend_paluba_lozhe", p020_j,      # стенд v2: палуба с южным бортиком дальше + длинное ложе (лежит по обе стороны прорези)
      prep("mini2_deck", ID) + prep("mini2_lozhe", FLIP)),
+    ("86_magnit_proba", p020_j,            # проба магнитного русла (20×10×5 N52): 2 оправки для намотки, рамка катушек (лёжа), основа, U-скоба
+     prep("mag_opravka_a", ID, copies=2) + prep("mag_opravka_b", ID, copies=2) + prep("mag_ramka", LAY) +
+     prep("mag_osnova", ID) + prep("mag_skoba", ID)),
     ("77_lozhe_v2_plosk", p020_j,     # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)
