@@ -63,6 +63,20 @@ op_a += BB(-CHEEK_X / 2, CHEEK_X / 2, -CHEEK_Z / 2, -CHEEK_Z / 2 + 2, CHEEK_T, C
 op_a += BB(-CHEEK_X / 2, CHEEK_X / 2, CHEEK_Z / 2 - 2, CHEEK_Z / 2, CHEEK_T, CHEEK_T + CT)
 for z in (-SCREW_Z, SCREW_Z):
     op_a -= Pos(0, z, CHEEK_T + CT / 2) * Cylinder(1.3, CT + 0.2)
+# защёлки (владелец 03.10: без винтов — отжал язычок и открыл): на длинных сторонах щёчки посередине
+# гибкий язычок 1.2 × 8 вверх, крючок со скосом сверху — прижимная щёчка давится сверху и защёлкивается;
+# выше крючка — ушко под палец. Винтовые дырки остались — на всякий случай.
+ARM_T, ARM_W, LATCH_C = 1.2, 8.0, 0.15
+Z_B_TOP = CHEEK_T + CT + CHEEK_T                                   # верх прижимной щёчки: 8.0
+for s in (1, -1):
+    x0 = s * (CHEEK_X / 2 + LATCH_C)                               # внутренняя грань язычка
+    x1 = s * (CHEEK_X / 2 + LATCH_C + ARM_T)
+    op_a += BB(min(x0, x1), max(x0, x1), -ARM_W / 2, ARM_W / 2, 0, Z_B_TOP + 4.0)   # язычок от низа щёчки
+    op_a += BB(s * (CHEEK_X / 2 - 0.01), min(x0, x1) if s > 0 else max(x0, x1), -ARM_W / 2, ARM_W / 2, 0, CHEEK_T)  # перемычка к щёчке
+    hook = Polyline((x0, Z_B_TOP + 0.05), (x0 - s * 1.1, Z_B_TOP + 0.05), (x0, Z_B_TOP + 1.6), (x0, Z_B_TOP + 0.05))
+    op_a += extrude(Plane.XZ * make_face(hook), ARM_W / 2, both=True)   # крючок: снизу плоский, сверху скос
+    ear0, ear1 = sorted((x1, x1 + s * 2.5))
+    op_a += BB(ear0, ear1, -ARM_W / 2, ARM_W / 2, Z_B_TOP + 2.8, Z_B_TOP + 4.0)        # ушко наружу — отжимать пальцем
 
 # ================= рамка катушек =================
 RX = NC * CW / 2                 # 26

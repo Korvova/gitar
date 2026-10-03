@@ -125,8 +125,6 @@ shot(sc, "mag_sb_0_detali.png", (0, -150, 170), (0, 0, 0), 30)
 sc = reset()
 stl("mag_opravka_a", mat("оправка", C_BLUE))
 stl("mag_opravka_b", mat("оправка b", (0.45, 0.65, 0.95, 1)), loc=(0, 0, 14))
-for y in (-13.45, 13.45):
-    cyl(0, y, 20, 32, 1.5, mat("винт", C_FE))
 shot(sc, "mag_sb_1_opravka.png", (45, -55, 55), (0, 0, 8), 40)
 
 # ---- 2: намотка ----
