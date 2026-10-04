@@ -22,8 +22,8 @@ from build123d import *
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(os.path.dirname(HERE), "Print", "Print")
 
-D_BORE = 4.15                    # гнездо под диск Ø4
-SQ = 5.6                         # стержень снаружи
+D_BORE = 4.6                     # жёлоб под диски Ø4 (04.10: 4.15 — туго, кассеты печатались плохо)
+SQ = 6.4                         # стержень снаружи (стенки жёлоба 0.9)
 POLE = 8.0                       # 4 диска × 2
 NG = 8
 PLUG = 6.0
@@ -44,24 +44,16 @@ def BB(x0, x1, y0, y1, z0, z1):
     return Pos((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2) * Box(abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
 
 
-# ---- кассета: печать стоя (гнездо вертикально), скос на верхнем углу = N ----
-kas = BB(-SQ / 2, SQ / 2, -SQ / 2, SQ / 2, 0, POLE)
-kas -= Pos(0, 0, POLE / 2) * Cylinder(D_BORE / 2, POLE + 0.2)
-kas -= Pos(SQ / 2, SQ / 2, POLE) * Rot(0, 0, 45) * Box(2.0, 2.0, 1.6)            # метка-скос
-# стрелка на боковой грани (владелец 03.10): вдавлена на 0.3, смотрит на торец со скосом = на N;
-# печать стоя — стрелка на вертикальной стенке, без поддержек
-ARROW = [(-0.4, 1.0), (0.4, 1.0), (0.4, 4.6), (1.2, 4.6), (0.0, 6.8), (-1.2, 4.6), (-0.4, 4.6)]
-for side in (1, -1):                                                              # на двух противоположных гранях
-    face = Plane.YZ.offset(side * SQ / 2)
-    arr = extrude(face * make_face(Polyline(*ARROW, ARROW[0])), 0.3, both=True)   # глубина 0.3: стенка у гнезда всего 0.72
-    kas -= arr
+# ---- стержень одной деталью (владелец 04.10: кассеты и стрелки печатались плохо): брус SQ × SQ, концы
+# сплошные — сразу в пазы стоек; сверху вдоль магнитной части открытый жёлоб под диски (ось дисков = ось бруса),
+# диски вкладываются сверху группами по 4 навстречу (N-S-N-S) и проклеиваются; полярность — маркером.
+# Печать лёжа жёлобом вверх, без поддержек.
+ROD_T = ROD_L + 2 * PLUG
+sterzhen_cel = BB(-ROD_T / 2, ROD_T / 2, -SQ / 2, SQ / 2, -SQ / 2, SQ / 2)
+sterzhen_cel -= BB(-ROD_L / 2, ROD_L / 2, -D_BORE / 2, D_BORE / 2, -D_BORE / 2, SQ / 2 + 0.1)      # жёлоб: дно на 2.3 ниже оси
+sterzhen_cel = Pos(0, 0, SQ / 2) * sterzhen_cel                                                     # низом на стол
+kas = zag = None
 
-# ---- заглушка ----
-zag = BB(-SQ / 2, SQ / 2, -SQ / 2, SQ / 2, 0, PLUG)
-
-# ---- кондуктор для склейки ----
-JL = ROD_L + 2 * PLUG + 6
-zhelob = BB(-JL / 2, JL / 2, -6, 6, 0, 4) - BB(-JL / 2 + 3, JL / 2 + 1, -SQ / 2 - 0.15, SQ / 2 + 0.15, 1.5, 4.1)
 
 # ---- гильза катушки: ось вдоль X, печать лёжа (щёчки стоят на столе) ----
 kat = BB(-BOB_L / 2, BOB_L / 2, -(HOLE / 2 + CORE_W), HOLE / 2 + CORE_W, -(HOLE / 2 + CORE_W), HOLE / 2 + CORE_W)
@@ -102,7 +94,7 @@ os_n = Part() + os_n
 # ---- для проверки: стержень целиком (кассеты + заглушки) ----
 sterzhen = BB(-XP - PLUG, XP + PLUG, -SQ / 2, SQ / 2, -SQ / 2, SQ / 2)
 
-parts = [("sz_kasseta", kas), ("sz_zaglushka", zag), ("sz_zhelob", zhelob), ("sz_katushka", kat),
+parts = [("sz_sterzhen", sterzhen_cel), ("sz_katushka", kat),
          ("sz_lozhe", lozhe), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
 for n, p in parts:
     p = Part() + p
