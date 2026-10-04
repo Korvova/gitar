@@ -9,6 +9,7 @@
 //   init                  — заново настроить все драйверы (после включения питания моторов)
 //   diag                  — опрос всех 4 адресов; diag N — полный тест драйвера N с катушками
 //   status
+//   spread 1/0            — режим драйверов: 1 = spreadCycle (жёсткий ток, для катушки-бегунка), 0 = stealthChop (тихий, моторы)
 // Калибровка струн (Т. Тележки 11.8–11.9), к выбранному мотору:
 //   save N    — запомнить текущее положение как струну N (1..6), хранится в памяти ESP
 //   ref N     — сверка: «сейчас тележка на струне N» (в начале сессии, мотор не знает, где стоит)
@@ -27,6 +28,7 @@ TMC2209Stepper* DRV[4] = {&d0, &d1, &d2, &d3};
 
 const long STEPS_PER_REV = 1600;      // 200 * 1/8
 int curMA = 350;
+bool useSpread = false;               // 04.10: катушка-бегунок почти без индуктивности — stealthChop может «гулять»
 float HOLD_MULT = 0.2;                // ток удержания в покое, доля рабочего: команда holdpct 20/50/100 (палец проворачивает мотор при 20%)
 uint8_t sel = 0;
 float posDeg[4] = {0, 0, 0, 0};
@@ -48,7 +50,7 @@ void tmcSetupAll() {
     d.mstep_reg_select(true);
     d.microsteps(8);
     d.rms_current(curMA, HOLD_MULT);
-    d.en_spreadCycle(false);
+    d.en_spreadCycle(useSpread);
     d.toff(4);
     d.iholddelay(2);
     d.TPOWERDOWN(20);
@@ -137,7 +139,7 @@ void doDeg(uint8_t m, float deg, float rpm) {
     if (fabs(deg) < 0.2) return;
   }
   float sps = rpm / 60.0 * STEPS_PER_REV;
-  if (sps < 40) sps = 40;
+  if (sps < 4) sps = 4;                  // 04.10: было 40 — катушке-бегунку нужно медленнее (4 мкшага/с ≈ 2 мм/с)
   doSteps(m, (long)(fabs(deg) / 360.0 * STEPS_PER_REV), deg > 0, sps);
 }
 
@@ -252,6 +254,7 @@ void execCmd(String line) {
     reply(goString(m, n, rpm) ? "ok to " + String(m) + " " + String(n) : "струна " + String(n) + " у мотора " + String(m) + " не откалибрована");
   }
   else if (cmd == "cal") { for (uint8_t m = 0; m < 4; m++) reply(calStr(m)); }
+  else if (cmd == "spread") { useSpread = a1 > 0; for (uint8_t i = 0; i < 4; i++) DRV[i]->en_spreadCycle(useSpread); reply(String("ok режим ") + (useSpread ? "spreadCycle" : "stealthChop")); }
   else if (cmd == "lim") { useLim = a1 > 0; reply(String("ok границы хода по калибровке ") + (useLim ? "вкл" : "выкл")); }
   else if (cmd == "calclr") { for (uint8_t n = 1; n <= 6; n++) { cal[sel][n] = NOCAL; calSave(sel, n); } reply("ok калибровка мотора " + String(sel) + " стёрта"); }
   else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
