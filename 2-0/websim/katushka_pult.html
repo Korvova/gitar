@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пульт катушки</title>
+<style>
+  :root { --bg:#f4f1ea; --card:#fff; --ink:#1d1d1f; --mut:#6b6b6b; --acc:#2f6fd6; --ok:#2e8b57; --bad:#c0392b; --line:#ddd6c8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:14px 16px; background:#1d1d1f; color:#fff; }
+  header h1 { font-size:18px; margin:0 12px 0 0; }
+  #st { font-size:13px; opacity:.85; }
+  button { font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:9px 12px; cursor:pointer; min-width:54px; }
+  button:hover { border-color:var(--acc); }
+  button.big { background:var(--acc); color:#fff; border-color:var(--acc); }
+  button.stop { background:var(--bad); color:#fff; border-color:var(--bad); }
+  button.on { background:var(--ok); color:#fff; border-color:var(--ok); }
+  main { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .card h2 { margin:0 0 8px; font-size:17px; }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; align-items:center; }
+  .lbl { font-size:12px; color:var(--mut); margin-top:10px; }
+  .hint { font-size:12px; color:var(--mut); }
+  #pos { font-size:28px; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; }
+  select { font:inherit; padding:6px 8px; border-radius:8px; border:1px solid var(--line); }
+  #log { margin:0 16px 16px; background:#111; color:#cfe; font:12px/1.4 ui-monospace, monospace; padding:10px; border-radius:10px; height:170px; overflow:auto; white-space:pre-wrap; }
+  .cmdline { display:flex; gap:6px; margin:0 16px 10px; }
+  .cmdline input { flex:1; min-width:0; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); }
+  @media (max-width: 480px) { header h1 { width:100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Пульт катушки-бегунка</h1>
+  <button class="big" id="bConn">Подключить</button>
+  <button class="stop" id="bStop">СТОП</button>
+  <span id="st">не подключено</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Настройка</h2>
+    <div class="row">Драйвер
+      <select id="mot"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3 (нижний левый)</option></select>
+    </div>
+    <div class="row">Ток
+      <select id="cur"><option>300</option><option>500</option><option>700</option><option selected>900</option></select> мА
+    </div>
+    <div class="lbl">Режим драйвера</div>
+    <div class="row">
+      <button id="mStealth" class="on">stealthChop — тихий</button>
+      <button id="mSpread">spreadCycle — жёсткий ток</button>
+    </div>
+    <div class="hint">Катушка почти без индуктивности: если в тихом режиме дёргается — попробуйте жёсткий.</div>
+    <div class="row" style="margin-top:10px">
+      <button id="bHold">✊ Держать</button>
+      <button id="bFree">🖐 Отпустить</button>
+      <button id="bZero" title="Считать текущее место нулём">⌂ Ноль здесь</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Ход</h2>
+    <div id="pos">0.0 мм</div>
+    <div class="hint">от нуля; весь ход стержня ≈ ±22 мм</div>
+    <div class="lbl">Скорость: <b id="vV">10</b> мм/с</div>
+    <input type="range" id="v" min="2" max="80" step="1" value="10">
+    <div class="lbl">Шаг</div>
+    <div class="row" id="moves">
+      <button data-mm="-16">◀ 16</button><button data-mm="-8">◀ 8</button><button data-mm="-4">◀ 4</button><button data-mm="-2">◀ 2</button>
+      <button data-mm="2">2 ▶</button><button data-mm="4">4 ▶</button><button data-mm="8">8 ▶</button><button data-mm="16">16 ▶</button>
+    </div>
+    <div class="hint">мм. Поле перескакивает через каждые 4 мм — гильза отстала больше чем на 4 мм, и её тянет назад («туда-сюда»). Тогда медленнее.</div>
+    <div class="lbl">Качание</div>
+    <div class="row">
+      <button data-sw="4">±4</button><button data-sw="8">±8</button><button data-sw="16">±16</button>
+      <button id="bSwStop">стоп</button>
+    </div>
+  </div>
+</main>
+
+<div class="cmdline"><input id="cmd" placeholder="своя команда, например: status  или  diag 3"><button id="bSend">Отправить</button></div>
+<pre id="log"></pre>
+
+<script>
+// Плата 4 моторов (plata4_fw) думает, что крутит мотор: 1600 микрошагов на 360°.
+// У катушки на стержне 4×2 (полюс 8 мм) один полный шаг = четверть периода 16 мм = 4 мм,
+// значит 1° = 200/360 полного шага = 2.22 мм; скорость: v мм/с = v/4 полных шагов/с.
+const MM_PER_DEG = 16 / 4 * 200 / 360;
+const st = document.getElementById('st'), logEl = document.getElementById('log');
+let port = null, writer = null, busy = Promise.resolve(), posMm = 0, zeroDeg = 0;
+
+function log(s) { logEl.textContent += s + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+const mot = () => document.getElementById('mot').value;
+const vmm = () => +document.getElementById('v').value;
+const rpm = () => (vmm() / MM_PER_DEG / 360 * 60).toFixed(3);   // мм/с → об/мин
+
+async function write(line) {
+  if (!writer) { log('— не подключено'); return; }
+  log('→ ' + line);
+  await writer.write(new TextEncoder().encode(line + '\n'));
+}
+function toMotor(line) { busy = busy.then(async () => { await write('m ' + mot()); await write(line); }); return busy; }
+
+document.getElementById('v').oninput = e => { document.getElementById('vV').textContent = e.target.value; };
+document.getElementById('cur').onchange = e => write('cur ' + e.target.value);
+document.getElementById('mot').onchange = () => write('status');
+function setMode(spread) {
+  write('spread ' + (spread ? 1 : 0));
+  document.getElementById('mSpread').className = spread ? 'on' : '';
+  document.getElementById('mStealth').className = spread ? '' : 'on';
+}
+document.getElementById('mStealth').onclick = () => setMode(false);
+document.getElementById('mSpread').onclick = () => setMode(true);
+document.getElementById('bHold').onclick = () => toMotor('hold');
+document.getElementById('bFree').onclick = () => toMotor('free');
+document.getElementById('bStop').onclick = () => write('stop');
+document.getElementById('bSwStop').onclick = () => write('stop');
+document.getElementById('bZero').onclick = () => { zeroDeg = lastDeg; showPos(lastDeg); };
+document.getElementById('moves').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  toMotor('deg ' + (+b.dataset.mm / MM_PER_DEG).toFixed(2) + ' ' + rpm());
+};
+document.querySelectorAll('[data-sw]').forEach(b => b.onclick = () =>
+  toMotor('sw ' + (+b.dataset.sw / MM_PER_DEG).toFixed(2) + ' ' + rpm()));
+document.getElementById('bSend').onclick = () => { const c = document.getElementById('cmd'); write(c.value); c.value = ''; };
+document.getElementById('cmd').onkeydown = e => { if (e.key === 'Enter') document.getElementById('bSend').click(); };
+
+let lastDeg = 0;
+function showPos(deg) { lastDeg = deg; posMm = (deg - zeroDeg) * MM_PER_DEG; showPosMm(); }
+function showPosMm() { document.getElementById('pos').textContent = posMm.toFixed(1) + ' мм'; }
+function onLine(s) {
+  log('← ' + s);
+  const mm = s.match(/вал 0:\s*(-?[\d.]+)°\s*1:\s*(-?[\d.]+)°\s*2:\s*(-?[\d.]+)°\s*3:\s*(-?[\d.]+)°/);
+  if (mm) showPos(+mm[+mot() + 1]);
+}
+
+document.getElementById('bConn').onclick = async () => {
+  if (!('serial' in navigator)) { alert('Нужен Chrome или Edge'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    st.textContent = 'подключено';
+    log('— подключено');
+    readLoop();
+    setTimeout(() => write('cur ' + document.getElementById('cur').value), 400);
+    setTimeout(() => write('holdpct 100'), 700);
+    setTimeout(() => write('spread 0'), 1000);
+    setTimeout(() => write('status'), 1300);
+  } catch (e) { log('ошибка: ' + e.message); }
+};
+
+async function readLoop() {
+  const reader = port.readable.getReader(), dec = new TextDecoder();
+  let buf = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) { onLine(buf.slice(0, i).trim()); buf = buf.slice(i + 1); }
+    }
+  } catch (e) { log('чтение: ' + e.message); }
+  st.textContent = 'отключено';
+}
+</script>
+</body>
+</html>
