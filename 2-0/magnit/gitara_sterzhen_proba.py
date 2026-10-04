@@ -65,6 +65,14 @@ for k in range(NSEC + 1):                                                       
     x = -BOB_L / 2 + k * PITCH
     kat -= BB(x - 0.1, x + FL + 0.1, -0.6, 0.6, -OUTER / 2 - 0.1, -HOLE / 2 - CORE_W - 0.3)
 
+# ---- гильза СБОРНАЯ (владелец 04.10: цельная лёжа печатается плохо): трубка-сердечник (печать стоя) +
+# 5 плоских щёчек с квадратной дыркой (надеть и приклеить) + шаблон 3.4 мм — вкладывать между щёчками при склейке ----
+TUBE = HOLE + 2 * CORE_W                                    # 8.0 снаружи
+g_tr = BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, 0, BOB_L) - BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, BOB_L + 0.1)
+g_sh = BB(-OUTER / 2, OUTER / 2, -OUTER / 2, OUTER / 2, 0, FL) - BB(-TUBE / 2 - 0.1, TUBE / 2 + 0.1, -TUBE / 2 - 0.1, TUBE / 2 + 0.1, -0.1, FL + 0.1)
+g_sh -= BB(-0.6, 0.6, -OUTER / 2 - 0.1, -TUBE / 2 + 0.05, -0.1, FL + 0.1)                     # прорезь под выводы
+g_tpl = BB(0, SEC, -OUTER / 2, OUTER / 2, 0, 3) - BB(-0.1, SEC + 0.1, -TUBE / 2 - 0.15, TUBE / 2 + 0.15, -0.1, 3.1)   # шаблон-вилка 3.4
+
 # ---- ложе: снизу паз на верх щёчек ----
 LZ_X, LZ_Y, LZ_T = 12.0, 10.0, 2.0
 lozhe = BB(-LZ_X, LZ_X, -LZ_Y, LZ_Y, 0, LZ_T)
@@ -95,7 +103,7 @@ os_n = Part() + os_n
 sterzhen = BB(-XP - PLUG, XP + PLUG, -SQ / 2, SQ / 2, -SQ / 2, SQ / 2)
 
 parts = [("sz_sterzhen", sterzhen_cel), ("sz_katushka", kat),
-         ("sz_lozhe", lozhe), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
+         ("sz_lozhe", lozhe), ("sz_gilza_trubka", g_tr), ("sz_gilza_shechka", g_sh), ("sz_gilza_shablon", g_tpl), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
