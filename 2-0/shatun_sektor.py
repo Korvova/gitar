@@ -69,3 +69,41 @@ for R in (14.0, 17.0, 20.0):
             res.append((b[0], LC, b[1]))
     m = max(res)
     print(f"  R{R:.0f}: лучший угол {m[0]:.0f}° при шатуне {m[1]:.0f}, кривошип ходит {m[2]:.0f}°")
+
+
+# ---------- подробно: R20 / R14 — где сектор, какой момент нужен мотору, сколько держит удержание ----------
+def detail(R, LC, F=3.0, MU=0.3):
+    rows = study(R, LC)
+    n = len(rows)
+    best = None
+    for i in range(n):
+        if rows[i] is None or abs(rows[i][1] + PHM) > 0.02:
+            continue
+        mu_min, j, steps = 90, i, 0
+        while steps < n:
+            r = rows[j % n]
+            if r is None:
+                break
+            mu_min = min(mu_min, r[2])
+            if abs(r[1] - PHM) < 0.02:
+                if best is None or mu_min > best[0]:
+                    best = (mu_min, i, steps)
+                break
+            j += 1; steps += 1
+    mu_min, i0, st = best
+    seg = [rows[(i0 + k) % n] for k in range(st + 1)]
+    th = np.radians([r[0] for r in seg]); ph = np.unwrap([r[1] for r in seg])
+    dxdth = np.abs(np.gradient(LB * np.sin(ph), th))          # мм ложа на радиан кривошипа
+    t_need = F * dxdth.max() * (1 + MU * 1.5) / 1000           # Н·м, грубо с трением шарниров
+    print(f"R{R:.0f}, шатун {LC:.0f}: сектор кривошипа {seg[0][0]:.0f}° → {seg[-1][0]:.0f}° ({st * 0.5:.0f}°), "
+          f"худший угол {mu_min:.0f}°; ход ложа макс {dxdth.max():.1f} мм/рад; "
+          f"мотору на палец {F:.0f} Н нужно ~{t_need:.3f} Н·м; удержание 0.05 Н·м держит палец до {0.05 / (dxdth.max() / 1000):.1f} Н "
+          f"(в середине), у краёв — сильнее")
+    return seg
+
+
+print()
+detail(10.0, 35.0)
+detail(14.0, 39.0)
+detail(20.0, 39.0)
+print("уши мотора: на радиусе 21.9 под углами 34° и 214° (знак ушей мотора 0 = 1)")
