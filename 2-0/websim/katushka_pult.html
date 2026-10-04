@@ -35,6 +35,7 @@
 <header>
   <h1>Пульт катушки-бегунка</h1>
   <button class="big" id="bConn">Подключить</button>
+  <button id="bInit" title="Если питание моторов включили после ESP">Настроить драйверы</button>
   <button class="stop" id="bStop">СТОП</button>
   <span id="st">не подключено</span>
 </header>
@@ -117,6 +118,7 @@ document.getElementById('mSpread').onclick = () => setMode(true);
 document.getElementById('bHold').onclick = () => toMotor('hold');
 document.getElementById('bFree').onclick = () => toMotor('free');
 document.getElementById('bStop').onclick = () => write('stop');
+document.getElementById('bInit').onclick = () => { write('init'); write('cur ' + document.getElementById('cur').value); write('diag'); };
 document.getElementById('bSwStop').onclick = () => write('stop');
 document.getElementById('bZero').onclick = () => { zeroDeg = lastDeg; showPos(lastDeg); };
 document.getElementById('moves').onclick = e => {
@@ -146,10 +148,12 @@ document.getElementById('bConn').onclick = async () => {
     st.textContent = 'подключено';
     log('— подключено');
     readLoop();
-    setTimeout(() => write('cur ' + document.getElementById('cur').value), 400);
+    setTimeout(() => write('init'), 300);
+    setTimeout(() => write('cur ' + document.getElementById('cur').value), 500);
     setTimeout(() => write('holdpct 100'), 700);
     setTimeout(() => write('spread 0'), 1000);
     setTimeout(() => write('status'), 1300);
+    setTimeout(() => write('diag'), 1600);
   } catch (e) { log('ошибка: ' + e.message); }
 };
 
