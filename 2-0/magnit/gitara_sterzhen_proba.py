@@ -65,13 +65,32 @@ for k in range(NSEC + 1):                                                       
     x = -BOB_L / 2 + k * PITCH
     kat -= BB(x - 0.1, x + FL + 0.1, -0.6, 0.6, -OUTER / 2 - 0.1, -HOLE / 2 - CORE_W - 0.3)
 
-# ---- гильза СБОРНАЯ (владелец 04.10: цельная лёжа печатается плохо): трубка-сердечник (печать стоя) +
-# 5 плоских щёчек с квадратной дыркой (надеть и приклеить) + шаблон 3.4 мм — вкладывать между щёчками при склейке ----
+# ---- гильза СБОРНАЯ из секций-«стаканчиков» (владелец 04.10, рисунок): секция = щёчка 0.8 + трубка; верх трубки
+# входит на 0.4 в гнездо снизу щёчки следующей секции. 4 секции + крышка (щёчка с гнездом). Шаг 4.0 сохранён (фазы),
+# место под провод 3.2. Печать щёчкой на стол, без поддержек (над гнездом — карниз 0.75, мостик не нужен).
 TUBE = HOLE + 2 * CORE_W                                    # 8.0 снаружи
-g_tr = BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, 0, BOB_L) - BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, BOB_L + 0.1)
-g_sh = BB(-OUTER / 2, OUTER / 2, -OUTER / 2, OUTER / 2, 0, FL) - BB(-TUBE / 2 - 0.1, TUBE / 2 + 0.1, -TUBE / 2 - 0.1, TUBE / 2 + 0.1, -0.1, FL + 0.1)
-g_sh -= BB(-0.6, 0.6, -OUTER / 2 - 0.1, -TUBE / 2 + 0.05, -0.1, FL + 0.1)                     # прорезь под выводы
-g_tpl = BB(0, SEC, -OUTER / 2, OUTER / 2, 0, 3) - BB(-0.1, SEC + 0.1, -TUBE / 2 - 0.15, TUBE / 2 + 0.15, -0.1, 3.1)   # шаблон-вилка 3.4
+FL_S, NEST = 0.8, 0.4                                       # щёчка секции, глубина гнезда
+NEST_W = TUBE + 0.3                                         # гнездо 8.3 — трубка входит с зазором 0.15
+SEC_S = PITCH - FL_S                                        # 3.2 под провод
+BOB_LS = NSEC * PITCH + FL_S                                # 16.8 — длина собранной гильзы
+
+
+def shechka():
+    sh = BB(-OUTER / 2, OUTER / 2, -OUTER / 2, OUTER / 2, 0, FL_S)
+    sh -= BB(-NEST_W / 2, NEST_W / 2, -NEST_W / 2, NEST_W / 2, -0.1, NEST)                       # гнездо снизу
+    sh -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, FL_S + 0.1)                         # дырка под стержень
+    sh -= BB(-0.6, 0.6, -OUTER / 2 - 0.1, -TUBE / 2, -0.1, FL_S + 0.1)                          # прорезь под выводы
+    return sh
+
+
+g_sek = shechka() + BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, FL_S - 0.1, PITCH + NEST - 0.05)
+g_sek -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, PITCH + NEST + 0.1)
+g_kr = shechka()
+# собранная гильза — для проверки хода (ось вдоль X, по центру)
+kat_s = None
+for k in range(NSEC + 1):
+    d = Pos(-BOB_LS / 2 + k * PITCH, 0, 0) * Rot(0, 90, 0) * (g_sek if k < NSEC else g_kr)
+    kat_s = d if kat_s is None else kat_s + d
 
 # ---- ложе: снизу паз на верх щёчек ----
 LZ_X, LZ_Y, LZ_T = 12.0, 10.0, 2.0
@@ -103,7 +122,7 @@ os_n = Part() + os_n
 sterzhen = BB(-XP - PLUG, XP + PLUG, -SQ / 2, SQ / 2, -SQ / 2, SQ / 2)
 
 parts = [("sz_sterzhen", sterzhen_cel), ("sz_katushka", kat),
-         ("sz_lozhe", lozhe), ("sz_gilza_trubka", g_tr), ("sz_gilza_shechka", g_sh), ("sz_gilza_shablon", g_tpl), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
+         ("sz_lozhe", lozhe), ("sz_gilza_sekciya", g_sek), ("sz_gilza_kryshka", g_kr), ("sz_gilza_sobrannaya", kat_s), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -122,14 +141,14 @@ def S(n):
 asm = Assembly()
 asm.add("osnova", S("sz_osnova"))
 asm.add("rod", S("sz_sterzhen_proverka"), loc=(0, 0, Z_AX))
-travel = XP - BOB_L / 2 - 1.0
+travel = XP - BOB_LS / 2 - 1.0
 clear, touch = [], [("rod", "osnova")]
 for i, x in enumerate((-travel, 0, travel)):
     k, l = "kat%d" % i, "lz%d" % i
-    asm.add(k, S("sz_katushka"), loc=(x, 0, Z_AX))
+    asm.add(k, S("sz_gilza_sobrannaya"), loc=(x, 0, Z_AX))
     asm.add(l, S("sz_lozhe"), loc=(x, 0, Z_AX + OUTER / 2))
     clear += [(k, "rod", 0.15), (k, "osnova", 0.5), (l, "osnova", 0.5)]
     touch += [(l, k)]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("ход бегунка ±%.1f; отсек %.1f × %.1f мм -> ~%d витков провода 0.3" % (
-    travel, SEC, (OUTER - HOLE) / 2 - CORE_W, int(0.5 * SEC * ((OUTER - HOLE) / 2 - CORE_W) / 0.0908)))
+    travel, SEC_S, (OUTER - HOLE) / 2 - CORE_W, int(0.5 * SEC_S * ((OUTER - HOLE) / 2 - CORE_W) / 0.0908)))
