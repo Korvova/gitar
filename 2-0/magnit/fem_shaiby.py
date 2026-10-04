@@ -53,3 +53,38 @@ b0_ = field(0.0)
 for sp in (1.0, 1.5, 2.0):
     b = field(sp)
     print(f"шайба {sp} мм: поле в катушке ×{b / b0_:.2f} (без шайб {b0_:.3f} Тл, с шайбами {b:.3f} Тл) → сила при том же токе ×{b / b0_:.2f}, ватты на ту же силу ×{(b0_ / b) ** 2:.2f}")
+
+
+# ---- 04.10: неподвижный стальной П-жёлоб вокруг стержня с катушкой (на бегунке железа нет) ----
+# в плоском сечении через ось: дно жёлоба — сталь под катушкой; «закрытая труба» — сталь и над, и под (верхняя оценка,
+# как если бы бока жёлоба работали полностью). Катушка — полосы |y| 8.25…12.25 сверху и снизу стержня.
+def field2(sp, bot, top, gap=0.5, t=1.5):
+    J = np.zeros_like(cx); iron = np.zeros_like(cx, bool)
+    M = BR / MU0; band = 0.1; pitch = POLE + sp
+    for i in range(-3, 3):
+        x0 = (i + 0.5) * pitch - POLE / 2
+        s = 1 if i % 2 == 0 else -1
+        J[(cx > x0) & (cx < x0 + POLE) & (cy > H / 2 - band) & (cy < H / 2)] += s * M / (band * 1e-3)
+        J[(cx > x0) & (cx < x0 + POLE) & (cy > -H / 2) & (cy < -H / 2 + band)] -= s * M / (band * 1e-3)
+        if sp > 0:
+            iron |= (cx > x0 + POLE) & (cx < x0 + POLE + sp) & (np.abs(cy) < H / 2)
+    y0 = 12.25 + gap
+    if bot:
+        iron |= (cy < -y0) & (cy > -y0 - t) & (np.abs(cx) < 3 * pitch)
+    if top:
+        iron |= (cy > y0) & (cy < y0 + t) & (np.abs(cx) < 3 * pitch)
+    nu = np.where(iron, 1 / (MU0 * 1000), 1 / MU0)
+    A = solve(*condense(asm(a, basis, nu=b0.interpolate(nu)), asm(l, basis, J=b0.interpolate(J)) * 1e-6, D=D))
+    By = -basis.interpolate(A).grad[0].mean(axis=1) * 1e3
+    coil = (np.abs(cy) > 8.25) & (np.abs(cy) < 12.25) & (np.abs(cx) < 2 * pitch)
+    return np.sqrt((By[coil] ** 2).mean())
+
+
+ref = field2(0.0, False, False)
+print("\nжёлоб (сталь 1.5, зазор 0.5 до катушки); за 100%% — стержень без шайб и без жёлоба:")
+for sp, bot, top, tag in ((1.5, False, False, "только шайбы"),
+                          (0.0, True, False, "только дно жёлоба"),
+                          (1.5, True, False, "шайбы + дно жёлоба"),
+                          (1.5, True, True, "шайбы + сталь сверху и снизу (верхняя оценка П-жёлоба с боками)")):
+    b = field2(sp, bot, top)
+    print(f"  {tag}: сила ×{b / ref:.2f}, ватты на ту же силу ×{(ref / b) ** 2:.2f}")
