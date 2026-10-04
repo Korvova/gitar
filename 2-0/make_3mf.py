@@ -230,9 +230,9 @@ plates = [
      prep("mag_osnova", ID) + prep("mag_skoba", ID)),
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
-     prep("sz_gilza_sekciya", ID, copies=8) + prep("sz_gilza_kryshka", ID, copies=2) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
-    ("88_gilza_sekcii", p012_j,            # только гильза из секций-стаканчиков: 4 секции + крышка (1 гильза), щёчкой на стол; дырка 7.0; ось для намотки
-     prep("sz_gilza_sekciya", ID, copies=4) + prep("sz_gilza_kryshka", ID) + prep("sz_os_namotki", ID)),
+     prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("88_gilza_sekcii", p012_j,            # только гильза из секций-стаканчиков: трубка со щёчкой + 4 насадки (щёчка + втулка), щёчкой на стол; дырка 7.5; ось для намотки
+     prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_os_namotki", ID)),
     ("77_lozhe_v2_plosk", p020_j,     # 4 плоских ложа под секцию-1 v2, бортиками на стол
      prep("gs1_cart_lozhe_v2_plosk", FLIP, copies=4)),
     ("76_lozhe_plosk_3", p020_j,           # ещё 3 плоских ложа к пробному: 2 обычных + крайнее (тележка 3)

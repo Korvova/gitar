@@ -28,16 +28,16 @@ POLE = 8.0                       # 4 диска × 2
 NG = 8
 PLUG = 6.0
 ROD_L = NG * POLE                # 64
-C = 0.3                          # зазор гильзы по стержню (04.10: 0.2 — туго, стержень вышел 6.5×6.3)
-HOLE = SQ + 2 * C                # 7.0
+C = 0.55                         # зазор гильзы по стержню (04.10: 0.2 и 0.3 — туго, стержень вышел 6.5×6.3)
+HOLE = SQ + 2 * C                # 7.5
 CORE_W = 0.6                     # стенка гильзы вокруг дырки
 FL = 0.6                         # щёчка
 PITCH = POLE / 2                 # шаг отсеков = четверть периода (16) = 4.0
 SEC = PITCH - FL                 # ширина отсека 3.4
 NSEC = 4
 BOB_L = NSEC * PITCH + FL        # 16.6
-OUTER = 13.0                     # гильза снаружи
-Z_AX = 9.0                       # ось стержня над основой
+OUTER = 15.0                     # гильза снаружи (04.10: 13 → 15 — под проводом две стенки, трубка + втулка)
+Z_AX = 10.5                      # ось стержня над основой (под щёчки 15)
 
 
 def BB(x0, x1, y0, y1, z0, z1):
@@ -65,38 +65,40 @@ for k in range(NSEC + 1):                                                       
     x = -BOB_L / 2 + k * PITCH
     kat -= BB(x - 0.1, x + FL + 0.1, -0.6, 0.6, -OUTER / 2 - 0.1, -HOLE / 2 - CORE_W - 0.3)
 
-# ---- гильза СБОРНАЯ из секций-«стаканчиков» (владелец 04.10, рисунок): секция = щёчка 0.8 + трубка; верх трубки
-# входит на 0.4 в гнездо снизу щёчки следующей секции. 4 секции + крышка (щёчка с гнездом). Шаг 4.0 сохранён (фазы),
-# место под провод 3.2. Печать щёчкой на стол, без поддержек (над гнездом — карниз 0.75, мостик не нужен).
-TUBE = HOLE + 2 * CORE_W                                    # 8.0 снаружи
-FL_S, NEST = 0.8, 0.4                                       # щёчка секции, глубина гнезда
-NEST_W = TUBE + 0.3                                         # гнездо 8.3 — трубка входит с зазором 0.15
-SEC_S = PITCH - FL_S                                        # 3.2 под провод
+# ---- гильза СБОРНАЯ (владелец 04.10, рисунок): ТРУБКА = нижняя щёчка + трубка на всю длину (печать стоя) +
+# 4 одинаковые НАСАДКИ = щёчка + втулка высотой с отсек; насадку надевают на трубку втулкой вниз — втулка упирается
+# в предыдущую щёчку и сама задаёт шаг 4.0. Всё печатается щёчкой на стол, без поддержек и навесов.
+FL_S = 0.8                                                  # щёчка
+WALL = 0.6                                                  # стенка трубки и втулки
+TUBE = HOLE + 2 * WALL                                      # 8.7 — трубка снаружи
+SL_I = TUBE + 0.3                                           # 9.0 — втулка внутри (зазор 0.15 на сторону)
+SL_O = SL_I + 2 * WALL                                      # 10.2 — втулка снаружи = сердечник под провод
+SEC_S = PITCH - FL_S                                        # 3.2 — отсек
 BOB_LS = NSEC * PITCH + FL_S                                # 16.8 — длина собранной гильзы
 
 
-def shechka():
+def shechka(hole, slot_to):
     sh = BB(-OUTER / 2, OUTER / 2, -OUTER / 2, OUTER / 2, 0, FL_S)
-    sh -= BB(-NEST_W / 2, NEST_W / 2, -NEST_W / 2, NEST_W / 2, -0.1, NEST)                       # гнездо снизу
-    sh -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, FL_S + 0.1)                         # дырка под стержень
-    sh -= BB(-0.6, 0.6, -OUTER / 2 - 0.1, -TUBE / 2, -0.1, FL_S + 0.1)                          # прорезь под выводы
+    sh -= BB(-hole / 2, hole / 2, -hole / 2, hole / 2, -0.1, FL_S + 0.1)
+    sh -= BB(-0.6, 0.6, -OUTER / 2 - 0.1, -slot_to / 2, -0.1, FL_S + 0.1)                       # прорезь под выводы
     return sh
 
 
-g_sek = shechka() + BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, FL_S - 0.1, PITCH + NEST - 0.05)
-g_sek -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, PITCH + NEST + 0.1)
-g_kr = shechka()
-# собранная гильза — для проверки хода (ось вдоль X, по центру)
-kat_s = None
-for k in range(NSEC + 1):
-    d = Pos(-BOB_LS / 2 + k * PITCH, 0, 0) * Rot(0, 90, 0) * (g_sek if k < NSEC else g_kr)
-    kat_s = d if kat_s is None else kat_s + d
+g_tr = shechka(HOLE, SL_O) + BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, 0, BOB_LS)
+g_tr -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, BOB_LS + 0.1)
+g_nas = shechka(SL_I, SL_O) + BB(-SL_O / 2, SL_O / 2, -SL_O / 2, SL_O / 2, 0, PITCH)
+g_nas -= BB(-SL_I / 2, SL_I / 2, -SL_I / 2, SL_I / 2, -0.1, PITCH + 0.1)
+# собранная гильза — для проверки хода: насадки перевёрнуты (втулкой вниз), ось вдоль X, по центру
+kat_s = g_tr
+for k in range(NSEC):
+    kat_s = kat_s + Pos(0, 0, FL_S + (k + 1) * PITCH) * Rot(0, 180, 0) * g_nas
+kat_s = Rot(0, 90, 0) * Pos(0, 0, -BOB_LS / 2) * kat_s
 
 # ---- ложе: снизу паз на верх щёчек ----
 LZ_X, LZ_Y, LZ_T = 12.0, 10.0, 2.0
 lozhe = BB(-LZ_X, LZ_X, -LZ_Y, LZ_Y, 0, LZ_T)
-lozhe += BB(-BOB_L / 2 - 1.2, BOB_L / 2 + 1.2, -OUTER / 2 - 1.2, OUTER / 2 + 1.2, -1.5, 0)   # юбка на гильзу
-lozhe -= BB(-BOB_L / 2 - 0.1, BOB_L / 2 + 0.1, -OUTER / 2 - 0.1, OUTER / 2 + 0.1, -1.6, 0.01)
+lozhe += BB(-BOB_LS / 2 - 1.2, BOB_LS / 2 + 1.2, -OUTER / 2 - 1.2, OUTER / 2 + 1.2, -1.5, 0)   # юбка на гильзу
+lozhe -= BB(-BOB_LS / 2 - 0.1, BOB_LS / 2 + 0.1, -OUTER / 2 - 0.1, OUTER / 2 + 0.1, -1.6, 0.01)
 for s in (1, -1):
     lozhe += BB(s * LZ_X - (1.6 if s > 0 else 0), s * LZ_X + (0 if s > 0 else 1.6), -LZ_Y, LZ_Y, LZ_T, LZ_T + 5)
 
@@ -112,7 +114,7 @@ for s in (1, -1):
 
 # ---- ось для намотки (владелец 03.10: «чтобы было просто намотать»): квадрат под дырку гильзы + шестигранный
 # хвостовик под патрон шуруповёрта; печать лёжа на грани, квадрат и шестигранник соосны (оба ровно 5.85 по граням) ----
-SQ_W = HOLE - 0.15                                       # 5.85 — гильза сидит плотно, не проворачивается
+SQ_W = HOLE - 0.15                                       # 7.35 — гильза сидит плотно, не проворачивается
 os_n = BB(0, BOB_L + 4, -SQ_W / 2, SQ_W / 2, 0, SQ_W)
 hexa = RegularPolygon(SQ_W / 2 / 0.8660254, 6, rotation=30)              # шестигранник 5.85 под ключ
 os_n += Pos(BOB_L + 4, 0, SQ_W / 2) * Rot(0, 90, 0) * extrude(hexa, 25)
@@ -122,7 +124,7 @@ os_n = Part() + os_n
 sterzhen = BB(-XP - PLUG, XP + PLUG, -SQ / 2, SQ / 2, -SQ / 2, SQ / 2)
 
 parts = [("sz_sterzhen", sterzhen_cel), ("sz_katushka", kat),
-         ("sz_lozhe", lozhe), ("sz_gilza_sekciya", g_sek), ("sz_gilza_kryshka", g_kr), ("sz_gilza_sobrannaya", kat_s), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
+         ("sz_lozhe", lozhe), ("sz_gilza_trubka", g_tr), ("sz_gilza_nasadka", g_nas), ("sz_gilza_sobrannaya", kat_s), ("sz_osnova", osnova), ("sz_os_namotki", os_n), ("sz_sterzhen_proverka", sterzhen)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -151,4 +153,4 @@ for i, x in enumerate((-travel, 0, travel)):
     touch += [(l, k)]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("ход бегунка ±%.1f; отсек %.1f × %.1f мм -> ~%d витков провода 0.3" % (
-    travel, SEC_S, (OUTER - HOLE) / 2 - CORE_W, int(0.5 * SEC_S * ((OUTER - HOLE) / 2 - CORE_W) / 0.0908)))
+    travel, SEC_S, (OUTER - SL_O) / 2, int(0.5 * SEC_S * ((OUTER - SL_O) / 2) / 0.0908)))
