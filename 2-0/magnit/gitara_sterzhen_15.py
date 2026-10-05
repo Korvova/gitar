@@ -34,14 +34,20 @@ C = 0.5
 HOLE = SQ + 2 * C                # 18.0
 FL_S = 0.8
 WALL = 0.6
-TUBE = HOLE + 2 * WALL           # 19.2 — трубка снаружи (05.10: трубку вернули — по ней проще собирать)
-SL_I = TUBE + 0.3                # 19.5 — втулка насадки внутри
-SL_O = SL_I + 2 * WALL           # 20.7 — сердечник под провод
+# 05.10, рисунок владельца: вместо стенок трубки — 4 штырька по её углам; насадки скользят по штырькам углами
+# втулки (в углах втулки — пазы под штырьки). Втулка сидит прямо по стержню — под провод место как без трубки.
+PIN = 2.0                        # штырёк 2 × 2, стоит снаружи угла дырки
+PIN_C = 0.15                     # зазор паза
+SL_I = HOLE                      # 18 — втулка насадки внутри = дырка по стержню
+SL_O = SL_I + 2 * WALL           # 19.2 — сердечник под провод (по сторонам)
+P0, P1 = HOLE / 2, HOLE / 2 + PIN                   # штырёк: от 9 до 11 по x и y
+N0, N1 = P0 - PIN_C, P1 + PIN_C                     # паз в насадке
+B1 = N1 + WALL                                      # бобышка в углу втулки до 11.75
 PITCH = 2 * PITCH_P / 4          # 8.1 — четверть периода
 SEC = PITCH - FL_S               # 7.3
 NSEC = 4
 BOB_L = NSEC * PITCH + FL_S      # 33.2
-OUTER = 26.0                     # 05.10: 24 → 26 — с трубкой под провод снова 2.65
+OUTER = 26.0                     # 05.10: 24 → 26 (с трубкой); со штырьками под провод 3.4 по сторонам
 Z_AX = 2.0 + OUTER / 2 + 1.0     # 16 — над плитой основы 1 мм
 
 
@@ -57,17 +63,32 @@ rod_print = Pos(0, 0, SQ / 2) * rod
 
 
 # ---- гильза: крышка + 4 насадки (щёчкой на стол) ----
-def shechka(hole):
+CORN = [(sx, sy) for sx in (1, -1) for sy in (1, -1)]
+
+
+def corners(a, b, z0, z1):                       # 4 квадратика [a, b]² по углам
+    r = None
+    for sx, sy in CORN:
+        q = BB(*sorted((sx * a, sx * b)), *sorted((sy * a, sy * b)), z0, z1)
+        r = q if r is None else r + q
+    return r
+
+
+def shechka(slots):
     sh = BB(-OUTER / 2, OUTER / 2, -OUTER / 2, OUTER / 2, 0, FL_S)
-    sh -= BB(-hole / 2, hole / 2, -hole / 2, hole / 2, -0.1, FL_S + 0.1)
+    sh -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, FL_S + 0.1)
+    if slots:
+        sh -= corners(N0, N1, -0.1, FL_S + 0.1)                                  # пазы под штырьки
     sh -= BB(-0.7, 0.7, -OUTER / 2 - 0.1, -SL_O / 2, -0.1, FL_S + 0.1)        # прорезь под выводы
     return sh
 
 
-g_tr = shechka(HOLE) + BB(-TUBE / 2, TUBE / 2, -TUBE / 2, TUBE / 2, 0, BOB_L)      # трубка с нижней щёчкой, стоя
-g_tr -= BB(-HOLE / 2, HOLE / 2, -HOLE / 2, HOLE / 2, -0.1, BOB_L + 0.1)
-g_nas = shechka(SL_I) + BB(-SL_O / 2, SL_O / 2, -SL_O / 2, SL_O / 2, 0, PITCH)
+# основание: нижняя щёчка + 4 штырька по углам на всю длину гильзы (печать стоя, щёчкой на стол)
+g_tr = shechka(False) + corners(P0, P1, FL_S - 0.1, BOB_L)
+# насадка: щёчка + втулка по стержню, в углах втулки бобышки с пазами под штырьки
+g_nas = shechka(True) + BB(-SL_O / 2, SL_O / 2, -SL_O / 2, SL_O / 2, 0, PITCH) + corners(P0 - WALL, B1, 0, PITCH)
 g_nas -= BB(-SL_I / 2, SL_I / 2, -SL_I / 2, SL_I / 2, -0.1, PITCH + 0.1)
+g_nas -= corners(N0, N1, -0.1, PITCH + 0.1)
 kat_s = g_tr
 for k in range(NSEC):
     kat_s = kat_s + Pos(0, 0, FL_S + (k + 1) * PITCH) * Rot(0, 180, 0) * g_nas
@@ -99,7 +120,7 @@ hexa = RegularPolygon(HEX / 2 / 0.8660254, 6)
 os_n += Pos(0, 0, BOB_L + 4) * extrude(hexa, 25)
 os_n = Part() + os_n
 
-parts = [("s15_sterzhen", rod_print), ("s15_trubka", g_tr), ("s15_nasadka", g_nas), ("s15_gilza_sobrannaya", kat_s),
+parts = [("s15_sterzhen", rod_print), ("s15_osnovanie_shtyri", g_tr), ("s15_nasadka", g_nas), ("s15_gilza_sobrannaya", kat_s),
          ("s15_lozhe", lozhe), ("s15_osnova", osnova), ("s15_os_namotki", os_n), ("s15_sterzhen_proverka", rod)]
 for n, p in parts:
     p = Part() + p
@@ -127,6 +148,6 @@ for i, x in enumerate((-travel, 0, travel)):
     clear += [(k, "rod", 0.3), (k, "osnova", 0.5), (l, "osnova", 0.5)]
     touch += [(l, k)]
 asm.check(clearances=clear, touching=touch, verbose=False)
-depth = (OUTER - SL_O) / 2
+depth = (OUTER - SL_O) / 2                                   # по сторонам; в углах меньше — бобышки
 print("ход бегунка ±%.1f; отсек %.1f × %.1f мм -> ~%d витков провода 0.3 в отсеке" % (
     travel, SEC, depth, int(SEC * depth / 0.12)))

@@ -231,8 +231,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
-    ("89_sterzhen_15", p020_j,             # настоящий стержень на дисках 15×5 + шайбы М5: стержень, гильза (трубка + 4 насадки + 1 запас), ложе, основа, ось намотки
-     prep("s15_sterzhen", ID) + prep("s15_trubka", ID) + prep("s15_nasadka", ID, copies=5) + prep("s15_lozhe", ID) +
+    ("89_sterzhen_15", p020_j,             # настоящий стержень на дисках 15×5 + шайбы М5: стержень, гильза (основание со штырьками + 4 насадки + 1 запас), ложе, основа, ось намотки
+     prep("s15_sterzhen", ID) + prep("s15_osnovanie_shtyri", ID) + prep("s15_nasadka", ID, copies=5) + prep("s15_lozhe", ID) +
      prep("s15_osnova", ID) + prep("s15_os_namotki", ID)),
     ("88_gilza_sekcii", p012_j,            # только гильза из секций-стаканчиков: трубка со щёчкой + 4 насадки (щёчка + втулка), щёчкой на стол; дырка 7.5; ось для намотки
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_os_namotki", ID)),
