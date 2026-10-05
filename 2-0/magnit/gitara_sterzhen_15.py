@@ -87,12 +87,13 @@ for s in (1, -1):
     g0, g1 = sorted((s * (XP + 0.9), s * (XP + PLUG + 0.1)))
     osnova -= BB(g0, g1, -SQ / 2 - 0.2, SQ / 2 + 0.2, Z_AX - SQ / 2 - 0.2, Z_AX + SQ / 2 + 3)
 
-# ---- ось для намотки: квадрат под гильзу + шестигранник 7 под шуруповёрт; печать лёжа на грани ----
+# ---- ось для намотки: квадрат под гильзу + шестигранник 7 под шуруповёрт ПО ОСИ квадрата (05.10: был у нижней
+# грани — биение); печать СТОЯ: квадрат на столе, шестигранник вверх — соосно и без поддержек ----
 SQ_W = HOLE - 0.15                                       # 17.85
 HEX = 7.0
-os_n = BB(0, BOB_L + 4, -SQ_W / 2, SQ_W / 2, 0, SQ_W)
-hexa = RegularPolygon(HEX / 2 / 0.8660254, 6, rotation=30)
-os_n += Pos(BOB_L + 4, 0, HEX / 2) * Rot(0, 90, 0) * extrude(hexa, 25)
+os_n = BB(-SQ_W / 2, SQ_W / 2, -SQ_W / 2, SQ_W / 2, 0, BOB_L + 4)
+hexa = RegularPolygon(HEX / 2 / 0.8660254, 6)
+os_n += Pos(0, 0, BOB_L + 4) * extrude(hexa, 25)
 os_n = Part() + os_n
 
 parts = [("s15_sterzhen", rod_print), ("s15_kryshka", g_kr), ("s15_nasadka", g_nas), ("s15_gilza_sobrannaya", kat_s),
