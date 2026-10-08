@@ -63,6 +63,19 @@
       <button id="bFree">🖐 Отпустить</button>
       <button id="bZero" title="Считать текущее место нулём">⌂ Ноль здесь</button>
     </div>
+    <div class="lbl">Стержень вертикально (как гитара в руках): вверх бегунок поднимает свой вес, вниз вес помогает</div>
+    <div class="row">Вверх — это
+      <select id="upd"><option value="1">▶ (вперёд)</option><option value="-1">◀ (назад)</option></select>
+    </div>
+    <div class="row">Ток вверх
+      <select id="cup"><option value="0">как общий</option><option>500</option><option selected>700</option><option>900</option></select>
+      вниз
+      <select id="cdn"><option value="0">как общий</option><option>300</option><option selected>400</option><option>500</option></select> мА
+    </div>
+    <div class="row">Удержание в покое
+      <select id="hp"><option>100</option><option selected>70</option><option>50</option><option>30</option></select> % общего тока
+    </div>
+    <div class="hint">Держать в покое — не меньше веса бегунка (~50 г) с запасом: при 500 мА это примерно от 50 %. Меньше — может сползти вниз на шаг.</div>
   </div>
 
   <div class="card">
@@ -120,6 +133,13 @@ function setMode(spread) {
 }
 document.getElementById('mStealth').onclick = () => setMode(false);
 document.getElementById('mSpread').onclick = () => setMode(true);
+function sendGrav() {
+  toMotor('up ' + document.getElementById('upd').value);
+  toMotor('curup ' + document.getElementById('cup').value);
+  toMotor('curdn ' + document.getElementById('cdn').value);
+}
+['upd', 'cup', 'cdn'].forEach(id => document.getElementById(id).onchange = sendGrav);
+document.getElementById('hp').onchange = e => write('holdpct ' + e.target.value);
 document.getElementById('bHold').onclick = () => toMotor('hold');
 document.getElementById('bFree').onclick = () => toMotor('free');
 document.getElementById('bStop').onclick = () => write('stop');
@@ -155,10 +175,11 @@ document.getElementById('bConn').onclick = async () => {
     readLoop();
     setTimeout(() => write('init'), 300);
     setTimeout(() => write('cur ' + document.getElementById('cur').value), 500);
-    setTimeout(() => write('holdpct 100'), 700);
+    setTimeout(() => write('holdpct ' + document.getElementById('hp').value), 700);
     setTimeout(() => write('spread 1'), 1000);   // 07.10: катушке нужен жёсткий режим
     setTimeout(() => write('status'), 1300);
     setTimeout(() => write('diag'), 1600);
+    setTimeout(sendGrav, 2600);
   } catch (e) { log('ошибка: ' + e.message); }
 };
 

@@ -6,6 +6,8 @@
 //   sw <полуугол> [rpm]   — качание туда-сюда, sw 0 = стоп
 //   stop | hold | free    — стоп / держать / отпустить (выбранный); off — отпустить все
 //   cur <мА>              — ток всех драйверов (100..900); holdpct <10..100> — ток удержания в покое, % рабочего
+//   curup <мА> | curdn <мА> — ток выбранного мотора при движении вверх / вниз (0 = как cur); up 1|-1 — какой знак deg «вверх»
+//                           (катушка-бегунок в руках стоит вертикально: вверх поднимает свой вес, вниз вес помогает)
 //   init                  — заново настроить все драйверы (после включения питания моторов)
 //   diag                  — опрос всех 4 адресов; diag N — полный тест драйвера N с катушками
 //   status
@@ -28,6 +30,8 @@ TMC2209Stepper* DRV[4] = {&d0, &d1, &d2, &d3};
 
 const long STEPS_PER_REV = 1600;      // 200 * 1/8
 int curMA = 350;
+int curUp[4] = {0, 0, 0, 0}, curDn[4] = {0, 0, 0, 0};   // 08.10: ток вверх/вниз, 0 — как curMA
+int upSign[4] = {1, 1, 1, 1};                           // направление «вверх» = знак deg
 bool useSpread = false;               // 04.10: катушка-бегунок почти без индуктивности — stealthChop может «гулять»
 float HOLD_MULT = 0.2;                // ток удержания в покое, доля рабочего: команда holdpct 20/50/100 (палец проворачивает мотор при 20%)
 uint8_t sel = 0;
@@ -107,6 +111,8 @@ String diagStr(uint8_t addr, bool coils) {
 void doSteps(uint8_t m, long n, bool fwd, float sps) {
   if (n <= 0) return;
   abortMove = false;
+  int dirMA = ((fwd ? 1 : -1) == upSign[m]) ? curUp[m] : curDn[m];
+  if (dirMA > 0) DRV[m]->rms_current(dirMA, HOLD_MULT);
   digitalWrite(P_EN[m], LOW);
   digitalWrite(P_DIR[m], fwd);
   long ramp = min(n / 4, (long)(sps * 0.15));
@@ -122,6 +128,7 @@ void doSteps(uint8_t m, long n, bool fwd, float sps) {
   }
   posDeg[m] += (fwd ? 1 : -1) * done * 360.0 / STEPS_PER_REV;
   posStep[m] += (fwd ? 1 : -1) * done;
+  if (dirMA > 0) DRV[m]->rms_current(curMA, HOLD_MULT);    // в покое — обычный ток (удержание от него)
 }
 
 bool calRange(uint8_t m, long &lo, long &hi);
@@ -230,6 +237,14 @@ void execCmd(String line) {
     if (ma >= 100 && ma <= 900) { curMA = ma; for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA, HOLD_MULT); reply("ok ток " + String(curMA) + " мА"); }
     else reply("ток 100..900");
   }
+  else if (cmd == "curup" || cmd == "curdn") {
+    int ma = (int)a1;
+    if (ma == 0 || (ma >= 100 && ma <= 900)) {
+      (cmd == "curup" ? curUp : curDn)[sel] = ma;
+      reply("ok мотор " + String(sel) + " ток " + (cmd == "curup" ? "вверх " : "вниз ") + (ma ? String(ma) + " мА" : String("как cur")));
+    } else reply("ток 0 или 100..900");
+  }
+  else if (cmd == "up") { upSign[sel] = a1 < 0 ? -1 : 1; reply("ok мотор " + String(sel) + " вверх = " + (upSign[sel] > 0 ? "+" : "-")); }
   else if (cmd == "save" || cmd == "ref" || cmd == "go") {
     int n = rest.toInt();
     if (n < 1 || n > 6) { reply("струна 1..6"); return; }
