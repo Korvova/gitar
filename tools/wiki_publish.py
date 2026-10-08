@@ -52,6 +52,7 @@ TITLES = {
     "t-magnitnaja-versija": "💤Т. Магнитная версия",
     "t-instrukcija-magnit": "💤Т. Инструкция по сборке: магнитное русло (проба)",
     "t-magnitnaja-versija-2": "⌛Т. Магнитная версия 2.0",
+    "t-magnitnyj-krivoshyp": "⌛Т. Магнитный + Кривошип",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")

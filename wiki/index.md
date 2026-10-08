@@ -62,6 +62,7 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **В работе и в планах**
 
+* [Т. Магнитный + Кривошип](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnyj-krivoshyp) — идея 08.10: линейный магнитный привод в деке толкает ленту этажа, рычаг-уголок 1:1 у тележки; почему стержень не влезает в гриф 50 мм
 * [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
 * [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
