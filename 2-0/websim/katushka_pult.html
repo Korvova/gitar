@@ -47,12 +47,12 @@
       <select id="mot"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3 (нижний левый)</option></select>
     </div>
     <div class="row">Ток
-      <select id="cur"><option>300</option><option>500</option><option>700</option><option selected>900</option></select> мА
+      <select id="cur"><option>300</option><option selected>500</option><option>700</option><option>900</option></select> мА
     </div>
     <div class="lbl">Режим драйвера</div>
     <div class="row">
-      <button id="mStealth" class="on">stealthChop — тихий</button>
-      <button id="mSpread">spreadCycle — жёсткий ток</button>
+      <button id="mStealth">stealthChop — тихий</button>
+      <button id="mSpread" class="on">spreadCycle — жёсткий ток</button>
     </div>
     <div class="hint">Катушка почти без индуктивности: если в тихом режиме дёргается — попробуйте жёсткий.</div>
     <div class="row" style="margin-top:10px">
@@ -151,7 +151,7 @@ document.getElementById('bConn').onclick = async () => {
     setTimeout(() => write('init'), 300);
     setTimeout(() => write('cur ' + document.getElementById('cur').value), 500);
     setTimeout(() => write('holdpct 100'), 700);
-    setTimeout(() => write('spread 0'), 1000);
+    setTimeout(() => write('spread 1'), 1000);   // 07.10: катушке нужен жёсткий режим
     setTimeout(() => write('status'), 1300);
     setTimeout(() => write('diag'), 1600);
   } catch (e) { log('ошибка: ' + e.message); }
