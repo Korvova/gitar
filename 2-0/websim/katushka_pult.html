@@ -46,6 +46,9 @@
     <div class="row">Драйвер
       <select id="mot"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3 (нижний левый)</option></select>
     </div>
+    <div class="row">Стержень
+      <select id="rod"><option value="8.1" selected>15×5 + шайбы (стол 89): шаг 8.1 мм</option><option value="4">4×2 (стол 87): шаг 4 мм</option></select>
+    </div>
     <div class="row">Ток
       <select id="cur"><option>300</option><option selected>500</option><option>700</option><option>900</option></select> мА
     </div>
@@ -65,7 +68,7 @@
   <div class="card">
     <h2>Ход</h2>
     <div id="pos">0.0 мм</div>
-    <div class="hint">от нуля; весь ход стержня ≈ ±22 мм</div>
+    <div class="hint">от нуля; весь ход стержня ≈ ±22 мм — по центру нажмите «Ноль здесь»</div>
     <div class="lbl">Скорость: <b id="vV">10</b> мм/с</div>
     <input type="range" id="v" min="2" max="80" step="1" value="10">
     <div class="lbl">Шаг</div>
@@ -73,7 +76,7 @@
       <button data-mm="-16">◀ 16</button><button data-mm="-8">◀ 8</button><button data-mm="-4">◀ 4</button><button data-mm="-2">◀ 2</button>
       <button data-mm="2">2 ▶</button><button data-mm="4">4 ▶</button><button data-mm="8">8 ▶</button><button data-mm="16">16 ▶</button>
     </div>
-    <div class="hint">мм. Поле перескакивает через каждые 4 мм — гильза отстала больше чем на 4 мм, и её тянет назад («туда-сюда»). Тогда медленнее.</div>
+    <div class="hint">мм. Поле перескакивает через каждый шаг (8.1 мм на 15×5, 4 мм на 4×2) — гильза отстала больше чем на шаг, и её тянет назад («туда-сюда»). Тогда медленнее.</div>
     <div class="lbl">Качание</div>
     <div class="row">
       <button data-sw="4">±4</button><button data-sw="8">±8</button><button data-sw="16">±16</button>
@@ -89,7 +92,9 @@
 // Плата 4 моторов (plata4_fw) думает, что крутит мотор: 1600 микрошагов на 360°.
 // У катушки на стержне 4×2 (полюс 8 мм) один полный шаг = четверть периода 16 мм = 4 мм,
 // значит 1° = 200/360 полного шага = 2.22 мм; скорость: v мм/с = v/4 полных шагов/с.
-const MM_PER_DEG = 16 / 4 * 200 / 360;
+// 08.10: шаг зависит от стержня — 15×5 с шайбами: период 32.4, полный шаг 8.1 мм (1° = 4.5 мм)
+let MM_PER_DEG = 8.1 * 200 / 360;
+document.getElementById('rod').onchange = e => { MM_PER_DEG = +e.target.value * 200 / 360; showPos(lastDeg); };
 const st = document.getElementById('st'), logEl = document.getElementById('log');
 let port = null, writer = null, busy = Promise.resolve(), posMm = 0, zeroDeg = 0;
 
