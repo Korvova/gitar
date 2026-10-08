@@ -6,6 +6,8 @@
 //   sw <полуугол> [rpm]   — качание туда-сюда, sw 0 = стоп
 //   stop | hold | free    — стоп / держать / отпустить (выбранный); off — отпустить все
 //   cur <мА>              — ток всех драйверов (100..900); holdpct <10..100> — ток удержания в покое, % рабочего
+//   zero                  — текущее место выбранного мотора = 0 шагов
+//   at <шаги> [об/мин]     — ехать в абсолютное положение (микрошаги от нуля), ответ «ok at N» — для ползунка в пульте катушки
 //   curup <мА> | curdn <мА> — ток выбранного мотора при движении вверх / вниз (0 = как cur); up 1|-1 — какой знак deg «вверх»
 //                           (катушка-бегунок в руках стоит вертикально: вверх поднимает свой вес, вниз вес помогает)
 //   init                  — заново настроить все драйверы (после включения питания моторов)
@@ -272,6 +274,15 @@ void execCmd(String line) {
   else if (cmd == "spread") { useSpread = a1 > 0; for (uint8_t i = 0; i < 4; i++) DRV[i]->en_spreadCycle(useSpread); reply(String("ok режим ") + (useSpread ? "spreadCycle" : "stealthChop")); }
   else if (cmd == "lim") { useLim = a1 > 0; reply(String("ok границы хода по калибровке ") + (useLim ? "вкл" : "выкл")); }
   else if (cmd == "calclr") { for (uint8_t n = 1; n <= 6; n++) { cal[sel][n] = NOCAL; calSave(sel, n); } reply("ok калибровка мотора " + String(sel) + " стёрта"); }
+  else if (cmd == "zero") { posStep[sel] = 0; posDeg[sel] = 0; reply("ok zero " + String(sel)); }
+  else if (cmd == "at") {
+    swHalf = 0;
+    long d = (long)a1 - posStep[sel];
+    float sps = (a2 > 0 ? a2 : 30) / 60.0 * STEPS_PER_REV;
+    if (sps < 4) sps = 4;
+    doSteps(sel, labs(d), d > 0, sps);
+    reply("ok at " + String(posStep[sel]));
+  }
   else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
   else if (cmd == "sw") {
     swHalf = fabs(a1); swRpm = a2 > 0 ? a2 : 30; swDir = 1;

@@ -84,6 +84,9 @@
     <div class="hint">от нуля; весь ход стержня ≈ ±22 мм — по центру нажмите «Ноль здесь»</div>
     <div class="lbl">Скорость: <b id="vV">10</b> мм/с</div>
     <input type="range" id="v" min="2" max="80" step="1" value="10">
+    <div class="lbl">Ползунок положения: тащите — бегунок едет за ним (<b id="slV">0</b> мм)</div>
+    <input type="range" id="sl" min="-22" max="22" step="1" value="0">
+    <div class="hint">Без датчиков: положение считается от «Ноль здесь». Если бегунок проскочил шаг (палец передержал, упёрся) — поставьте его по центру и снова «Ноль здесь».</div>
     <div class="lbl">Шаг</div>
     <div class="row" id="moves">
       <button data-mm="-16">◀ 16</button><button data-mm="-8">◀ 8</button><button data-mm="-4">◀ 4</button><button data-mm="-2">◀ 2</button>
@@ -145,7 +148,24 @@ document.getElementById('bFree').onclick = () => toMotor('free');
 document.getElementById('bStop').onclick = () => write('stop');
 document.getElementById('bInit').onclick = () => { write('init'); write('cur ' + document.getElementById('cur').value); write('diag'); };
 document.getElementById('bSwStop').onclick = () => write('stop');
-document.getElementById('bZero').onclick = () => { zeroDeg = lastDeg; showPos(lastDeg); };
+document.getElementById('bZero').onclick = () => {
+  toMotor('zero'); zeroDeg = 0; lastDeg = 0; showPos(0);
+  document.getElementById('sl').value = 0; document.getElementById('slV').textContent = 0;
+};
+// ползунок: шлём абсолютное положение в микрошагах («at»); пока бегунок едет — копим только последнее значение
+let slTarget = null, slBusy = false, slTimer = null;
+const stepsPerMm = () => 1600 / 360 / MM_PER_DEG;
+function slPump() {
+  if (slBusy || slTarget === null || !writer) return;
+  const mm = slTarget; slTarget = null; slBusy = true;
+  toMotor('at ' + Math.round(mm * stepsPerMm()) + ' ' + rpm());
+  clearTimeout(slTimer);
+  slTimer = setTimeout(() => { slBusy = false; slPump(); }, 1000 + Math.abs(mm - posMm) / vmm() * 1000 * 1.5);
+}
+document.getElementById('sl').oninput = e => {
+  document.getElementById('slV').textContent = e.target.value;
+  slTarget = +e.target.value; slPump();
+};
 document.getElementById('moves').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   toMotor('deg ' + (+b.dataset.mm / MM_PER_DEG).toFixed(2) + ' ' + rpm());
@@ -160,6 +180,8 @@ function showPos(deg) { lastDeg = deg; posMm = (deg - zeroDeg) * MM_PER_DEG; sho
 function showPosMm() { document.getElementById('pos').textContent = posMm.toFixed(1) + ' мм'; }
 function onLine(s) {
   log('← ' + s);
+  const at = s.match(/^ok at (-?\d+)/);
+  if (at) { posMm = +at[1] / stepsPerMm(); showPosMm(); slBusy = false; clearTimeout(slTimer); slPump(); }
   const mm = s.match(/вал 0:\s*(-?[\d.]+)°\s*1:\s*(-?[\d.]+)°\s*2:\s*(-?[\d.]+)°\s*3:\s*(-?[\d.]+)°/);
   if (mm) showPos(+mm[+mot() + 1]);
 }
