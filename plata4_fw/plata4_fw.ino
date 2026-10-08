@@ -7,6 +7,9 @@
 //   stop | hold | free    — стоп / держать / отпустить (выбранный); off — отпустить все
 //   cur <мА>              — ток всех драйверов (100..900); holdpct <10..100> — ток удержания в покое, % рабочего
 //   zero                  — текущее место выбранного мотора = 0 шагов
+//   ms <8|16|32|64>       — дробление шага выбранного мотора (катушка: 32 — микрошаг 0.25 мм на 15×5); шаги в at/tgt — в этих единицах
+//   tgt <шаги> [об/мин]    — плавное следование (ползунок): бегунок едет к цели с разгоном/торможением, цель меняется на ходу, без ответа
+//   acc <шагов/с²>         — разгон для tgt
 //   at <шаги> [об/мин]     — ехать в абсолютное положение (микрошаги от нуля), ответ «ok at N» — для ползунка в пульте катушки
 //   curup <мА> | curdn <мА> — ток выбранного мотора при движении вверх / вниз (0 = как cur); up 1|-1 — какой знак deg «вверх»
 //                           (катушка-бегунок в руках стоит вертикально: вверх поднимает свой вес, вниз вес помогает)
@@ -30,7 +33,15 @@ const uint8_t P_DIR[4]  = {21, 2, 32, 26};
 TMC2209Stepper d0(&Serial2, 0.11f, 0), d1(&Serial2, 0.11f, 1), d2(&Serial2, 0.11f, 2), d3(&Serial2, 0.11f, 3);
 TMC2209Stepper* DRV[4] = {&d0, &d1, &d2, &d3};
 
-const long STEPS_PER_REV = 1600;      // 200 * 1/8
+const long STEPS_PER_REV = 1600;      // 200 * 1/8 — при ms 8; у мотора с ms N — × N/8
+int msMul[4] = {1, 1, 1, 1};          // 08.10: дробление/8 по моторам (ms)
+float spr(uint8_t m) { return STEPS_PER_REV * msMul[m]; }
+// 08.10: плавное следование к цели (tgt) — не блокирует, крутится в loop()
+bool fol[4] = {false, false, false, false};
+long ftgt[4] = {0, 0, 0, 0};
+float fv[4] = {0, 0, 0, 0}, fvmax[4] = {400, 400, 400, 400}, facc[4] = {3000, 3000, 3000, 3000}, fAcc[4] = {0, 0, 0, 0};
+unsigned long fLast[4] = {0, 0, 0, 0};
+int fDir[4] = {0, 0, 0, 0};
 int curMA = 350;
 int curUp[4] = {0, 0, 0, 0}, curDn[4] = {0, 0, 0, 0};   // 08.10: ток вверх/вниз, 0 — как curMA
 int upSign[4] = {1, 1, 1, 1};                           // направление «вверх» = знак deg
@@ -54,7 +65,7 @@ void tmcSetupAll() {
     d.pdn_disable(true);
     d.I_scale_analog(false);
     d.mstep_reg_select(true);
-    d.microsteps(8);
+    d.microsteps(8 * msMul[i]);
     d.rms_current(curMA, HOLD_MULT);
     d.en_spreadCycle(useSpread);
     d.toff(4);
@@ -128,7 +139,7 @@ void doSteps(uint8_t m, long n, bool fwd, float sps) {
     done++;
     if ((i & 0x7F) == 0 && Serial.available() && Serial.peek() == 's') { abortMove = true; break; }
   }
-  posDeg[m] += (fwd ? 1 : -1) * done * 360.0 / STEPS_PER_REV;
+  posDeg[m] += (fwd ? 1 : -1) * done * 360.0 / spr(m);
   posStep[m] += (fwd ? 1 : -1) * done;
   if (dirMA > 0) DRV[m]->rms_current(curMA, HOLD_MULT);    // в покое — обычный ток (удержание от него)
 }
@@ -141,15 +152,15 @@ void doDeg(uint8_t m, float deg, float rpm) {
   if (fabs(deg) < 0.5) return;
   long lo, hi;
   if (useLim && calRange(m, lo, hi)) {
-    long tgt = posStep[m] + (long)(deg / 360.0 * STEPS_PER_REV);
+    long tgt = posStep[m] + (long)(deg / 360.0 * spr(m));
     if (tgt < lo) tgt = lo;
     if (tgt > hi) tgt = hi;
-    deg = (tgt - posStep[m]) * 360.0 / STEPS_PER_REV;
+    deg = (tgt - posStep[m]) * 360.0 / spr(m);
     if (fabs(deg) < 0.2) return;
   }
-  float sps = rpm / 60.0 * STEPS_PER_REV;
+  float sps = rpm / 60.0 * spr(m);
   if (sps < 4) sps = 4;                  // 04.10: было 40 — катушке-бегунку нужно медленнее (4 мкшага/с ≈ 2 мм/с)
-  doSteps(m, (long)(fabs(deg) / 360.0 * STEPS_PER_REV), deg > 0, sps);
+  doSteps(m, lround(fabs(deg) / 360.0 * spr(m)), deg > 0, sps);
 }
 
 void calLoad() {
@@ -187,7 +198,7 @@ String calStr(uint8_t m) {
 bool goString(uint8_t m, uint8_t n, float rpm) {
   if (n < 1 || n > 6 || cal[m][n] == NOCAL) return false;
   long d = cal[m][n] - posStep[m];
-  float sps = rpm / 60.0 * STEPS_PER_REV;
+  float sps = rpm / 60.0 * spr(m);
   if (sps < 40) sps = 40;
   doSteps(m, labs(d), d > 0, sps);
   return true;
@@ -223,8 +234,8 @@ void execCmd(String line) {
     if (rest.length()) reply(diagStr((uint8_t)constrain(rest.toInt(), 0, 3), true));
     else for (uint8_t a = 0; a < 4; a++) reply(diagStr(a, false));
   }
-  else if (cmd == "stop") { swHalf = 0; abortMove = true; reply("ok стоп"); }
-  else if (cmd == "free") { swHalf = 0; digitalWrite(P_EN[sel], HIGH); reply("ok мотор " + String(sel) + " отпущен"); }
+  else if (cmd == "stop") { swHalf = 0; abortMove = true; for (uint8_t i = 0; i < 4; i++) { if (fol[i]) ftgt[i] = posStep[i]; } reply("ok стоп"); }
+  else if (cmd == "free") { swHalf = 0; fol[sel] = false; digitalWrite(P_EN[sel], HIGH); reply("ok мотор " + String(sel) + " отпущен"); }
   else if (cmd == "holdpct") {
     int pc = rest.toInt();
     if (pc < 10 || pc > 100) { reply("holdpct 10..100"); return; }
@@ -232,7 +243,7 @@ void execCmd(String line) {
     for (uint8_t i = 0; i < 4; i++) DRV[i]->rms_current(curMA, HOLD_MULT);
     reply("ok удержание " + String(pc) + "% (" + String((int)(curMA * HOLD_MULT)) + " мА)");
   }
-  else if (cmd == "off") { swHalf = 0; for (uint8_t i = 0; i < 4; i++) digitalWrite(P_EN[i], HIGH); reply("ok все моторы отпущены"); }
+  else if (cmd == "off") { swHalf = 0; for (uint8_t i = 0; i < 4; i++) fol[i] = false; for (uint8_t i = 0; i < 4; i++) digitalWrite(P_EN[i], HIGH); reply("ok все моторы отпущены"); }
   else if (cmd == "hold") { digitalWrite(P_EN[sel], LOW); reply("ok мотор " + String(sel) + " держит"); }
   else if (cmd == "cur") {
     int ma = (int)a1;
@@ -274,24 +285,72 @@ void execCmd(String line) {
   else if (cmd == "spread") { useSpread = a1 > 0; for (uint8_t i = 0; i < 4; i++) DRV[i]->en_spreadCycle(useSpread); reply(String("ok режим ") + (useSpread ? "spreadCycle" : "stealthChop")); }
   else if (cmd == "lim") { useLim = a1 > 0; reply(String("ok границы хода по калибровке ") + (useLim ? "вкл" : "выкл")); }
   else if (cmd == "calclr") { for (uint8_t n = 1; n <= 6; n++) { cal[sel][n] = NOCAL; calSave(sel, n); } reply("ok калибровка мотора " + String(sel) + " стёрта"); }
-  else if (cmd == "zero") { posStep[sel] = 0; posDeg[sel] = 0; reply("ok zero " + String(sel)); }
-  else if (cmd == "at") {
+  else if (cmd == "zero") { posStep[sel] = 0; posDeg[sel] = 0; ftgt[sel] = 0; fv[sel] = 0; fAcc[sel] = 0; reply("ok zero " + String(sel)); }
+  else if (cmd == "ms") {
+    int n = (int)a1;
+    if (n == 8 || n == 16 || n == 32 || n == 64) {
+      int k = n / 8;
+      posStep[sel] = posStep[sel] * k / msMul[sel]; ftgt[sel] = ftgt[sel] * k / msMul[sel];
+      msMul[sel] = k; DRV[sel]->microsteps(n);
+      reply("ok мотор " + String(sel) + " дробление 1/" + String(n));
+    } else reply("ms 8|16|32|64");
+  }
+  else if (cmd == "tgt") {
     swHalf = 0;
+    if (!fol[sel]) { fol[sel] = true; ftgt[sel] = posStep[sel]; fv[sel] = 0; fAcc[sel] = 0; fDir[sel] = 0; fLast[sel] = micros(); }
+    ftgt[sel] = (long)a1;
+    if (a2 > 0) fvmax[sel] = max(4.0f, (float)(a2 / 60.0 * spr(sel)));
+    digitalWrite(P_EN[sel], LOW);
+  }
+  else if (cmd == "acc") { if (a1 > 0) facc[sel] = a1; reply("ok разгон " + String(facc[sel], 0) + " шагов/с²"); }
+  else if (cmd == "at") {
+    swHalf = 0; fol[sel] = false;
     long d = (long)a1 - posStep[sel];
-    float sps = (a2 > 0 ? a2 : 30) / 60.0 * STEPS_PER_REV;
+    float sps = (a2 > 0 ? a2 : 30) / 60.0 * spr(sel);
     if (sps < 4) sps = 4;
     doSteps(sel, labs(d), d > 0, sps);
     reply("ok at " + String(posStep[sel]));
   }
-  else if (cmd == "deg") { swHalf = 0; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
+  else if (cmd == "deg") { swHalf = 0; fol[sel] = false; doDeg(sel, a1, a2 > 0 ? a2 : 30); reply("ok " + statusStr()); }
   else if (cmd == "sw") {
-    swHalf = fabs(a1); swRpm = a2 > 0 ? a2 : 30; swDir = 1;
+    swHalf = fabs(a1); swRpm = a2 > 0 ? a2 : 30; swDir = 1; fol[sel] = false;
     reply(swHalf > 0 ? "ok качание мотора " + String(sel) : "ok качание стоп");
   }
-  else reply("? команды: m deg sw stop hold free off cur init diag status save ref go to cal calclr");
+  else reply("? команды: m deg sw stop hold free off cur init diag status save ref go to cal calclr zero at tgt acc ms curup curdn up spread");
 }
 
 String rxBuf;
+
+// плавное следование: желаемая скорость к цели — не больше vmax и не больше sqrt(2·a·путь) (успеть затормозить),
+// к ней скорость подтягивается с разгоном a; шаги выдаём по накопленному пути
+void followService(uint8_t m) {
+  unsigned long now = micros();
+  float dt = (now - fLast[m]) * 1e-6f; fLast[m] = now;
+  if (dt > 0.05f) dt = 0.05f;
+  long d = ftgt[m] - posStep[m];
+  float vdes = d == 0 ? 0 : (d > 0 ? 1 : -1) * min(fvmax[m], sqrtf(2 * facc[m] * labs(d)));
+  float v = fv[m];
+  if (v < vdes) v = min(vdes, v + facc[m] * dt); else v = max(vdes, v - facc[m] * dt);
+  fv[m] = v;
+  int dir = v > 1 ? 1 : (v < -1 ? -1 : 0);
+  if (dir != fDir[m]) {                                  // ток вверх/вниз (curup/curdn), в покое — обычный
+    int ma = dir == 0 ? curMA : (dir == upSign[m] ? curUp[m] : curDn[m]);
+    if (ma <= 0) ma = curMA;
+    DRV[m]->rms_current(ma, HOLD_MULT);
+    fDir[m] = dir;
+  }
+  fAcc[m] += v * dt;
+  while (fAcc[m] >= 1 && posStep[m] < ftgt[m] + 1) {
+    digitalWrite(P_DIR[m], HIGH); digitalWrite(P_STEP[m], HIGH); delayMicroseconds(3); digitalWrite(P_STEP[m], LOW);
+    posStep[m]++; fAcc[m] -= 1;
+  }
+  while (fAcc[m] <= -1 && posStep[m] > ftgt[m] - 1) {
+    digitalWrite(P_DIR[m], LOW); digitalWrite(P_STEP[m], HIGH); delayMicroseconds(3); digitalWrite(P_STEP[m], LOW);
+    posStep[m]--; fAcc[m] += 1;
+  }
+  if (d == 0 && fabsf(v) < 1) { fv[m] = 0; fAcc[m] = 0; }
+  posDeg[m] = posStep[m] * 360.0 / spr(m);
+}
 
 void setup() {
   for (uint8_t i = 0; i < 4; i++) {
@@ -312,6 +371,7 @@ void loop() {
     if (c == '\n' || c == '\r') { if (rxBuf.length()) { execCmd(rxBuf); rxBuf = ""; } }
     else if (rxBuf.length() < 80) rxBuf += c;
   }
+  for (uint8_t m = 0; m < 4; m++) if (fol[m]) followService(m);
   if (swHalf > 0) {
     doDeg(sel, swDir * 2 * swHalf, swRpm);
     swDir = -swDir;

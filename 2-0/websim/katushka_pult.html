@@ -152,19 +152,21 @@ document.getElementById('bZero').onclick = () => {
   toMotor('zero'); zeroDeg = 0; lastDeg = 0; showPos(0);
   document.getElementById('sl').value = 0; document.getElementById('slV').textContent = 0;
 };
-// ползунок: шлём абсолютное положение в микрошагах («at»); пока бегунок едет — копим только последнее значение
-let slTarget = null, slBusy = false, slTimer = null;
-const stepsPerMm = () => 1600 / 360 / MM_PER_DEG;
-function slPump() {
-  if (slBusy || slTarget === null || !writer) return;
-  const mm = slTarget; slTarget = null; slBusy = true;
-  toMotor('at ' + Math.round(mm * stepsPerMm()) + ' ' + rpm());
-  clearTimeout(slTimer);
-  slTimer = setTimeout(() => { slBusy = false; slPump(); }, 1000 + Math.abs(mm - posMm) / vmm() * 1000 * 1.5);
+// ползунок (08.10): плавное следование — шлём цель «tgt» в микрошагах (дробление 1/32) не чаще раза в 40 мс,
+// плата сама едет к ней с разгоном/торможением и меняет курс на ходу, не останавливаясь
+const MS = 32;
+const stepsPerMm = () => 200 * MS / 360 / MM_PER_DEG;
+let slTarget = null, slTimer = null;
+function slSend() {
+  slTimer = null;
+  if (slTarget === null || !writer) return;
+  toMotor('tgt ' + Math.round(slTarget * stepsPerMm()) + ' ' + rpm());
+  posMm = slTarget; showPosMm(); slTarget = null;
 }
 document.getElementById('sl').oninput = e => {
   document.getElementById('slV').textContent = e.target.value;
-  slTarget = +e.target.value; slPump();
+  slTarget = +e.target.value;
+  if (!slTimer) slTimer = setTimeout(slSend, 40);
 };
 document.getElementById('moves').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -181,7 +183,7 @@ function showPosMm() { document.getElementById('pos').textContent = posMm.toFixe
 function onLine(s) {
   log('← ' + s);
   const at = s.match(/^ok at (-?\d+)/);
-  if (at) { posMm = +at[1] / stepsPerMm(); showPosMm(); slBusy = false; clearTimeout(slTimer); slPump(); }
+  if (at) { posMm = +at[1] / stepsPerMm(); showPosMm(); }
   const mm = s.match(/вал 0:\s*(-?[\d.]+)°\s*1:\s*(-?[\d.]+)°\s*2:\s*(-?[\d.]+)°\s*3:\s*(-?[\d.]+)°/);
   if (mm) showPos(+mm[+mot() + 1]);
 }
@@ -200,6 +202,7 @@ document.getElementById('bConn').onclick = async () => {
     setTimeout(() => write('holdpct ' + document.getElementById('hp').value), 700);
     setTimeout(() => write('spread 1'), 1000);   // 07.10: катушке нужен жёсткий режим
     setTimeout(() => write('status'), 1300);
+    setTimeout(() => toMotor('ms ' + MS), 1450);
     setTimeout(() => write('diag'), 1600);
     setTimeout(sendGrav, 2600);
   } catch (e) { log('ошибка: ' + e.message); }
