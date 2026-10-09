@@ -50,7 +50,7 @@ RUN = 2.9
 # в конце хода цеплялось): длиннее к деке — лежит на палубе ПО ОБЕ стороны прорези
 LZ_Y0, LZ_Y1 = -10.2, 15.2           # от центра ложа; прорезь палубы −3.5 … +10.7 — опора 4.5 мм за ней
 RAIL_S = LZ_Y1 + 0.3 + 1.5           # южный бортик русла сдвинут под длинное ложе (был +12)
-TRAVEL = 20.0                   # ложе ±20
+TRAVEL = 22.0                   # ложе ±22 (09.10, владелец: как в гитаре — 6 струн через 8.8 = 44 мм)
 EAR_R, EAR_ANG, EAR_SIGN = 43.85 / 2, 56.0, 1
 
 
@@ -84,6 +84,8 @@ def walls(z0, z1):
     for x, y in TIE:
         s = 1 if x > 0 else -1
         w += BB(s * 21, s * 26, y - 4, y + 4, z0, z1)
+    # 09.10: штырь плеча на ±22 доходит до x 24.5 — в полосе его хода стенки тоньше (внутренняя грань 25.0, стенка 1.0)
+    w -= BB(-25.0, 25.0, CART_Y - 3.5, CART_Y + max(LB * (1 - math.cos(math.asin(TRAVEL / LB))) + 3.2, 10.7), z0 - 0.1, z1 + 0.1)
     return w
 
 
@@ -94,7 +96,7 @@ def ties(part, z0, z1, r):
 
 
 PHI_MAX = math.asin(TRAVEL / LB)
-SLOT = BB(-24.5, 24.5, CART_Y - 3.5, CART_Y + max(LB * (1 - math.cos(PHI_MAX)) + 3.2, 10.7), -50, 50)   # прорезь штыря; 10.7 — под полозья ложа v3
+SLOT = BB(-25.0, 25.0, CART_Y - 3.5, CART_Y + max(LB * (1 - math.cos(PHI_MAX)) + 3.2, 10.7), -50, 50)   # прорезь штыря; 10.7 — под полозья ложа v3
 
 # ---------------- дно ----------------
 base = BB(-26, 26, 0, L, 0, Z_FL) + walls(Z_FL, Z_CEIL)
@@ -127,7 +129,7 @@ PIN_TOP = Z_DECK + DECK_T + LZ_T + 0.3                              # штырь
 SCREW_D, SCREW_H = 2.6, 10.0                                        # дырка под самонарез М3 с шайбой (владелец)
 WASHER_R, HEAD_R, HEAD_H = 3.5, 2.75, 2.2                           # шайба М3 Ø7, головка — для проверки
 arm = Pos(0, 0, 0.8) * Cylinder(5, 1.6)
-arm += BB(-2.5, 2.5, -LB, 0, 0, 1.6) + Pos(0, -LB, 0.8) * Cylinder(3.5, 1.6)
+arm += BB(-2.5, 2.5, -LB, 0, 0, 1.6) + Pos(0, -LB, 0.8) * Cylinder(2.9, 1.6)   # 09.10: кольцо у штыря 2.9 (было 3.5) — на ±22 у стенки
 arm += BB(0, RS, -2.5, 2.5, 0, 1.6) + Pos(RS, 0, 0.8) * Cylinder(4, 1.6)
 arm -= Pos(0, 0, 0.8) * Cylinder(FIT_D / 2, 1.8)
 arm += Pos(RS, 0, 1.6 + (Z_TOP - Z_ARM - 1.6) / 2) * Cylinder(2.5, Z_TOP - Z_ARM - 1.6)   # стад под шатун, торчит на 1.5
@@ -179,7 +181,7 @@ lz += BB(LZ_HX - RIM_T, LZ_HX, LZ_Y0, LZ_Y1, LZ_T, LZ_T + RIM_H)
 lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y0, LZ_Y0 + LIP_T, LZ_T, LZ_T + LIP_H)
 lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y1 - LIP_T, LZ_Y1, LZ_T, LZ_T + LIP_H)
 for sx in (1, -1):
-    lz += BB(sx * PIN_CH / 2, sx * 4.4, -3.0, 10.2, -RUN, 0)        # полозья в прорезь палубы (как v3)
+    pass                                                            # 09.10: полозьев нет — на ±22 им нет места у стенок; ложе ведут бортики русла, штырь — дырка в дне
 lozhe = Pos(0, 0, RUN) * lz
 
 parts = [("mini2s_base", base), ("mini2s_mid", mid), ("mini2s_deck", deck), ("mini2s_arm", arm),
@@ -236,8 +238,8 @@ def find_sector(target):
     return lo
 
 
-SEC_P, SEC_M = find_sector(20.0), find_sector(-20.0)
-print("сектор кривошипа: +%.1f° / −%.1f° (ложе ±20)" % (SEC_P, SEC_M))
+SEC_P, SEC_M = find_sector(TRAVEL), find_sector(-TRAVEL)
+print("сектор кривошипа: +%.1f° / −%.1f° (ложе ±%.0f)" % (SEC_P, SEC_M, TRAVEL))
 thetas = sorted(set([-SEC_M + k * (SEC_P + SEC_M) / 12 for k in range(13)]))
 for thd in thetas:
     th = math.radians(thd)

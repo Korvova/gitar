@@ -240,7 +240,7 @@ plates = [
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("95_stend_nema_sektor", p020_j,       # стенд с мотором, кривошип R14 качается сектором ±46° (gitara_mini2_sektor.py): дно, середина, палуба 170, плечо 36:18,
      prep("mini2s_base", ID) + prep("mini2s_mid", ID) + prep("mini2s_deck", ID) + prep("mini2s_arm", ID) +   # шатун 95, кривошип R14 (ступица как R10),
-     prep("mini2s_shatun", ID) + prep("mini2_lozhe_v2", FLIP)),                                               # ложе с длинными полозьями; проставка — со стенда 82
+     prep("mini2s_shatun", ID) + prep("mini2s_lozhe", FLIP)),                                                 # ложе ±22 без полозьев (ведут бортики русла); проставка — со стенда 82
     ("96_krivoshyp_r14", p020sup_j,        # к столу 95: кривошип R14 (ступица Ø27 как у R10 + диск Ø35 выше проставки) — поддержка только от стола под кольцом диска
      prep("mini2s_crank", ID)),
     ("94_paluba_v2_dlinnoe_lozhe", p020_j,  # к стендам 90/93 вместо палубы и ложа стола 91: короткое ложе v3 проваливалось в прорезь —
