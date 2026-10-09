@@ -95,7 +95,7 @@ rib -= Pos(LANE_X, Y_PIN, 0.8) * Cylinder((FIT_D + 0.1) / 2, 1.8)
 
 # ---------------- седло (10.10): пластина под медью + две торцевые вилки, бортиков по бокам нет ----------------
 # вилки обнимают крайние щёчки гильзы снаружи (по оси) и стержень с боков — до оси и выше, держат катушку вдоль хода
-FORK_T, FORK_W = 2.5, 3.5                                   # толщина вилки вдоль оси, ширина зубца
+FORK_T, FORK_W = 2.5, 4.5                                   # толщина вилки вдоль оси, ширина зубца
 SY = BOB_L / 2 + 0.15                                       # внутренняя грань вилки — щёчка + зазор
 PL_X = OUTER / 2                                            # пластина ±13 поперёк
 sed = BB(-PL_X, PL_X, -SY - FORK_T, SY + FORK_T, 0, SED_T)
@@ -108,14 +108,21 @@ for sy in (1, -1):
     sed += BB(-SQ / 2 - 0.6 - FORK_W, SQ / 2 + 0.6 + FORK_W, y0, y1, 0, Z_AX - SQ / 2 - 0.6 - Z_SED)   # перемычка под стержнем
 for sx in (1, -1):                                          # пазы под стяжку вдоль оси (стяжка вокруг гильзы)
     sed -= BB(sx * (PL_X - 3.5) - 0.8, sx * (PL_X - 3.5) + 0.8, -3, 3, -0.1, SED_T + 0.1)
+# 09.10 (владелец: «седло плохо печатается»): палец — отдельной деталью, седло печатается ПЛАСТИНОЙ НА СТОЛ,
+# вилки растут вверх — ни мостов, ни поддержек. Палец mini3_palec: шляпка Ø8 × 1 в зенковку сверху пластины
+# (заподлицо, под медью 0.5 мм) + стержень Ø5 вниз сквозь дырку Ø5.3 в ленту; вклеить.
 pin_h = Z_SED - PIN_BOT
-sed += Pos(0, 0, -pin_h / 2) * Cylinder(2.5, pin_h)
+sed -= Pos(0, 0, SED_T / 2) * Cylinder(2.65, SED_T + 0.2)
+sed -= Pos(0, 0, SED_T - 0.5 + 0.005) * Cylinder(4.2, 1.01)
+PAL_L = SED_T - 1.0 + pin_h                                  # стержень пальца ниже шляпки
+pal = Pos(0, 0, 0.5) * Cylinder(4.0, 1.0) + Pos(0, 0, 1.0 + PAL_L / 2) * Cylinder(2.5, PAL_L)
 
 # медь для проверки: цилиндр Ø CU_D между крайними щёчками
 cu = Rot(90, 0, 0) * Cylinder(CU_D / 2, BOB_L - 2 * 0.8)
 cu -= Rot(90, 0, 0) * Cylinder(SQ / 2 + 2.5, BOB_L)
 
-parts = [("mini3_base", base), ("mini3_lenta", rib), ("mini3_sedlo", sed), ("mini3_med_proverka", cu)]
+pal_asm = Rot(180, 0, 0) * Pos(0, 0, -SED_T) * pal                 # в сборке: шляпка вверху пластины, стержень вниз
+parts = [("mini3_base", base), ("mini3_lenta", rib), ("mini3_sedlo", sed), ("mini3_palec", pal), ("mini3_palec_sborka", pal_asm), ("mini3_med_proverka", cu)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -143,6 +150,7 @@ for i, u in enumerate([-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10]):
     k, s, r, a, z = "kat%d" % i, "sed%d" % i, "rb%d" % i, "arm%d" % i, "lz%d" % i
     asm.add(k, S("s15_gilza_sobrannaya"), loc=(LANE_X, Y_D + u, Z_AX), rz=90)
     asm.add(s, S("mini3_sedlo"), loc=(LANE_X, Y_D + u, Z_SED))
+    asm.add("pal%d" % i, S("mini3_palec_sborka"), loc=(LANE_X, Y_D + u, Z_SED))
     asm.add("cu%d" % i, S("mini3_med_proverka"), loc=(LANE_X, Y_D + u, Z_AX))
     asm.add(r, S("mini3_lenta"), loc=(0, AX + u, Z_RIB))
     asm.add(a, S("mini1_arm"), loc=(0, AX, Z_ARM), rz=phi)
@@ -150,6 +158,7 @@ for i, u in enumerate([-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10]):
     clear += [(k, "rod", 0.3), (k, "base", 0.5), (s, "base", 0.3), (s, "rod", 0.5), (s, "cu%d" % i, 0.3), ("cu%d" % i, "base", 0.5),
               (r, "base", 0.1), (r, "mid", 0.15),
               (a, "base", 0.01), (a, "mid", 0.15), (a, "deck", 0.15), (a, z, 0.0)]
-    touch += [(a, r), (z, "deck"), (s, r)]
+    touch += [(a, r), (z, "deck"), ("pal%d" % i, r)]
+    clear += [(s, r, 0.3)]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("приблуда ±%.0f -> лента ±%.0f -> ложе ±%.1f; дно %.0f x %.0f" % (TRAVEL, TRAVEL, worst, W, Y_END))
