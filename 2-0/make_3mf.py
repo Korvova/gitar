@@ -231,6 +231,9 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("92_stend_shatun_100", p020_j,        # стенд v2 с длинным шатуном ~97 мм (gitara_mini2_dlinnyj.py): дно, середина, палуба 170 мм, плечо, шатун;
+     prep("mini2d_base", ID) + prep("mini2d_mid", ID) + prep("mini2d_deck", ID) + prep("mini2d_arm", ID) +   # кривошип R10, проставка и ложе —
+     prep("mini2d_shatun", ID)),                                                                               # со стенда 82/85 (есть у владельца)
     ("90_stend_pribluda", p020_j,          # стенд одного пальца на магнитной приблуде (gitara_mini3.py): дно + площадка приблуды одной деталью 56×214,
      prep("mini3_base", ID) + prep("mini3_lenta", ID) + prep("mini3_sedlo", ID) + prep("mini3_palec", ID, copies=2)),   # 09.10: седло пластиной на стол (вилки вверх, без поддержек), палец отдельно шляпкой на стол (2: запас)
     ("91_stend_pribluda_verh", p020_j,     # к столу 90, если стенд 81 не печатался: середина, палуба, плечо (от mini1), ложе v3 бортиками на стол
