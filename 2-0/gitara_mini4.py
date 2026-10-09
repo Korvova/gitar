@@ -156,7 +156,7 @@ def solve_phi(u):
 asm = Assembly()
 asm.add("base", S("mini4_base"))
 asm.add("mid", S("mini1_mid"), loc=(0, 0, Z_CEIL))
-asm.add("deck", S("mini1_deck"), loc=(0, 0, Z_DECK))
+asm.add("deck", S("mini1_deck_v2"), loc=(0, 0, Z_DECK))
 asm.add("rod", S("s15_sterzhen_proverka"), loc=(LANE_X, Y_D, Z_AX), rz=90)
 clear, touch = [("rod", "mid", 1.0)], [("mid", "deck"), ("rod", "base")]
 worst, mu_min = 0, 180
@@ -177,7 +177,7 @@ for i, u in enumerate([-9.8, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10.1]):   # лож�
     asm.add("cu%d" % i, S("mini3_med_proverka"), loc=(LANE_X, Y_D + u, Z_AX))
     asm.add(r, S("mini4_shatun"), loc=(px, py, Z_RIB), rz=alpha)
     asm.add(a, S("mini4_arm"), loc=(0, AX, Z_ARM), rz=phi)
-    asm.add(z, S("gs1_lozhe_v3"), loc=(LB * math.sin(p), CART_Y, Z_DECK + DECK_T - RUN))
+    asm.add(z, S("mini2_lozhe"), loc=(LB * math.sin(p), CART_Y, Z_DECK + DECK_T - RUN))
     clear += [(k, "rod", 0.3), (k, "base", 0.5), (s_, "base", 0.3), (s_, "rod", 0.5), (s_, "cu%d" % i, 0.3), ("cu%d" % i, "base", 0.5),
               (r, "base", 0.1), (r, "mid", 0.15), (s_, r, 0.3),
               (a, "base", 0.01), (a, "mid", 0.15), (a, "deck", 0.15), (a, z, 0.0)]

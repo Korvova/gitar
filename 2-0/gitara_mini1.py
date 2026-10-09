@@ -102,6 +102,23 @@ for sx in (-22.0, -13.2, -4.4, 4.4, 13.2, 22.0):                    # линии
             r -= Pos(tx, ty, DECK_T) * Cylinder(3.6, 3)
     deck += r
 
+# ---------------- палуба v2 (09.10, владелец: короткое ложе v3 проваливается одним концом в прорезь) ----------------
+# как у стенда v2 (gitara_mini2.py, 03.10): под ДЛИННОЕ ложе mini2_lozhe (−10.2 … +15.2 от центра, лежит на палубе
+# по обе стороны прорези) — северный бортик русла дальше: +17 вместо +12
+RAIL_S2 = 15.2 + 0.3 + 1.5
+deck2 = BB(-26, 26, 0, L, 0, DECK_T) - SLOT
+for ry in (CART_Y - 12, CART_Y + RAIL_S2):
+    deck2 += BB(-26, 26, ry - 1.5, ry + 1.5, DECK_T, DECK_T + 4)
+deck2 = ties(deck2, 0, DECK_T + 4, 1.7)
+for sx in (-22.0, -13.2, -4.4, 4.4, 13.2, 22.0):
+    y0, y1 = CART_Y + RAIL_S2 + 3.0, L - 1
+    r = Pos(sx, (y0 + y1) / 2, DECK_T) * Rot(90, 0, 0) * Cylinder(0.6, y1 - y0)
+    r -= BB(sx - 1, sx + 1, y0 - 1, y1 + 1, DECK_T - 0.7, DECK_T)
+    for tx, ty in TIE:
+        if abs(tx - sx) < 3.6:
+            r -= Pos(tx, ty, DECK_T) * Cylinder(3.6, 3)
+    deck2 += r
+
 # ---------------- плечо: плоское, прорезь вдоль короткого плеча, штырь вверх ----------------
 U_MAX = R_CR
 SX0 = XS - FIT_D / 2 - 0.1                                          # стад ходит по радиусу 15 .. 18.03
@@ -127,7 +144,7 @@ rib += BB(JX0, JX1, -4.5, YC + YH, 0, 1.6)                          # тело �
 rib += BB(-SH - 1.2, JX0, YC - YH, YC + YH, 0, 1.6)                 # площадка кулисы (на запад)
 rib -= BB(-SH, SH, YC - (PIN_R + SLOT_C), YC + (PIN_R + SLOT_C), -0.1, 1.7)
 
-parts = [("mini1_base", base), ("mini1_mid", mid), ("mini1_deck", deck), ("mini1_arm", arm), ("mini1_lenta", rib)]
+parts = [("mini1_base", base), ("mini1_mid", mid), ("mini1_deck", deck), ("mini1_deck_v2", deck2), ("mini1_arm", arm), ("mini1_lenta", rib)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
