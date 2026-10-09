@@ -91,6 +91,13 @@ p012fin = tweak(resolve("process", "0.12mm High Quality @BBL P2S"),
                      sparse_infill_pattern="zig-zag", wall_loops=6))
 p012fin_j = write_json(p012fin, "p012fin.json")
 
+# кривошип R14 стенда-сектора: диск шире ступицы на 4 мм — поддержка ТОЛЬКО от стола под кольцом диска
+p020sup = tweak(resolve("process", "0.20mm Standard @BBL P2S"), COMMON)
+p020sup = tweak(p020sup,
+                dict(enable_support=1, support_on_build_plate_only=1,
+                     support_type="normal(auto)", support_top_z_distance=0.2))
+p020sup_j = write_json(p020sup, "p020sup.json")
+
 # барабаны вверх ногами: поддержка ТОЛЬКО от стола (кольцо под юбкой)
 p012drum = tweak(resolve("process", "0.12mm High Quality @BBL P2S"),
                  dict(SMALL, sparse_infill_density="99%",
@@ -231,6 +238,11 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("95_stend_nema_sektor", p020_j,       # стенд с мотором, кривошип R14 качается сектором ±46° (gitara_mini2_sektor.py): дно, середина, палуба 170, плечо 36:18,
+     prep("mini2s_base", ID) + prep("mini2s_mid", ID) + prep("mini2s_deck", ID) + prep("mini2s_arm", ID) +   # шатун 95, кривошип R14 (ступица как R10),
+     prep("mini2s_shatun", ID) + prep("mini2_lozhe_v2", FLIP)),                                               # ложе с длинными полозьями; проставка — со стенда 82
+    ("96_krivoshyp_r14", p020sup_j,        # к столу 95: кривошип R14 (ступица Ø27 как у R10 + диск Ø35 выше проставки) — поддержка только от стола под кольцом диска
+     prep("mini2s_crank", ID)),
     ("94_paluba_v2_dlinnoe_lozhe", p020_j,  # к стендам 90/93 вместо палубы и ложа стола 91: короткое ложе v3 проваливалось в прорезь —
      prep("mini1_deck_v2", ID) + prep("mini2_lozhe_v2", FLIP)),   # палуба v2 (северный бортик +17) + длинное ложе с длинными полозьями (штырь зажат по высоте), бортиками на стол
     ("93_stend_pribluda_shatun", p020_j,   # стенд «приблуда + шатун» (gitara_mini4.py): дно, шатун 110 (круглые дырки, стад вверх) + запас, плечо с круглой дыркой;
