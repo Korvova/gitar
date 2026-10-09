@@ -179,9 +179,17 @@ lz += BB(-LZ_HX + RIM_T, LZ_HX - RIM_T, LZ_Y1 - LIP_T, LZ_Y1, LZ_T, LZ_T + LIP_H
 for sx in (1, -1):
     lz += BB(sx * PIN_CH / 2, sx * 4.4, -3.0, 10.2, -RUN, 0)        # полозья в прорезь палубы (как v3)
 lozhe = Pos(0, 0, RUN) * lz
+# ложе v2 (09.10, владелец): полозья длиннее — штырь плеча зажат по высоте ~16 мм, а не только у дна ложа;
+# полозья уходят сквозь прорезь палубы вниз до 9.5 над столом (плечо — до 6.55), снаружи тоньше (3.85),
+# чтобы на краю хода (±20) не задеть стенки середины (x ±24). Печать — так же, бортиками на стол, полозья вверх
+RUN2 = Z_DECK + DECK_T - 9.5                                       # 14.5
+lz2 = lz - BB(-LZ_HX, LZ_HX, -20, 20, -RUN - 0.1, 0)              # старые полозья долой
+for sx in (1, -1):
+    lz2 += BB(sx * PIN_CH / 2, sx * 3.85, -3.0, 10.2, -RUN2, 0)
+lozhe2 = Pos(0, 0, RUN2) * lz2
 
 parts = [("mini2_base", base), ("mini2_mid", mid), ("mini2_deck", deck), ("mini2_arm", arm),
-         ("mini2_shatun", link), ("mini2_crank", crank), ("mini2_vint_proverka", screw), ("mini2_lozhe", lozhe)]
+         ("mini2_shatun", link), ("mini2_crank", crank), ("mini2_vint_proverka", screw), ("mini2_lozhe", lozhe), ("mini2_lozhe_v2", lozhe2)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()

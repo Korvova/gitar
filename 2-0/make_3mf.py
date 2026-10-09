@@ -232,7 +232,7 @@ plates = [
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("94_paluba_v2_dlinnoe_lozhe", p020_j,  # к стендам 90/93 вместо палубы и ложа стола 91: короткое ложе v3 проваливалось в прорезь —
-     prep("mini1_deck_v2", ID) + prep("mini2_lozhe", FLIP)),   # палуба v2 (северный бортик +17) + длинное ложе (как стенд 85), ложе бортиками на стол
+     prep("mini1_deck_v2", ID) + prep("mini2_lozhe_v2", FLIP)),   # палуба v2 (северный бортик +17) + длинное ложе с длинными полозьями (штырь зажат по высоте), бортиками на стол
     ("93_stend_pribluda_shatun", p020_j,   # стенд «приблуда + шатун» (gitara_mini4.py): дно, шатун 110 (круглые дырки, стад вверх) + запас, плечо с круглой дыркой;
      prep("mini4_base", ID) + prep("mini4_shatun", ID, copies=2) + prep("mini4_arm", ID)),   # середина/палуба/ложе — стол 91, седло/палец — стол 90, приблуда — стол 89
     ("92_stend_shatun_100", p020_j,        # стенд v2 с длинным шатуном ~97 мм (gitara_mini2_dlinnyj.py): дно, середина, палуба 170 мм, плечо, шатун;

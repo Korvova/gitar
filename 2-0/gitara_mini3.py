@@ -154,7 +154,7 @@ for i, u in enumerate([-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10]):
     asm.add("cu%d" % i, S("mini3_med_proverka"), loc=(LANE_X, Y_D + u, Z_AX))
     asm.add(r, S("mini3_lenta"), loc=(0, AX + u, Z_RIB))
     asm.add(a, S("mini1_arm"), loc=(0, AX, Z_ARM), rz=phi)
-    asm.add(z, S("mini2_lozhe"), loc=(LB * math.sin(math.radians(phi)), CART_Y, Z_DECK + DECK_T - RUN))
+    asm.add(z, S("mini2_lozhe_v2"), loc=(LB * math.sin(math.radians(phi)), CART_Y, 9.5))
     clear += [(k, "rod", 0.3), (k, "base", 0.5), (s, "base", 0.3), (s, "rod", 0.5), (s, "cu%d" % i, 0.3), ("cu%d" % i, "base", 0.5),
               (r, "base", 0.1), (r, "mid", 0.15),
               (a, "base", 0.01), (a, "mid", 0.15), (a, "deck", 0.15), (a, z, 0.0)]
