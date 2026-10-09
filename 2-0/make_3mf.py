@@ -232,7 +232,7 @@ plates = [
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("90_stend_pribluda", p020_j,          # стенд одного пальца на магнитной приблуде (gitara_mini3.py): дно + площадка приблуды одной деталью 56×214,
-     prep("mini3_base", ID) + prep("mini3_lenta", ID) + prep("mini3_sedlo", FLIP)),   # длинная лента, седло пальцем вверх (юбкой на стол, дно седла мостом 26 мм)
+     prep("mini3_base", ID) + prep("mini3_lenta", ID) + prep("mini3_sedlo", FLIP)),   # длинная лента, седло пальцем вверх (вилками на стол, пластина мостом 33 мм между вилками)
     ("91_stend_pribluda_verh", p020_j,     # к столу 90, если стенд 81 не печатался: середина, палуба, плечо (от mini1), ложе v3 бортиками на стол
      prep("mini1_mid", ID) + prep("mini1_deck", ID) + prep("mini1_arm", ID) + prep("gs1_lozhe_v3", FLIP)),
     ("89_sterzhen_15", p020_j,             # настоящий стержень на дисках 15×5 + шайбы М5: стержень, гильза (трубка + 4 насадки + 1 запас), ложе, основа, ось намотки

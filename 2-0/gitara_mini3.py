@@ -36,12 +36,13 @@ ROD_T = ROD_L + 2 * PLUG        # 92.2
 XP = ROD_L / 2
 BOB_L, OUTER = 33.2, 26.0
 TRAVEL = 10.0                   # ход катушки = ход ленты (вариант А)
-Z_AX = 22.0                     # ось стержня над столом: низ гильзы 9, седло 7..9, лента 3.15..4.75
+Z_AX = 26.0                     # ось стержня над столом (10.10: 22 → 26 — медь намотана толще щёчек, до Ø34)
+CU_D = 34.0                     # наружный диаметр меди с запасом (выпирает за щёчки 26)
 ST_N0 = L + 2.0                 # северная стойка начинается за стенкой стенда
 Y_D = ST_N0 + XP + PLUG + 4.0   # центр стержня: 162.1
 Y_END = Y_D + XP + PLUG + 4.0 + 2.0
-SED_T, SKIRT = 2.0, 1.5
-Z_SED = Z_AX - OUTER / 2 - SED_T    # 7.0 — низ седла
+SED_T = 2.0
+Z_SED = Z_AX - CU_D / 2 - 0.5 - SED_T    # 6.5 — низ седла: под медью 0.5 мм
 PIN_BOT = Z_FL + 0.3
 
 
@@ -92,17 +93,29 @@ rib += Pos(XS, 0, 1.6 + (Z_ARM - Z_RIB) / 2) * Cylinder(2.5, Z_ARM - Z_RIB)
 rib += BB(JX0, JX1, -4.5, Y_PIN + 6, 0, 1.6)
 rib -= Pos(LANE_X, Y_PIN, 0.8) * Cylinder((FIT_D + 0.1) / 2, 1.8)
 
-# ---------------- седло: юбка по низу гильзы + палец вниз + пазы под стяжку ----------------
-SX, SY = OUTER / 2 + 4.5, BOB_L / 2 + 1.2
-sed = BB(-SX, SX, -SY, SY, 0, SED_T)
-sed += BB(-OUTER / 2 - 1.2, OUTER / 2 + 1.2, -SY, SY, SED_T, SED_T + SKIRT)
-sed -= BB(-OUTER / 2 - 0.1, OUTER / 2 + 0.1, -BOB_L / 2 - 0.1, BOB_L / 2 + 0.1, SED_T - 0.01, SED_T + SKIRT + 0.1)
-for s in (1, -1):
-    sed -= BB(s * (OUTER / 2 + 1.6) - 0.8, s * (OUTER / 2 + 1.6) + 0.8, -3, 3, -0.1, SED_T + 0.1)
+# ---------------- седло (10.10): пластина под медью + две торцевые вилки, бортиков по бокам нет ----------------
+# вилки обнимают крайние щёчки гильзы снаружи (по оси) и стержень с боков — до оси и выше, держат катушку вдоль хода
+FORK_T, FORK_W = 2.5, 3.5                                   # толщина вилки вдоль оси, ширина зубца
+SY = BOB_L / 2 + 0.15                                       # внутренняя грань вилки — щёчка + зазор
+PL_X = OUTER / 2                                            # пластина ±13 поперёк
+sed = BB(-PL_X, PL_X, -SY - FORK_T, SY + FORK_T, 0, SED_T)
+z_top = (Z_AX + 6) - Z_SED                                  # вилки до оси + 6
+for sy in (1, -1):
+    y0, y1 = sorted((sy * SY, sy * (SY + FORK_T)))
+    for sx in (1, -1):
+        x0, x1 = sorted((sx * (SQ / 2 + 0.6), sx * (SQ / 2 + 0.6 + FORK_W)))
+        sed += BB(x0, x1, y0, y1, 0, z_top)                    # зубцы по бокам стержня
+    sed += BB(-SQ / 2 - 0.6 - FORK_W, SQ / 2 + 0.6 + FORK_W, y0, y1, 0, Z_AX - SQ / 2 - 0.6 - Z_SED)   # перемычка под стержнем
+for sx in (1, -1):                                          # пазы под стяжку вдоль оси (стяжка вокруг гильзы)
+    sed -= BB(sx * (PL_X - 3.5) - 0.8, sx * (PL_X - 3.5) + 0.8, -3, 3, -0.1, SED_T + 0.1)
 pin_h = Z_SED - PIN_BOT
 sed += Pos(0, 0, -pin_h / 2) * Cylinder(2.5, pin_h)
 
-parts = [("mini3_base", base), ("mini3_lenta", rib), ("mini3_sedlo", sed)]
+# медь для проверки: цилиндр Ø CU_D между крайними щёчками
+cu = Rot(90, 0, 0) * Cylinder(CU_D / 2, BOB_L - 2 * 0.8)
+cu -= Rot(90, 0, 0) * Cylinder(SQ / 2 + 2.5, BOB_L)
+
+parts = [("mini3_base", base), ("mini3_lenta", rib), ("mini3_sedlo", sed), ("mini3_med_proverka", cu)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -122,7 +135,7 @@ asm.add("base", S("mini3_base"))
 asm.add("mid", S("mini1_mid"), loc=(0, 0, Z_CEIL))
 asm.add("deck", S("mini1_deck"), loc=(0, 0, Z_DECK))
 asm.add("rod", S("s15_sterzhen_proverka"), loc=(LANE_X, Y_D, Z_AX), rz=90)
-clear, touch = [("rod", "mid", 1.0)], [("base", "mid"), ("mid", "deck"), ("rod", "base")]
+clear, touch = [("rod", "mid", 1.0)], [("mid", "deck"), ("rod", "base")]   # base<->mid: заглушка fcl 999, реальное пересечение 0
 worst = 0
 for i, u in enumerate([-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10]):
     phi = math.degrees(math.atan2(u, XS))
@@ -130,12 +143,13 @@ for i, u in enumerate([-10, -7.5, -5, -2.5, 0, 2.5, 5, 7.5, 10]):
     k, s, r, a, z = "kat%d" % i, "sed%d" % i, "rb%d" % i, "arm%d" % i, "lz%d" % i
     asm.add(k, S("s15_gilza_sobrannaya"), loc=(LANE_X, Y_D + u, Z_AX), rz=90)
     asm.add(s, S("mini3_sedlo"), loc=(LANE_X, Y_D + u, Z_SED))
+    asm.add("cu%d" % i, S("mini3_med_proverka"), loc=(LANE_X, Y_D + u, Z_AX))
     asm.add(r, S("mini3_lenta"), loc=(0, AX + u, Z_RIB))
     asm.add(a, S("mini1_arm"), loc=(0, AX, Z_ARM), rz=phi)
     asm.add(z, S("gs1_lozhe_v3"), loc=(LB * math.sin(math.radians(phi)), CART_Y, Z_DECK + DECK_T - RUN))
-    clear += [(k, "rod", 0.3), (k, "base", 0.5), (s, "base", 0.3), (s, "rod", 0.5),
+    clear += [(k, "rod", 0.3), (k, "base", 0.5), (s, "base", 0.3), (s, "rod", 0.5), (s, "cu%d" % i, 0.3), ("cu%d" % i, "base", 0.5),
               (r, "base", 0.1), (r, "mid", 0.15),
               (a, "base", 0.01), (a, "mid", 0.15), (a, "deck", 0.15), (a, z, 0.0)]
-    touch += [(a, r), (z, "deck"), (s, k), (s, r)]
+    touch += [(a, r), (z, "deck"), (s, r)]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("приблуда ±%.0f -> лента ±%.0f -> ложе ±%.1f; дно %.0f x %.0f" % (TRAVEL, TRAVEL, worst, W, Y_END))

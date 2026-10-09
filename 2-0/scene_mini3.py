@@ -12,7 +12,7 @@ P = os.path.join(HERE, "Print", "Print")
 OUT = os.path.join(HERE, "Стенд_один_палец_приблуда.blend")
 CART_Y, LB, AX, XS, LANE_X = 16, 36.0, 52.0, 15.0, 10
 Z_RIB, Z_ARM, Z_CEIL, Z_DECK, DECK_T, RUN = 3.15, 4.95, 6.8, 21.0, 3.0, 2.9
-Y_D, Z_AX, Z_SED, TRAVEL = 162.1, 22.0, 7.0, 10.0
+Y_D, Z_AX, Z_SED, TRAVEL = 162.1, 26.0, 6.5, 10.0
 FRAMES = 240
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
