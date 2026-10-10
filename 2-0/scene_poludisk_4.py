@@ -15,6 +15,7 @@ CARS = [("указательный", 60.0), ("средний", 86.0), ("безы
 MOT_Y = [-220.0, -160.0, -100.0, -40.0]
 ZL = [-5.0, -11.0, -17.0, -23.0]                 # пол этажа
 FRAMES = 200
+OFF = 28.0                                       # 10.10: полудиск сдвинут от тележки к деке — штырь тележки неподвижен по y
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
@@ -112,16 +113,23 @@ for k, (name, cy) in enumerate(CARS):
     cyl("диск", 0, 0, 0, 1.8, R + 3.5, m, dd)
     cyl("палец", R, 0, 1.8, 4.0, 2.5, M_AX, dd)
     # полудиск у тележки: ось на полу своего этажа под тележкой
-    cyl("%s: ось полудиска (на полу этажа)" % name, 0, cy, z, z + 2.2, 2.5, M_AX)
-    hd = empty("%s: полудиск" % name, (0, cy, z + 0.2))
+    yh = cy - OFF                                                                 # ось полудиска — со стороны деки от тележки
+    cyl("%s: ось полудиска (на полу этажа)" % name, 0, yh, z, z + 2.2, 2.5, M_AX)
+    hd = empty("%s: полудиск" % name, (0, yh, z + 0.2))
     half_disk("полудиск", R + 3.5, 0, 1.8, m, hd)
-    cyl("палец полудиска -> тележка", 0, -R, 1.8, -z + 0.5, 2.5, M_AX, hd)       # палец на −Y (θ=270° локально)
+    cyl("палец полудиска (короткий, в лапу)", 0, -R, 1.8, 5.6, 2.5, M_AX, hd)   # палец на −Y (θ=270° локально)
     # планка между пальцами (над дисками)
     bar = empty("%s: планка-спарник (этаж %d)" % (name, k + 1))
-    box("планка", -3, 3, 0, cy - ym, 0, 1.6, m, bar)
+    box("планка", -3, 3, 0, yh - ym, 0, 1.6, m, bar)
     # тележка: ложе + лапа с прорезью вдоль грифа на высоте пола над этажом
     car = empty("%s: тележка" % name, (0, cy, 0))
     box("дно ложа", -11, 11, -7, 7, 0.5, 2.5, m, car)
+    z_lapa = z + 0.2 + 1.8 + 2.2 + 0.3                                           # над планкой своего этажа
+    box("штырь тележки (неподвижен по y)", -2.5, 2.5, -2.5, 2.5, z_lapa, 0.5, m, car)
+    y0, y1 = -OFF - R - 4, 3                                                      # лапа к деке, прорезь вдоль грифа
+    for sx in (1, -1):
+        box("лапа: бок", sx * 2.8 - (0 if sx > 0 else 2.2), sx * 2.8 + (2.2 if sx > 0 else 0), y0, y1, z_lapa, z_lapa + 1.6, m, car)
+    box("лапа: торец", -5, 5, y0, y0 + 1.5, z_lapa, z_lapa + 1.6, m, car)
     for s in (1, -1):
         box("бортик", s * 11 - (1.6 if s > 0 else 0), s * 11 + (0 if s > 0 else 1.6), -7, 7, 2.5, 7.5, m, car)
     label(name, (-40, cy, 4), 3.5)
@@ -136,7 +144,7 @@ for f in range(1, FRAMES + 1):
         dd.keyframe_insert("rotation_euler", index=2, frame=f)
         hd.rotation_euler = (0, 0, th + math.pi / 2)                       # палец полудиска локально на −Y
         hd.keyframe_insert("rotation_euler", index=2, frame=f)
-        bar.location = (x, ym + dy, z + 2.2)
+        bar.location = (x, ym + dy, z + 2.2)        # палец диска в деке: (x, ym + dy); палец полудиска: (x, yh + dy)
         bar.keyframe_insert("location", frame=f)
         car.location.x = x
         car.keyframe_insert("location", index=0, frame=f)
