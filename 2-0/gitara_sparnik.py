@@ -69,9 +69,15 @@ for ex, ey in ((EAR_R * math.sin(a), MY + EAR_R * math.cos(a)), (-EAR_R * math.s
 base += Pos(0, YI, (Z_FL + Z_D0) / 2) * Cylinder(4.0, Z_D0 - Z_FL)                     # шайба-подпятник под диск
 stud_h = Z_D0 + DISK_T - 0.1 - Z_FL                                     # ось вровень с диском — над ней ходит планка
 base += Pos(0, YI, Z_FL + stud_h / 2) * Cylinder(2.5, stud_h)                           # ось свободного диска Ø5
-for x in (-20, 20):                                                                      # 4 дырки Ø3.4 — потом прикрутить направляющие тележки
-    base -= Pos(x, 80, Z_FL / 2) * Cylinder(1.7, Z_FL + 0.2)
-    base -= Pos(x, 95, Z_FL / 2) * Cylinder(1.7, Z_FL + 0.2)
+# 10.10: мостик-палуба над планкой с прорезью ПОПЕРЁК — штырь Т-тележки ходит в пересечении прорезей (мостик и планка)
+YC = YI + D / 2                                       # 87 — тележка посередине между дисками
+Z_DK0, DK_T = Z_BAR + BAR_T + 0.5, 3.0                # мостик 8.0 … 11.0 (пальцы дисков далеко, у краёв)
+LEG_X, LEG_Y = 29.5, (YC - 9.5, YC + 9.5)
+base += BB(-32, 32, YC - 13, YC + 13, 0, Z_FL)                                           # уши дна под ножки мостика
+for ly in LEG_Y:
+    for sx in (1, -1):
+        base += BB(sx * LEG_X - 2.5, sx * LEG_X + 2.5, ly - 2.5, ly + 2.5, Z_FL, Z_DK0)   # ножки — вне маха планки (±24.5)
+        base -= Pos(sx * LEG_X, ly, Z_DK0 - 4) * Cylinder(1.3, 8.1)                       # под самонарез М3
 
 
 # ---------------- диски: плашмя, палец вверх ----------------
@@ -96,7 +102,24 @@ for y in (0, D):
 SL0, SL1 = 15.0, D - 15.0
 bar -= BB(-HOLE_D / 2, HOLE_D / 2, SL0, SL1, -0.1, BAR_T + 0.1)
 
-parts = [("spar_base", base), ("spar_disk_motor", disk_m), ("spar_disk_svob", disk_i), ("spar_stupica", hub),
+# ---------------- мостик: прорезь поперёк ±22.7 под штырь Ø5 ----------------
+deck = BB(-32, 32, YC - 13, YC + 13, 0, DK_T)
+deck -= BB(-R - 2.7, R + 2.7, YC - 2.7, YC + 2.7, -0.1, DK_T + 0.1)
+for ly in LEG_Y:
+    for sx in (1, -1):
+        deck -= Pos(sx * LEG_X, ly, DK_T / 2) * Cylinder(1.7, DK_T + 0.2)
+deck = Pos(0, -YC, 0) * deck                                                             # начало — по центру прорези
+
+# ---------------- Т-тележка: площадка сверху + штырь Ø5 вниз сквозь мостик и щель планки; снизу самонарез М3 с шайбой ----------------
+PAD_Z = DK_T + 0.3                                    # площадка над мостиком
+POST_L = (Z_DK0 + PAD_Z) - (Z_BAR - 0.3)              # от низа площадки до 0.3 под планкой: 5.7
+tel = BB(-10, 10, -7, 7, 0, 2.0)                                                          # площадка 20 × 14
+for sx in (1, -1):
+    tel += BB(sx * 10 - (1.6 if sx > 0 else 0), sx * 10 + (0 if sx > 0 else 1.6), -7, 7, 2.0, 7.0)   # бортики под палец
+tel = Pos(0, 0, POST_L) * tel + Pos(0, 0, POST_L / 2) * Cylinder(2.5, POST_L)           # печать площадкой на стол — переворачивается при печати
+tel -= Pos(0, 0, 2.5) * Cylinder(1.3, 5.1)                                               # снизу дырка под самонарез М3 (шайба под планкой)
+
+parts = [("spar_base", base), ("spar_most", deck), ("spar_telezhka", tel), ("spar_disk_motor", disk_m), ("spar_disk_svob", disk_i), ("spar_stupica", hub),
          ("spar_planka", bar)]
 for n, p in parts:
     p = Part() + p
@@ -127,5 +150,10 @@ for thd in range(0, 360, 15):
     clear += [(dm, "base", 0.3), (hb, "spacer", 0.3), (hb, "base", 0.3),
               (br, "base", 0.3)]   # планка с дисками — шарнир (зазор пальца 0.15), проверяется касанием
     touch += [(br, dm), (br, di), (hb, dm), (di, "base")]
+    asm.add("tl%d" % thd, S("spar_telezhka"), loc=(R * math.cos(th), YC, Z_BAR - 0.3))
+    clear += [(br, "most", 0.3), ("tl%d" % thd, "base", 0.3)]
+    touch += [("tl%d" % thd, "most"), ("tl%d" % thd, br)]
+asm.add("most", S("spar_most"), loc=(0, YC, Z_DK0))
+touch += [("most", "base")]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("спарник: диски R%.0f, планка ц-ц %.0f, щель %.0f…%.0f, ход щели поперёк ±%.0f" % (R, D, SL0, SL1, R))

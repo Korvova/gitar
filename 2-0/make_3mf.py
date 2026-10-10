@@ -239,7 +239,8 @@ plates = [
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("99_stend_sparnik", p020_j,           # стенд «спарник» (gitara_sparnik.py): дно 52×170, 2 диска R20 (мотор + свободный), ступица мотора, планка со щелью ×2 (1 запас)
-     prep("spar_base", ID) + prep("spar_disk_motor", ID) + prep("spar_disk_svob", ID) + prep("spar_stupica", ID) + prep("spar_planka", ID, copies=2)),
+     prep("spar_base", ID) + prep("spar_disk_motor", ID) + prep("spar_disk_svob", ID) + prep("spar_stupica", ID) + prep("spar_planka", ID, copies=2) +
+     prep("spar_most", ID) + prep("spar_telezhka", FLIP)),   # мостик с поперечной прорезью, Т-тележка бортиками на стол (дно мостом), штырь вверх
     ("98_shatun_dyrki_menshe", p020_j,     # шатун стенда 95 с дырками 5.3 и 5.2 (было 5.5) — против люфта; какой сядет плотно, но крутится
      prep("mini2s_shatun_d53", ID) + prep("mini2s_shatun_d52", ID)),
     ("97_cilindr_r8_3", p020_j,            # цилиндр R8.3 × 3 с глухой дыркой Ø5 × 1.2 сверху (shaiba_8_3.py), дыркой вверх
