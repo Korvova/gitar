@@ -77,8 +77,14 @@ M_NECK = mat("гриф (прозрачный)", (0.55, 0.38, 0.2, 1), 0.12)
 M_TXT = mat("текст", (0.05, 0.05, 0.05, 1))
 COLS = [(0.9, 0.3, 0.3, 1), (0.95, 0.65, 0.15, 1), (0.3, 0.7, 0.35, 1), (0.3, 0.5, 0.95, 1)]
 
-box("гриф 50 мм", -25, 25, -10, 175, -24, 0, M_NECK)
-label("дека — диски спарников (за кадром)", (0, -30, 6), 5)
+box("гриф 50 мм", -25, 25, 0, 175, -24, 0, M_NECK)
+box("дека (прозрачная)", -40, 40, -470, 0, -60, 0, mat("дека", (0.7, 0.6, 0.45, 1), 0.08))
+label("ГРИФ: только планки и тележки", (0, 120, 14), 5)
+label("ДЕКА: у каждого пальца 2 диска (мотор + свободный)", (0, -250, 14), 6)
+M_MOT = mat("мотор", (0.25, 0.25, 0.28, 1))
+# диски в деке: дальний палец (мизинец, нижний этаж) — ближе к грифу, указательный (верхний) — дальше всех,
+# тогда вал мотора снизу не проходит сквозь чужие планки (они до него не доходят)
+DISKS = [(-370.0, -425.0), (-260.0, -315.0), (-150.0, -205.0), (-40.0, -95.0)]   # (свободный, мотор) по пальцам
 
 movers = []
 for k, (name, cy) in enumerate(CARS):
@@ -86,7 +92,19 @@ for k, (name, cy) in enumerate(CARS):
     zb = FLOOR[k]
     # планка: из деки (y −10) до пальца под своей тележкой; палец на конце вверх
     bar = empty("%s: планка (этаж %d)" % (name, k + 1))
-    box("планка", -BAR_W / 2, BAR_W / 2, -10 - cy, 0, 0, BAR_T, m, bar)          # локально: палец в (0, 0)
+    y_free, y_mot = DISKS[k]
+    box("планка", -BAR_W / 2, BAR_W / 2, y_mot - cy - 4.4, 0, 0, BAR_T, m, bar)   # локально: палец тележки в (0, 0), до пальца мотора
+    disks = []
+    for yd, nm in ((y_free, "свободный диск"), (y_mot, "диск на моторе")):
+        d = empty("%s: %s" % (name, nm))
+        d.location = (0, yd, zb - 2.6)
+        cyl("диск", 0, 0, 0, 2.3, 23.5, m, d)
+        cyl("палец диска", R, 0, 2.3, 2.3 + 0.3 + BAR_T + 1.0, PIN_R, mat("палец", (0.15, 0.15, 0.15, 1)), d)
+        disks.append(d)
+    cyl("%s: вал мотора" % name, 0, y_mot, -60, zb - 2.6, 2.5, M_MOT)
+    box("%s: мотор" % name, -17.5, 17.5, y_mot - 17.5, y_mot + 17.5, -60, -36, M_MOT)
+    cyl("%s: ось свободного диска" % name, 0, y_free, zb - 2.6 - 3, zb - 2.6, 2.5, M_MOT)
+    label(name, (-48, y_mot + 25, zb), 4)
     cyl("палец планки", 0, 0, BAR_T, BAR_T + FOOT_T + 0.6, PIN_R, m, bar)
     # тележка: площадка над грифом, штырь вниз до своей лапы, лапа с прорезью вдоль грифа
     car = empty("%s: тележка" % name)
@@ -101,13 +119,16 @@ for k, (name, cy) in enumerate(CARS):
     box("лапа: торец", -FOOT_W / 2, FOOT_W / 2, 2.8, 5, z_foot, z_foot + FOOT_T, m, car)
     box("лапа: торец", -FOOT_W / 2, FOOT_W / 2, foot_y0, foot_y0 + 2.2, z_foot, z_foot + FOOT_T, m, car)
     label(name, (-34, cy, 3), 3.5)
-    movers.append((bar, car, cy, zb))
+    movers.append((bar, car, cy, zb, disks))
 
 # анимация: полуоборот дисков θ 180…360…180: поперёк x = R·cosθ (±20), вдоль y = R·sinθ (0…−20, к деке)
 for f in range(1, FRAMES + 1):
     th = math.pi + math.pi * (1 - math.cos(2 * math.pi * (f - 1) / (FRAMES - 1))) / 2
     x, dy = R * math.cos(th), R * math.sin(th)
-    for bar, car, cy, zb in movers:
+    for bar, car, cy, zb, disks in movers:
+        for d in disks:
+            d.rotation_euler = (0, 0, th)
+            d.keyframe_insert("rotation_euler", index=2, frame=f)
         bar.location = (x, cy + dy, zb)
         bar.keyframe_insert("location", frame=f)
         car.location = (x, cy, 0)
@@ -123,11 +144,14 @@ for j, (_, cj) in enumerate(CARS):
 print("наименьший зазор вдоль грифа: конец чужой планки до штыря следующей тележки = %.1f мм" % worst)
 
 tgt = empty("цель")
-tgt.location = (0, 95, -8)
+tgt.location = (0, -140, -25)
 cam = bpy.data.objects.new("Камера", bpy.data.cameras.new("Камера"))
 sc.collection.objects.link(cam)
-cam.data.clip_start, cam.data.clip_end, cam.data.lens = 1, 50000, 35
-cam.location = (150, -40, 110)
+cam.data.clip_start, cam.data.clip_end, cam.data.lens = 1, 50000, 28
+cam.location = (380, -330, 420)
+w = bpy.data.worlds.new("мир")
+w.color = (0.92, 0.92, 0.9)
+sc.world = w
 tc = cam.constraints.new("TRACK_TO")
 tc.target, tc.track_axis, tc.up_axis = tgt, "TRACK_NEGATIVE_Z", "UP_Y"
 sc.camera = cam
