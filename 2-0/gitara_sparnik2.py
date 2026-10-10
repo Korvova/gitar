@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "Print", "Print")
 
 W = 52
-Y0, L = -8.0, 170.0               # дно от y −8 до 170
+Y0, L = -12.0, 170.0              # дно от y −12 до 170
 MY, YI = 147.0, 27.0              # мотор и второй диск (у тележки)
 D = MY - YI
 R, DISK_R, PIN_R, HOLE_D = 20.0, 23.5, 2.5, 5.3
@@ -30,7 +30,8 @@ WIN_R = R + PIN_R + 0.7                       # окно мостика под �
 SL_HY = 27.0                                  # салазки ±27 вдоль грифа (лежат на мостике за окном)
 RAIL_IN = SL_HY + 0.3
 BR_HX = R + 13 + 2                            # мостик ±35 поперёк (салазки ±13 ходят ±20)
-LEG_X, LEG_YS = 32.0, (YI - 24, YI + 24)
+LEG_X, LEG_YS = 30.0, (YI - 33.5, YI + 33.5)   # 10.10 (владелец): винты были под ходом салазок — теперь за бортиками
+BR_HY = 36.5                                  # мостик вдоль грифа ±36.5
 EAR_R, EAR_ANG = 43.85 / 2, 56.0
 
 
@@ -40,7 +41,7 @@ def BB(x0, x1, y0, y1, z0, z1):
 
 # ---------------- дно: мотор как у стенда 99, ось второго диска, ножки мостика ----------------
 base = BB(-W / 2, W / 2, Y0, L, 0, Z_FL)
-base += BB(-BR_HX, BR_HX, YI - 30, YI + 30, 0, Z_FL)                                     # уши под ножки мостика
+base += BB(-BR_HX, BR_HX, YI - BR_HY, YI + BR_HY, 0, Z_FL)                                     # уши под ножки мостика
 base -= Pos(0, MY, Z_FL / 2) * Cylinder(13.5 + 0.5, Z_FL + 0.2)
 a = math.radians(EAR_ANG)
 for ex, ey in ((EAR_R * math.sin(a), MY + EAR_R * math.cos(a)), (-EAR_R * math.sin(a), MY - EAR_R * math.cos(a))):
@@ -65,7 +66,7 @@ for y in (0, D):
     bar -= Pos(0, y, BAR_T / 2) * Cylinder(HOLE_D / 2, BAR_T + 0.2)
 
 # ---------------- мостик: круглое окно под палец, бортики вдоль поперёк (держат салазки) ----------------
-most = BB(-BR_HX, BR_HX, -30, 30, 0, BR_T)
+most = BB(-BR_HX, BR_HX, -BR_HY, BR_HY, 0, BR_T)
 most -= Pos(0, 0, BR_T / 2) * Cylinder(WIN_R, BR_T + 0.2)
 for sy in (1, -1):
     y0, y1 = sorted((sy * RAIL_IN, sy * (RAIL_IN + 2.5)))
@@ -101,6 +102,13 @@ asm.add("spacer", S("gdk_spacer0_x2"), loc=(0, MY, 0))
 asm.add("motor", S("gdk_motor0_model"), loc=(0, MY, -4.0))
 asm.add("most", S("spar2_most"), loc=(0, YI, Z_BR0))
 clear, touch = [], [("spacer", "base"), ("motor", "spacer"), ("most", "base")]
+vints = []
+for i, ly in enumerate(LEG_YS):
+    for j, sx in enumerate((1, -1)):
+        v = "vint%d%d" % (i, j)
+        asm.add(v, S("mini2_vint_proverka"), loc=(sx * LEG_X, ly, Z_BR0 + BR_T))     # шайба + головка М3 на мостике
+        vints.append(v)
+        touch += [(v, "most")]
 for thd in range(0, 360, 15):
     th = math.radians(thd)
     dm, di, hb, br, sl_ = "dm%d" % thd, "di%d" % thd, "hub%d" % thd, "bar%d" % thd, "sl%d" % thd
@@ -112,5 +120,6 @@ for thd in range(0, 360, 15):
     clear += [(dm, "base", 0.3), (hb, "spacer", 0.3), (hb, "base", 0.3), (br, "base", 0.3), (br, "most", 0.3),
               (di, "most", 0.3), (dm, "most", 0.3), (sl_, "base", 0.3)]
     touch += [(br, dm), (br, di), (hb, dm), (di, "base"), (sl_, "most"), (sl_, di)]
+    clear += [(sl_, v, 0.5) for v in vints] + [(br, "base", 0.3)]
 asm.check(clearances=clear, touching=touch, verbose=False)
 print("макет «второй диск у тележки»: диски R%.0f, планка ц-ц %.0f, тележка поперёк ±%.0f" % (R, D, R))
