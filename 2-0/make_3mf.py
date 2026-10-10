@@ -238,6 +238,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("97_cilindr_r8_3", p020_j,            # цилиндр R8.3 × 3 с глухой дыркой Ø5 × 1.2 сверху (shaiba_8_3.py), дыркой вверх
+     prep("cilindr_r8_3", ID)),
     ("95_stend_nema_sektor", p020_j,       # стенд с мотором, кривошип R14 качается сектором ±46° (gitara_mini2_sektor.py): дно, середина, палуба 170, плечо 36:18,
      prep("mini2s_base", ID) + prep("mini2s_mid", ID) + prep("mini2s_deck", ID) + prep("mini2s_arm", ID) +   # шатун 95, кривошип R14 (ступица как R10),
      prep("mini2s_shatun", ID) + prep("mini2s_lozhe", FLIP)),                                                 # ложе ±22 без полозьев (ведут бортики русла); проставка — со стенда 82
