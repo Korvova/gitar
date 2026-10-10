@@ -238,6 +238,9 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("100_maket_disk_u_telezhki", p020_j,  # макет «второй диск у тележки» (gitara_sparnik2.py), один мотор: дно, диск на мотор + ступица, второй диск с высоким пальцем,
+     prep("spar2_base", ID) + prep("spar_disk_motor", ID) + prep("spar_stupica", ID) + prep("spar2_disk", ID) +   # планка без щели (+ запас), мостик с окном,
+     prep("spar2_planka", ID, copies=2) + prep("spar2_most", ID) + prep("spar2_salazki", ID)),                      # салазки-тележка; всё без поддержек
     ("99_stend_sparnik", p020_j,           # стенд «спарник» (gitara_sparnik.py): дно 52×170, 2 диска R20 (мотор + свободный), ступица мотора, планка со щелью ×2 (1 запас)
      prep("spar_base", ID) + prep("spar_disk_motor", ID) + prep("spar_disk_svob", ID) + prep("spar_stupica", ID) + prep("spar_planka", ID, copies=2) +
      prep("spar_most", ID) + prep("spar_telezhka", FLIP)),   # мостик с поперечной прорезью, Т-тележка бортиками на стол (дно мостом), штырь вверх
