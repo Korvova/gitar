@@ -38,8 +38,9 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 | Узел | Состояние |
 |---|---|
-| Гриф с тележками и моторами | ⌛ Короткий гриф собран 26.09, все 4 мотора ведут тележки; дорабатываем ложа и секцию-1 под расстояние пальцев |
-| Плата управления 4 моторами | ✅ Изготовлена и проверена 25.09: все 4 мотора крутятся от пульта |
+| Привод тележек | ⌛ 12.10: **мотор прямо в тележке** — гимбал-мотор GB1806 на ребро, шестерня по рейке поперёк грифа; концепт 4 тележек готов, моторы к заказу — [Т. Моторчик в тележке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-motorchik-v-telezhki). Механика с мотором в деке и магнитные приводы — 💤 (история в [📜 Хронике](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/hronika)) |
+| Гриф с тележками | ⌛ Короткий гриф с приводом «палка» собран 26.09, все 4 тележки ездят; под мотор в тележке гриф перерисовывается (карманы поперёк, открытые бока) |
+| Плата управления | ✅ Плата 4 шаговых моторов (TMC2209) изготовлена 25.09; для моторов в тележках нужны драйверы FOC — [Т. Моторчик в тележке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-motorchik-v-telezhki) 19.14–19.15 |
 | Корпус и дека | ⌛ Спроектированы полностью, напечатаны частично |
 | Тактильная обратная связь | ⬜ Браслет и вибро в тележках — не начаты |
 | Струны (правая рука) | Вспомогательная проверка: узел щипка на датчиках Холла собран и работает, дальше пока не развиваем |
@@ -58,19 +59,14 @@ AeroBand AG01 показывают или слушают, но руку не в�
 
 **Сейчас в работе**
 
-* [Т. Магнитная версия 2.0](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija-2) — магнитный стержень + бегущая катушка: сравнение схем, расчёт Ø15×5, опыт на дисках 4×2 (стол 87), планы
+* [Т. Моторчик в тележке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-motorchik-v-telezhki) — мотор прямо в тележке, шестерня по рейке: компоновка 4 тележек, выбор мотора (GB1806), электроника, стенд одного пальца
+* [📜 Хроника](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/hronika) — что происходило в проекте и чем кончилось, новые сверху
 
 **В работе и в планах**
 
-* [Т. Магнитный + Кривошип](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnyj-krivoshyp) — идея 08.10: линейный магнитный привод в деке толкает ленту этажа, рычаг-уголок 1:1 у тележки; почему стержень не влезает в гриф 50 мм
 * [Т. Тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-telezhki) — тележки с ложем для пальцев: посадка, удобство для любой руки, потом вибро и кнопка
-* [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
 * [Т. Софт](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-soft) — прошивки, пульты в браузере, калибровка и мелодии, скрипты моделей, столов, плат и вики
-* [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам: напечатать, собрать, проверить ход ленты
-* [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
-* [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) — дорожная карта до производства, сделанное зачёркиваем
-* [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, привод «палка», моторы
-* [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif) — пошаговый чек-лист сборки грифа, деки и корпуса
+* [Т. План](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plan) — дорожная карта до производства (этап 1 писался под привод «палка», см. 1.8)
 * [Т. Корпус и дека](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-korpus) — форма классической гитары
 * [Т. Электроника и звук](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-elektronika) — датчики, прошивки, MIDI
 * [Т. Перемещение по грифу рукой](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-peremeshchenie-po-grifu) — идея «затвор» под большим пальцем: как ученик сам задаёт сдвиг позиции
@@ -78,11 +74,27 @@ AeroBand AG01 показывают или слушают, но руку не в�
 * [Архитектура и стек](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/arxitektura) — как устроен код моделей
 * [Печать и сборка](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/pechat-sborka) — столы печати и крепёж
 * [Прошивка ESP32](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/proshivka-esp32) — заливка без BOOT, окружение машин, чтение Serial
-* 💤 [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — отложено 03.10: механика рычагом и шатуном (стенды 81, 82, 85)
-* 💤 [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — отложено 03.10: плоское русло со скобой 20×10×5, запасной путь
-* 💤 [Т. Инструкция по сборке: магнитное русло (проба)](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-magnit) — отложено 03.10: стол 86
+
+**Привод «палка» (мотор в деке → лента → плечо) — 💤 отложено 12.10, остаётся рабочим референсом**
+
+* [Т. Гриф и аппликатура](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif) — тележки, привод «палка», моторы
+* [Т. Гриф под тележки](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-pod-telezhki) — секция-1 v2: тележки на расстоянии пальцев V позиции
+* [Т. Гриф в деке](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke) — дека с четырьмя моторами по шагам
+* [Т. Инструкция по сборке: гриф с моторами](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-grif) — секции 2 и 3 с лентами, дека с моторами
+* [Т. Сборка гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-grif) — пошаговый чек-лист сборки грифа, деки и корпуса
+* 💤 [Т. Вариант с тележками](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-variant-s-telezhkami) — рычаг, шатун, сектор R14, спарник (стенды 81–100)
+* [Т. Гипоидная передача](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-gipoidnaja-peredacha) — заметка владельца 10.10: шестерня в деке → перпендикулярная шестерня → тележка
+
+**Магнитные приводы — 💤 отложено**
+
+* 💤 [Т. Магнитный + Кривошип](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnyj-krivoshyp) — приблуда в деке толкает ленту, стенд 90 — тянет слабо (18.16)
+* 💤 [Т. Магнитная версия 2.0](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija-2) — магнитный стержень + бегущая катушка: расчёты, опыты 4×2 и Ø15
+* 💤 [Т. Магнитная версия](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-magnitnaja-versija) — плоское русло со скобой 20×10×5
+* 💤 [Т. Инструкция по сборке: магнитное русло (проба)](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-instrukcija-magnit) — стол 86
 
 **Готово ✅**
+
+* [Гриф в деке от астра](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-grif-v-deke-ot-astra) — дека A2/A3 с четырьмя моторами Ø36, собрана в коротком грифе 26.09
 
 * [Т. Сборка короткий гриф](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-sborka-korotkij-grif) — стенд: секция-1 + секция-2 + дека с 4 моторами + плата, проверка всех четырёх тележек
 * [Т. Плата для 4-х моторов](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-plata-4-motora) — своя плата: разводка, изготовление на станке, травление, пайка, проверка

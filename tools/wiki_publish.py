@@ -38,7 +38,7 @@ TITLES = {
     "t-plata-4-motora": "✅Т. Плата для 4-х моторов",
     "t-sborka-grif": "⌛Т. Сборка гриф",
     "t-plan": "⌛Т. План",
-    "t-grif-v-deke-ot-astra": "🚀Гриф в деке от астра",
+    "t-grif-v-deke-ot-astra": "✅Гриф в деке от астра",
     "t-peremeshchenie-po-grifu": "⌛Т. Перемещение по грифу рукой",
     "t-polozhenie-telezhek": "✅Т. Положение тележек",
     "t-instrukcija-sborki": "✅Т. Инструкция по сборке: секция-1",
@@ -51,8 +51,10 @@ TITLES = {
     "t-variant-s-telezhkami": "💤Т. Вариант с тележками",
     "t-magnitnaja-versija": "💤Т. Магнитная версия",
     "t-instrukcija-magnit": "💤Т. Инструкция по сборке: магнитное русло (проба)",
-    "t-magnitnaja-versija-2": "⌛Т. Магнитная версия 2.0",
-    "t-magnitnyj-krivoshyp": "⌛Т. Магнитный + Кривошип",
+    "t-magnitnaja-versija-2": "💤Т. Магнитная версия 2.0",
+    "t-magnitnyj-krivoshyp": "💤Т. Магнитный + Кривошип",
+    "t-motorchik-v-telezhki": "⌛Т. Моторчик в тележке",
+    "hronika": "📜Хроника",
 }
 
 TOKEN = os.environ.get("WIKI_TOKEN", "")
