@@ -238,6 +238,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("102_telezhka_shire", p020_j,        # стенд 101: только рама-тележка с полозьями по ширине коробки (±16.8 вместо ±12) — против перекоса
+     prep("m1_telezhka", ID)),
     ("101_motor_v_telezhke", p020_j,      # стенд одного пальца «мотор в тележке» (gitara_motor1.py) под гимбал 2204: плита с Т-рельсами и рейкой m1,
      prep("m1_osnova", ID) + prep("m1_telezhka", ID) + prep("m1_kryshka", FLIP) + prep("m1_shesternya", ID, copies=2) + prep("m1_lozhe", ID)),   # рама-клетка стоя, крышка на защёлках крышей на стол, шестерня z26 (+ запас), ложе
     ("100_maket_disk_u_telezhki", p020_j,  # макет «второй диск у тележки» (gitara_sparnik2.py), один мотор: дно, диск на мотор + ступица, второй диск с высоким пальцем,
