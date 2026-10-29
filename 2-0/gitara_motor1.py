@@ -117,7 +117,7 @@ CHEEK_X0 = max(MOT_R, G_OR) + 0.6    # 14.6
 CHEEK_X1 = CHEEK_X0 + 2.2            # 16.8
 Z_TOPF = Z_AX + G_OR + 0.7           # 34.7 — верх рамы = низ крышки
 Y_FR0 = Y_G1 + 1.0                   # передняя стойка за шестернёй
-Y_RK0 = Y_G0 - 0.2                   # от сюда к груди — над рейкой
+Y_RK0 = Y_G0 + 0.3 - 1.5             # 29.10 (владелец): пол кончается за 1.5 до рейки (было 0.5 — при наклоне цеплял зубья)
 fr = BB(-CHEEK_X1, CHEEK_X1, WALL_Y0, Y_ST - 1, Z_FLR0, Z_TOPF)                     # задняя стенка
 fr -= Pos(0, Y_ST - 2.5, Z_AX) * Rot(90, 0, 0) * Cylinder(5.0, 3.2)                  # окно под центральную трубку
 fr -= BB(-10, 10, WALL_Y0 - 0.1, Y_ST - 0.9, Z_FLR1, Z_AX - 10.5)                     # окно под провода вниз (под кольцом)
@@ -134,7 +134,7 @@ fr += BB(-CHEEK_X1, CHEEK_X1, WALL_Y0, Y_RK0, Z_FLR0, Z_FLR1)                   
 for sx in (1, -1):
     x0, x1 = sorted((sx * CHEEK_X0, sx * CHEEK_X1))
     fr += BB(x0, x1, WALL_Y0, Y_RK0, Z_FLR0, Z_TOPF)                                    # бока у мотора — от пола
-    fr += BB(x0, x1, Y_RK0 - 0.01, RAIL_YS[1] - 4 - C - 0.2, 8.5, Z_TOPF)             # бока над рейкой — выше её зубьев, до шляпки рельса
+    fr += BB(x0, x1, Y_RK0 - 0.01, RAIL_YS[1] - 4 - C - 0.2, Z_PITCH + M + 1.5, Z_TOPF)   # бока над рейкой — на 1.5 выше её зубьев (было 0.5), до шляпки рельса
 fr += BB(-CHEEK_X1, CHEEK_X1, Y_FR0, Y_FR0 + 3, 13.0 - 0.01, Z_TOPF)                  # передняя стойка — на полозе
 for ry in RAIL_YS:                                                                      # полозья с Т-пазом
     fr += BB(-SK_HX, SK_HX, ry - 6, ry + 6, Z_SK0, 13.0)
