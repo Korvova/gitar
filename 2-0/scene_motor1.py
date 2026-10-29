@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-r"""Сцена: стенд «мотор в тележке» (gitara_motor1.py, стол 101) — гимбал 2204 на ребре, шестерня m1 z20 катится
+r"""Сцена: стенд «мотор в тележке» (gitara_motor1.py, стол 101) — гимбал 2204 на ребре, шестерня m1 z26 катится
 по рейке, тележка ездит на Т-рельсах ±22. Пробел — анимация. Запуск: blender -b -P 2-0\scene_motor1.py"""
 import math
 import os
@@ -8,7 +8,7 @@ import bpy
 HERE = os.path.dirname(os.path.abspath(__file__))
 P = os.path.join(HERE, "Print", "Print")
 OUT = os.path.join(HERE, "Стенд_мотор_в_тележке.blend")
-RP, Z_AX, Y_G1, Z_ROOF1 = 10.0, 17.0, 19.4, 33.55
+RP, Z_AX, Y_G1, Z_ROOF1 = 13.0, 20.0, 19.4, 36.7
 FRAMES = 200
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
@@ -39,17 +39,18 @@ def stl(fname, name, m, loc=(0, 0, 0), rot=(0, 0, 0)):
 
 
 stl("m1_osnova", "плита: рельсы и рейка m1", mat("плита", (0.8, 0.8, 0.84, 1)))
-tel = stl("m1_telezhka", "тележка", mat("тележка", (0.95, 0.72, 0.30, 1), 0.55))
+tel = stl("m1_telezhka", "рама-клетка", mat("тележка", (0.95, 0.72, 0.30, 1), 0.55))
+lid = stl("m1_kryshka", "крышка на защёлках", mat("крышка", (0.80, 0.60, 0.25, 1), 0.55))
 mot = stl("m1_motor_proverka", "гимбал 2204", mat("мотор", (0.15, 0.15, 0.17, 1)))
-lz = stl("m1_lozhe", "ложе", mat("ложе", (0.85, 0.35, 0.35, 1)), (0, 7.5, Z_ROOF1))
+lz = stl("m1_lozhe", "ложе", mat("ложе", (0.85, 0.35, 0.35, 1)), (0, 10.0, Z_ROOF1))
 # шестерня: в STL ось Z — ставим осью вдоль Y, торцом к мотору
 g_piv = bpy.data.objects.new("шестерня (поворот)", None)
 sc.collection.objects.link(g_piv)
-g = stl("m1_shesternya", "шестерня m1 z20", mat("шестерня", (0.30, 0.70, 0.40, 1)), (0, 0, 0), (math.radians(90), 0, 0))
+g = stl("m1_shesternya", "шестерня m1 z26", mat("шестерня", (0.30, 0.70, 0.40, 1)), (0, 0, 0), (math.radians(90), 0, 0))
 g.parent = g_piv
 for f in range(1, FRAMES + 1):
     x = 22.0 * math.sin(2 * math.pi * (f - 1) / (FRAMES - 1))
-    for ob in (tel, mot):
+    for ob in (tel, mot, lid):
         ob.location.x = x
         ob.keyframe_insert("location", index=0, frame=f)
     lz.location.x = x
