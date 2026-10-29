@@ -31,7 +31,7 @@ Y_BELL = Y_ST + MOT_L                # крутящийся торец
 G_T, G_GAP = 5.0, 0.4                # шестерня толщиной 5, от торца мотора 0.4
 Y_G0, Y_G1 = Y_BELL + G_GAP, Y_BELL + G_GAP + G_T
 RAIL_YS = (-9.0, 26.5)               # оси рельсов вдоль грифа (за стенкой тележки и за шестерней)
-HALF_X = 34.0                        # плита и рельсы ±34 поперёк (ход ±22 + полозья ±12)
+HALF_X = 26.0                        # 29.10 (владелец): плита = ширина грифа 52, тележка на краях выезжает за грань наполовину
 C = 0.3                              # зазор скольжения
 
 
@@ -92,8 +92,8 @@ for ry in RAIL_YS:
 P = math.pi * M
 rk_y0, rk_y1 = Y_G0 + 0.3, Y_G1 - 0.3
 base += BB(-HALF_X, HALF_X, rk_y0, rk_y1, Z_FL, Z_PITCH - 1.25 * M)
-kmax = int((HALF_X - P) // P)
-xs = [k * P for k in range(-kmax, kmax + 1)]                                    # зуб рейки в x = 0
+kmax = int((HALF_X + P) // P)
+xs = [k * P for k in range(-kmax, kmax + 1)]                                    # зуб рейки в x = 0; зубья до самого края
 for xc in xs:
     t_half = (P / 2 - 0.1) / 2                                           # полтолщины зуба на делительной
     za, zf = Z_PITCH + M, Z_PITCH - 1.25 * M
@@ -102,6 +102,9 @@ for xc in xs:
             (xc + t_half - (za - Z_PITCH) * tan, za), (xc + t_half + (Z_PITCH - zf) * tan, zf)]
     tooth = extrude(make_face(Polyline(*(prof + [prof[0]]))), rk_y1 - rk_y0)      # профиль (x, z) в XY, толщина по Z
     base += Pos(0, rk_y1, 0) * Rot(90, 0, 0) * tooth                                   # Z -> −Y, Y -> Z
+
+for sx in (1, -1):                                                                    # срез по краю грифа
+    base -= BB(*sorted((sx * HALF_X, sx * (HALF_X + 10))), -50, 60, -1, 20)
 
 # ---------------- тележка-клетка (29.10, владелец): рама с полом под мотором, задней стенкой (клеевое кольцо Ø20,
 # окно под провода вниз) и боками; сверху крышка на 4 защёлках — мотор с шестернёй вставляется сверху ----------------
