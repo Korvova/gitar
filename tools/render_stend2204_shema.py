@@ -44,7 +44,7 @@ for a, b, c, y in sig:
     ax.text(23, y, a, ha="right", va="center", fontsize=10)
     ax.text(43, y, b, ha="left", va="center", fontsize=10)
     wire(24, y, 42, y, c)
-ax.text(43, 11, "VDD, VCC — пока не подключать\nCS1–CS3 — потом (ток)", ha="left", va="center", fontsize=8.5, color="#a00")
+ax.text(43, 11, "VDD (выход 3.3 В), VCC ×0.101 (делитель),\nCS1–CS3 (ток) — не подключать", ha="left", va="center", fontsize=8.5, color="#a00")
 
 # плата -> мотор
 for i, (n, c) in enumerate((("M1", "#555"), ("M2", "#888"), ("M3", "#bbb"))):
@@ -59,7 +59,7 @@ wire(48, 55, 48, 41, "#d00")
 wire(62, 55, 62, 41, "#000")
 ax.text(47, 49.5, "VBUS → +", ha="right", va="center", fontsize=10, color="#d00")
 ax.text(63, 49.5, "GND → −", ha="left", va="center", fontsize=10)
-ax.text(72, 59, "DIP: 1 OFF, 2 OFF, 3 ON = 12 В\nпроверить мультиметром до подключения!", ha="left", va="center", fontsize=8.5, color="#a00")
+ax.text(72, 59, "12 В: включён только переключатель 1, кабель C–C\nпроверить мультиметром до подключения!", ha="left", va="center", fontsize=8.5, color="#a00")
 
 plt.savefig(OUT, bbox_inches="tight", facecolor="white")
 print(OUT)
