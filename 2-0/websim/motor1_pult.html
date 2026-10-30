@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пульт стенда 2204</title>
+<style>
+  :root { --bg:#f4f1ea; --card:#fff; --ink:#1d1d1f; --mut:#6b6b6b; --acc:#2f6fd6; --ok:#2e8b57; --bad:#c0392b; --line:#ddd6c8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:14px 16px; background:#1d1d1f; color:#fff; }
+  header h1 { font-size:18px; margin:0 12px 0 0; }
+  #st { font-size:13px; opacity:.85; }
+  button { font:inherit; border:1px solid var(--line); background:#fff; border-radius:8px; padding:9px 12px; cursor:pointer; min-width:54px; }
+  button:hover { border-color:var(--acc); }
+  button.big { background:var(--acc); color:#fff; border-color:var(--acc); }
+  button.stop { background:var(--bad); color:#fff; border-color:var(--bad); }
+  button.on { background:var(--ok); color:#fff; border-color:var(--ok); }
+  main { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .card h2 { margin:0 0 8px; font-size:17px; }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; align-items:center; }
+  .lbl { font-size:12px; color:var(--mut); margin-top:10px; }
+  .hint { font-size:12px; color:var(--mut); }
+  #pos { font-size:28px; font-weight:600; font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; }
+  #log { margin:0 16px 16px; background:#111; color:#cfe; font:12px/1.4 ui-monospace, monospace; padding:10px; border-radius:10px; height:170px; overflow:auto; white-space:pre-wrap; }
+  .cmdline { display:flex; gap:6px; margin:0 16px 10px; }
+  .cmdline input { flex:1; min-width:0; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); }
+  @media (max-width: 480px) { header h1 { width:100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Стенд 2204 — мотор в тележке</h1>
+  <button class="big" id="bConn">Подключить</button>
+  <button id="bOn">Включить мотор</button>
+  <button class="stop" id="bOff">ОТПУСТИТЬ</button>
+  <span id="st">не подключено</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Положение</h2>
+    <div id="pos">— мм</div>
+    <div class="hint">Перед включением поставьте тележку рукой в середину и нажмите «Здесь ноль».</div>
+    <div class="lbl">Куда ехать, мм (±22)</div>
+    <input type="range" id="slX" min="-22" max="22" step="0.1" value="0">
+    <div class="row"><span id="vX">0.0</span> мм</div>
+    <div class="lbl">Струны</div>
+    <div class="row" id="strings"></div>
+    <div class="row">
+      <button id="bZero">Здесь ноль</button>
+      <button id="bDir">Поменять направление</button>
+    </div>
+    <div class="lbl">Качели между крайними струнами</div>
+    <div class="row">
+      <button id="bSwing">Качать</button>
+      <span class="hint">туда-сюда, пока не нажмёте ещё раз</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Сила и скорость</h2>
+    <div class="lbl">Напряжение на мотор, В: сила и нагрев</div>
+    <input type="range" id="slU" min="0.5" max="8" step="0.5" value="2">
+    <div class="row"><span id="vU">2.0</span> В</div>
+    <div class="hint">Начните с 2 В. Пощупайте мотор через минуту — если горячий, убавьте.</div>
+    <div class="lbl">Скорость, мм/с</div>
+    <input type="range" id="slS" min="5" max="200" step="5" value="50">
+    <div class="row"><span id="vS">50</span> мм/с</div>
+    <div class="hint">Без датчика мотор может «проскочить», если быстро или слабо: тогда тележка дёргается и отстаёт. Помогает больше напряжения или меньше скорость.</div>
+  </div>
+</main>
+
+<div class="cmdline">
+  <input id="cmd" placeholder="команда: x 10, u 3, s 80, on, off, z, dir, p 7, ?">
+  <button id="bSend">Отправить</button>
+</div>
+<pre id="log"></pre>
+
+<script>
+let port = null, writer = null, swingT = null, swingSide = 1;
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+function log(t) { logEl.textContent += t + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+
+async function send(line) {
+  if (!writer) { log('— не подключено'); return; }
+  log('> ' + line);
+  await writer.write(new TextEncoder().encode(line + '\n'));
+}
+
+// струны 1…6: шаг 8.8, от −22 до +22
+const STR = [-22, -13.2, -4.4, 4.4, 13.2, 22];
+STR.forEach((x, i) => {
+  const b = document.createElement('button');
+  b.textContent = i + 1;
+  b.onclick = () => goX(x);
+  $('strings').appendChild(b);
+});
+
+function goX(x) {
+  $('slX').value = x; $('vX').textContent = (+x).toFixed(1);
+  send('x ' + (+x).toFixed(2));
+}
+
+// ползунок: шлём не чаще 20 раз в секунду
+let slT = null;
+$('slX').oninput = () => {
+  $('vX').textContent = (+$('slX').value).toFixed(1);
+  if (slT) return;
+  slT = setTimeout(() => { slT = null; send('x ' + (+$('slX').value).toFixed(2)); }, 50);
+};
+$('slU').oninput = () => { $('vU').textContent = (+$('slU').value).toFixed(1); };
+$('slU').onchange = () => send('u ' + $('slU').value);
+$('slS').oninput = () => { $('vS').textContent = $('slS').value; };
+$('slS').onchange = () => send('s ' + $('slS').value);
+
+$('bOn').onclick = async () => {
+  await send('u ' + $('slU').value); await send('s ' + $('slS').value); await send('on');
+};
+$('bOff').onclick = () => { stopSwing(); send('off'); };
+$('bZero').onclick = () => { $('slX').value = 0; $('vX').textContent = '0.0'; send('z'); };
+$('bDir').onclick = () => { $('slX').value = 0; $('vX').textContent = '0.0'; send('dir'); };
+
+function stopSwing() { if (swingT) { clearTimeout(swingT); swingT = null; } $('bSwing').classList.remove('on'); }
+function swingStep() {
+  swingSide = -swingSide;
+  goX(22 * swingSide);
+  const t = 44 / +$('slS').value * 1000 + 400;      // весь ход + пауза
+  swingT = setTimeout(swingStep, t);
+}
+$('bSwing').onclick = () => { if (swingT) stopSwing(); else { $('bSwing').classList.add('on'); swingStep(); } };
+
+$('bSend').onclick = () => { const v = $('cmd').value.trim(); if (v) send(v); $('cmd').value = ''; };
+$('cmd').onkeydown = e => { if (e.key === 'Enter') $('bSend').onclick(); };
+
+$('bConn').onclick = async () => {
+  if (!('serial' in navigator)) { alert('Нужен Chrome или Edge'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    $('st').textContent = 'подключено';
+    $('bConn').classList.add('on');
+    readLoop();
+    setTimeout(() => send('?'), 300);
+  } catch (e) { log('ошибка: ' + e.message); }
+};
+
+async function readLoop() {
+  const reader = port.readable.getReader(), dec = new TextDecoder();
+  let buf = '';
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value);
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+        const m = l.match(/^pos (-?[\d.]+)$/);
+        if (m) { $('pos').textContent = (+m[1]).toFixed(1) + ' мм'; continue; }
+        if (l) log(l);
+        const on = l.match(/ on (\d)/);
+        if (on) { $('bOn').classList.toggle('on', on[1] === '1'); $('st').textContent = on[1] === '1' ? 'мотор включён' : 'мотор отпущен'; }
+      }
+    }
+  } catch (e) { log('порт: ' + e.message); }
+  $('st').textContent = 'отключено'; $('bConn').classList.remove('on'); writer = null;
+}
+</script>
+</body>
+</html>
