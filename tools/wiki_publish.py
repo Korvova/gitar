@@ -54,6 +54,7 @@ TITLES = {
     "t-magnitnaja-versija-2": "💤Т. Магнитная версия 2.0",
     "t-magnitnyj-krivoshyp": "💤Т. Магнитный + Кривошип",
     "t-motorchik-v-telezhki": "⌛Т. Моторчик в тележке",
+    "t-sborka-lazernaja-rezka": "⌛Т. Сборка: лазерная резка",
     "hronika": "📜Хроника",
 }
 
