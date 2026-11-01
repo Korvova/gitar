@@ -105,6 +105,9 @@ p012drum = tweak(resolve("process", "0.12mm High Quality @BBL P2S"),
                       enable_support=1, support_on_build_plate_only=1,
                       support_type="normal(auto)", support_top_z_distance=0.2))
 p012drum_j = write_json(p012drum, "p012drum.json")
+# полоса дна грифа (опыт 20.8): заполнение 100%, без кайм — по диагонали стола впритык
+p020full = tweak(resolve("process", "0.20mm Standard @BBL P2S"), dict(COMMON, **{"sparse_infill_density": "100%", "sparse_infill_pattern": "zig-zag", "brim_type": "no_brim"}))
+p020full_j = write_json(p020full, "p020full.json")
 
 # ---------- ориентация STL ----------
 def prep(name, transform=None, copies=1, tag=""):
@@ -238,6 +241,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("104_polosa_grifa", p020full_j,     # опыт «дно грифа в руках» (test_polosa_grifa.py, вики 20.8): полоса 2.5 × 295, 52 → 58, по диагонали
+     prep("test_polosa_grifa", ID)),
     ("103_stend_gb1806", p020_j,          # стенд одного пальца под GB1806 (gitara_motor2.py): плита, рейка m1 на гребне, тележка-клетка стоя,
      prep("m2_osnova", ID) + prep("m2_telezhka", ID) + prep("m2_kryshka", FLIP) + prep("m2_shesternya", ID, copies=2) + prep("m2_lozhe", ID)),   # крышка крышей на стол, шестерня z14 (+ запас), ложе
     ("102_telezhka_shire", p020_j,        # стенд 101: только рама-тележка с полозьями по ширине коробки (±16.8 вместо ±12) — против перекоса, зазор вокруг рейки 1.5 (было 0.5)
@@ -397,5 +402,7 @@ for plate in plates:
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     ok = os.path.exists(out)
     print(f"{name}: exit={r.returncode} file={'OK' if ok else 'НЕТ!'} ({len(stls)} дет.)")
+    if not ok:                                   # почему не собрался — хвост вывода слайсера
+        print(*(r.stdout + r.stderr).strip().splitlines()[-8:], sep="\n")
 
 print("done")
