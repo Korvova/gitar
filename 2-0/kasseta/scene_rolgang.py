@@ -49,6 +49,7 @@ stl("rg_osnovanie_niz", "основание: низ", mat("основание", 
 stl("rg_osnovanie_verh", "основание: верх — палуба со штырьками (на клей)", mat("палуба", (0.70, 0.78, 0.85, 1), 0.35))
 stl("rg_kryshka", "крышка над верхними шестернями", mat("крышка", (0.70, 0.75, 0.85, 1), 0.25))
 stl("rg_rels", "рельс тележки", mat("рельс", (0.55, 0.55, 0.6, 1)))
+stl("rg_probka", "пробка прорези (клей)", mat("пробка", (0.95, 0.15, 0.15, 1)))
 bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=27.8 / 2, depth=12.23, location=(0, Y_P, 1.2 + 12.23 / 2))
 bpy.context.object.name = "гимбал 2204 (неподвижен)"
 bpy.context.object.data.materials.append(mat("мотор", (0.12, 0.12, 0.14, 1), 0.85))

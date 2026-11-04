@@ -35,7 +35,7 @@ HEX = 5.0
 Z_D1 = ZW + 1.5                            # верх палубы 18.35
 Z_L0, Z_L1 = Z_D1 + 0.1, Z_D1 + 0.1 + T    # нижний слой 18.45 … 21.45
 Z_U0, Z_U1 = Z_L1 + 0.1, Z_L1 + 0.1 + T    # верхний 21.55 … 24.55
-Z_CV0, Z_CV1 = Z_U1 + 0.1, Z_U1 + 0.6      # крышка над верхними шестернями 24.65 … 25.15
+Z_CV0, Z_CV1 = Z_U1 + 0.1, Z_U1 + 1.1      # крышка над верхними шестернями 24.65 … 25.15
 Z_C0, Z_C1 = Z_CV1 + 0.1, Z_CV1 + 2.1      # тележка 25.25 … 27.25
 # раскладка по Y (вдоль грифа)
 W, L = 24.0, 50.0
@@ -176,7 +176,13 @@ for x, y in CORNERS:
     b_verh -= Pos(x, y, ZW + 0.65 - 0.01) * Cylinder(1.65, 1.32)                        # глухая дырка 1.3
 b = b_niz + b_verh                                                                     # для проверок — собранное
 
-kr = BB(-L / 2, L / 2, 0, 13.6, Z_CV0, Z_CV1)
+# 05.11 (владелец): ограничитель тележки — штырёк Ø2 снизу тележки ходит в прорези крышки; крышка 1.0 и длиннее (±27);
+# прорезь открыта с +X (туда заводится штырёк при сборке), потом в неё вклеивается пробка — тележка не дальше ±24.2
+KR_X, Y_SL, PIN_R, SL_W = 27.0, 6.0, 1.0, 2.4
+X_SL = TRAVEL_STOP = 24.2 + PIN_R + 0.0                                              # конец прорези (центр штырька до ±24.2)
+kr = BB(-KR_X, KR_X, 0, 13.6, Z_CV0, Z_CV1)
+kr -= BB(-X_SL, KR_X + 1, Y_SL - SL_W / 2, Y_SL + SL_W / 2, Z_CV0 - 0.1, Z_CV1 + 0.1)
+probka = BB(X_SL, KR_X, Y_SL - SL_W / 2 + 0.05, Y_SL + SL_W / 2 - 0.05, Z_CV0, Z_CV1)
 # 04.11 (владелец): без поддержек — шляпка рельса и губы полоза тележки со скосами 45° (как ласточкин хвост)
 Z_RS = Z_U1 - 1.0                                                                   # низ шляпки у ножки
 
@@ -198,6 +204,7 @@ rl += prof_x([(Y_R - R_B / 2, Z_RB), (Y_R + R_B / 2, Z_RB), (Y_R + R_T / 2, Z_RT
 
 # тележка: пластина, рейка вниз в верхний слой, полоз вокруг шляпки рельса
 ct = BB(-RK_HALF, RK_HALF, 1.6, W - 0.1, Z_C0, Z_C1)                               # пластина до края полоза
+ct += Pos(0, Y_SL, (Z_CV0 + 0.2 + Z_C0) / 2) * Cylinder(PIN_R, Z_C0 - Z_CV0 - 0.2 + 0.01)   # штырёк-ограничитель в прорезь крышки
 rk = BB(-RK_HALF, RK_HALF, Y_RK + DED, RK_BACK, Z_U0, Z_C0 + 0.01)
 tn, th = math.tan(PA), (PITCH / 2 - 0.1) / 2
 for i in range(-4, 5):
@@ -212,7 +219,7 @@ ct += BB(-RK_HALF, RK_HALF, RK_BACK - 0.01, W - 0.1, Z_RB + 0.1, Z_C0 + 0.01)
 ct -= prof_x([(Y_R - R_B / 2 - C_G, Z_RB + 0.09), (Y_R + R_B / 2 + C_G, Z_RB + 0.09), (Y_R + R_T / 2 + C_G, Z_RT + 0.1),
               (Y_R - R_T / 2 - C_G, Z_RT + 0.1)], -RK_HALF - 1, RK_HALF + 1)
 
-parts = [("rg_osnovanie_niz", b_niz), ("rg_osnovanie_verh", b_verh), ("rg_kryshka", kr), ("rg_rels", rl), ("rg_shesternya_centr", g_c),
+parts = [("rg_osnovanie_niz", b_niz), ("rg_osnovanie_verh", b_verh), ("rg_kryshka", kr), ("rg_probka", probka), ("rg_rels", rl), ("rg_shesternya_centr", g_c),
          ("rg_shesternya_kraj_prav", G_K[1]), ("rg_shesternya_kraj_lev", G_K[-1]), ("rg_promezh", g_i), ("rg_telezhka", ct)]
 import json
 json.dump({"PH_I": {str(k): v for k, v in PH_I.items()}, "S": S, "Y_P": Y_P, "Y_I": Y_I, "Z_L0": Z_L0, "FL_COLLAR": FL_COLLAR,
@@ -231,7 +238,7 @@ motor = Pos(0, Y_P, T_BASE + MOT_H / 2) * Cylinder(MOT_D / 2, MOT_H)
 
 
 def assembly(c):
-    a = {"основание": b, "крышка": kr, "рельс": rl, "мотор": motor, "фланец": fl, "головки": heads,
+    a = {"основание": b, "крышка": kr, "пробка": probka, "рельс": rl, "мотор": motor, "фланец": fl, "головки": heads,
          "средняя": Pos(0, Y_P, FL_COLLAR) * Rot(0, 0, -math.degrees(c / RP)) * g_c,
          "тележка": Pos(c, 0, 0) * ct}
     for sx in (1, -1):
@@ -241,7 +248,7 @@ def assembly(c):
 
 
 SKIP = [{"мотор", "основание"}, {"мотор", "фланец"}, {"фланец", "головки"}, {"мотор", "головки"}, {"фланец", "средняя"},
-        {"основание", "крышка"}, {"основание", "рельс"}]
+        {"основание", "крышка"}, {"основание", "рельс"}, {"крышка", "пробка"}]
 bad = 0
 for c in (-24, -17.3, -12, -8.7, -6, -2.2, 0, 1.5, 6.8, 9.1, 13, 18.4, 24):
     a = assembly(c)
@@ -267,3 +274,8 @@ for dy in (-4, -8, -14, -22, -30):
         bad += 1
         print("мотор не задвигается: сдвиг %d — %.3f" % (dy, v))
 print("рольганг 2204: %s" % ("чисто" if not bad else "ЕСТЬ ПЕРЕСЕЧЕНИЯ: %d" % bad))
+
+# ограничитель: на краях хода штырёк не доходит до концов прорези, на ±24.6 — упирается
+for c in (24.0, -24.0, 24.6, -24.6):
+    v = (Part() + (Pos(c, 0, 0) * ct & (kr + probka))).volume
+    print("ограничитель при c = %+.1f: %.3f мм³ %s" % (c, v, "(свободно)" if abs(c) < 24.2 else "(упор)"))
