@@ -243,8 +243,8 @@ plates = [
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("108_rolgang_osnovanie", p012_j,      # рольганг 2204 (kasseta/rolgang_2204.py): основание из двух частей на клей — без поддержек (идея владельца):
      prep("rg_osnovanie_niz", ID) + prep("rg_osnovanie_verh", ID), "cool"),                                        # низ дном на стол, верх палубой на стол
-    ("109_rolgang_detali", p012_j,         # рольганг: крышка, рельс (шляпкой на стол), средняя шестерня (шестернёй на стол), крайние правая • и левая ••,
-     prep("rg_kryshka", ID) + prep("rg_rels", FLIP) + prep("rg_shesternya_centr", FLIP) + prep("rg_shesternya_kraj_prav", ID) +   # промежуточные ×3 (1 запас),
+    ("109_rolgang_detali", p012_j,         # рольганг: крышка, рельс (полоской на стол, гребень вверх), средняя шестерня (шестернёй на стол), крайние правая • и левая ••,
+     prep("rg_kryshka", ID) + prep("rg_rels", ID) + prep("rg_shesternya_centr", FLIP) + prep("rg_shesternya_kraj_prav", ID) +   # промежуточные ×3 (1 запас),
      prep("rg_shesternya_kraj_lev", ID) + prep("rg_promezh", ID, copies=3) + prep("rg_telezhka", FLIP) + prep("kas2204_flanec", ID), "cool"),   # тележка, фланец
     ("107_kasseta_2204", p012_j,          # кассета под 2204 (kasseta/kasseta_2204.py) — БЕЗ поддержек (04.11): основание стоя (мосты ~30 мм), фланец, ножка с шестернёй
      prep("kas2204_osnovanie", ID) + prep("kas2204_flanec", ID) + prep("kas2204_nozhka_shesternya", FLIP, copies=2) +           # шестернёй на стол ×2;

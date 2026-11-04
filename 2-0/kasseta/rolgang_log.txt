@@ -3,11 +3,11 @@
 rg_osnovanie_niz: 50.0 x 24.0 x 18.1, solids 1
 rg_osnovanie_verh: 50.0 x 24.0 x 7.8, solids 1
 rg_kryshka: 50.0 x 13.6 x 0.5, solids 1
-rg_rels: 50.0 x 2.2 x 3.0, solids 1
+rg_rels: 50.0 x 4.2 x 2.2, solids 1
 rg_shesternya_centr: 13.4 x 13.4 x 9.7, solids 1
 rg_shesternya_kraj_prav: 13.7 x 13.7 x 6.1, solids 1
 rg_shesternya_kraj_lev: 13.7 x 13.7 x 6.1, solids 1
 rg_promezh: 11.7 x 11.3 x 2.9, solids 1
-rg_telezhka: 20.0 x 20.4 x 5.7, solids 1
+rg_telezhka: 20.0 x 22.3 x 5.7, solids 1
 средняя на пол-зуба × промежуточная: 7.22, × тележка: 9.62 (> 0 — в зацеплении)
 рольганг 2204: чисто

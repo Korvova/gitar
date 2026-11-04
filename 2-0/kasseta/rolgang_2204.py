@@ -140,7 +140,8 @@ g_i = gear(ZI, T - 0.1) - Cylinder(1.7, 20)      # на 0.1 тоньше: вер
 # основание: дно, стенки, палуба над мотором, штырьки, стойки рельса
 b = BB(-L / 2, L / 2, 0, W, 0, T_BASE)
 for y0, y1 in ((0, 1.5), (W - 1.5, W)):                                             # передняя и задняя стенки
-    b += BB(-L / 2, L / 2, y0, y1, ZW - 0.01, Z_CV0)
+    # 05.11: задняя — ниже полоза тележки (паз ласточкина хвоста идёт до y 23.9), передняя — до крышки
+    b += BB(-L / 2, L / 2, y0, y1, ZW - 0.01, Z_CV0 if y0 == 0 else Z_U0 + 0.9)
     for sx in (1, -1):                                                              # до дна — только по краям (мотор задвигается
         b += BB(*sorted((sx * 14.4, sx * L / 2)), y0, y1, T_BASE - 0.01, ZW + 0.01)   # спереди между опорами)
 b += BB(-L / 2, L / 2, 1.5 - 0.01, W - 1.5 + 0.01, ZW, Z_D1)                         # палуба
@@ -185,12 +186,18 @@ def prof_x(pts, x0, x1):
     return Pos(x0, 0, 0) * Rot(90, 90, 0) * extrude(make_face(Polyline(*(pts + [pts[0]]))), x1 - x0)
 
 
-rl = BB(-L / 2, L / 2, STEM_Y0, STEM_Y1, Z_U0, Z_RS + 0.01)
-rl += prof_x([(STEM_Y0, Z_RS), (STEM_Y1, Z_RS), (RAIL_Y1, Z_RS + 0.6), (RAIL_Y1, Z_U1), (RAIL_Y0, Z_U1), (RAIL_Y0, Z_RS + 0.6)],
-             -L / 2, L / 2)
+# 05.11 (владелец): как в телескопе — рельс = полоска + гребень ласточкина хвоста (как у ползуна, расширяется вверх),
+# тележка = паз ласточкина хвоста снизу (как у тележки телескопа). Губы и шляпка со скосами слайсер всё равно ругал
+Y_R = 20.5                                                                          # середина рельса
+R_B, R_T, R_H = 3.0, 4.2, 1.2                                                       # гребень: низ, верх, высота
+Z_RL0 = Z_U0                                                                        # полоска на стойках
+Z_RB = Z_RL0 + 1.0                                                                  # низ гребня 22.55
+Z_RT = Z_RB + R_H                                                                   # верх гребня 23.75
+rl = BB(-L / 2, L / 2, Y_R - R_B / 2, Y_R + R_B / 2, Z_RL0, Z_RB + 0.01)
+rl += prof_x([(Y_R - R_B / 2, Z_RB), (Y_R + R_B / 2, Z_RB), (Y_R + R_T / 2, Z_RT), (Y_R - R_T / 2, Z_RT)], -L / 2, L / 2)
 
 # тележка: пластина, рейка вниз в верхний слой, полоз вокруг шляпки рельса
-ct = BB(-RK_HALF, RK_HALF, 1.6, 22.0, Z_C0, Z_C1)
+ct = BB(-RK_HALF, RK_HALF, 1.6, W - 0.1, Z_C0, Z_C1)                               # пластина до края полоза
 rk = BB(-RK_HALF, RK_HALF, Y_RK + DED, RK_BACK, Z_U0, Z_C0 + 0.01)
 tn, th = math.tan(PA), (PITCH / 2 - 0.1) / 2
 for i in range(-4, 5):
@@ -199,11 +206,11 @@ for i in range(-4, 5):
           (xc + th + DED * tn, Y_RK + DED)]
     rk += Pos(0, 0, Z_U0) * extrude(make_face(Polyline(*(pr + [pr[0]]))), Z_C0 + 0.01 - Z_U0)   # зубья до пластины — без нависания
 ct += rk & BB(-RK_HALF, RK_HALF, 0, W, Z_U0 - 1, Z_C1)
-for y0, y1 in ((19.0, 19.3), (21.7, 22.0)):                                          # стенки полоза
-    ct += BB(-RK_HALF, RK_HALF, y0, y1, Z_RS - 0.31, Z_C0 + 0.01)
-# губы под скосы шляпки с зазором 0.15 (скос 45° — печать вверх ногами без поддержек)
-ct += prof_x([(19.0, Z_RS - 0.31), (19.89, Z_RS - 0.31), (19.89, Z_RS - 0.11), (19.29, Z_RS + 0.49), (19.0, Z_RS + 0.49)], -RK_HALF, RK_HALF)
-ct += prof_x([(22.0, Z_RS - 0.31), (22.0, Z_RS + 0.49), (21.71, Z_RS + 0.49), (21.11, Z_RS - 0.11), (21.11, Z_RS - 0.31)], -RK_HALF, RK_HALF)
+# полоз: брусок вдоль тележки с пазом ласточкина хвоста под гребень рельса (зазор 0.15 на сторону, 0.1 сверху)
+C_G = 0.15
+ct += BB(-RK_HALF, RK_HALF, RK_BACK - 0.01, W - 0.1, Z_RB + 0.1, Z_C0 + 0.01)
+ct -= prof_x([(Y_R - R_B / 2 - C_G, Z_RB + 0.09), (Y_R + R_B / 2 + C_G, Z_RB + 0.09), (Y_R + R_T / 2 + C_G, Z_RT + 0.1),
+              (Y_R - R_T / 2 - C_G, Z_RT + 0.1)], -RK_HALF - 1, RK_HALF + 1)
 
 parts = [("rg_osnovanie_niz", b_niz), ("rg_osnovanie_verh", b_verh), ("rg_kryshka", kr), ("rg_rels", rl), ("rg_shesternya_centr", g_c),
          ("rg_shesternya_kraj_prav", G_K[1]), ("rg_shesternya_kraj_lev", G_K[-1]), ("rg_promezh", g_i), ("rg_telezhka", ct)]
