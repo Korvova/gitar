@@ -117,11 +117,10 @@ def load(n):
     return import_step(os.path.join(HERE, n + ".step"))
 
 
-sld = load("04_polzun")
-for x in (-SP_FLOAT / 2, SP_FLOAT / 2):
-    sld = sld + Pos(x, Y_FLOAT, (Z_GEAR0 + 0.3 + Z_PLATE1) / 2) * Cylinder(1.0, Z_PLATE1 - Z_GEAR0 - 0.3)
-flo = load("03_shesternya_plav_Z12") - Cylinder(1.2, 50)
-cart = load("05_telezhka")
+import fdm_detali as F
+sld = F.polzun() + F.shtyr_prutok()                 # с вклеенным прутком стопора
+flo = F.plav()
+cart = F.telezhka()
 motor = Pos(0, Y_PIN, T_BASE + MOT_H / 2) * Cylinder(MOT_D / 2, MOT_H)
 heads = Pos(0, Y_PIN, Z_MTOP + FL_T + HEAD_H / 2) * (Cylinder(7.9, HEAD_H) - Cylinder(4.1, HEAD_H + 0.1))  # кольцо головок
 bad = 0

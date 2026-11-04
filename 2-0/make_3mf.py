@@ -243,15 +243,15 @@ plates = [
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("107_kasseta_2204", p012drum_j,      # кассета под гимбал 2204 с Авито (kasseta/kasseta_2204.py): основание с полкой (стенки выше — под фланцем), фланец на торец
      prep("kas2204_osnovanie", ID) + prep("kas2204_flanec", ID) + prep("kas2204_nozhka_shesternya", ID, copies=2) +             # мотора, ножка с шестернёй ×2; ползун, тележка,
-     prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) + prep("kas2204_upor", ID, copies=2) +   # плавающие ×4, упор-вкладыш ×2
+     prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka_fdm", FLIP) + prep("kas_plav_fdm", ID, copies=4) + prep("kas2204_upor", ID, copies=2) +   # плавающие ×4, упор-вкладыш ×2
      prep("kas_podstavka", ID), "cool"),
     ("106_kasseta_maket_motora", p012drum_j,  # кассета целиком + макет мотора (kasseta/fdm_kasseta.py, maket_motora.py): основание, ползун, тележка,
-     prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие ×4 (2 запас),
+     prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka_fdm", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие ×4 (2 запас),
      prep("kas_shesternya_motora", ID, copies=2) + prep("kas_upor", ID, copies=2) +                                                # шестерня мотора ×2, упоры;
      prep("kas_maket_korpus", ID) + prep("kas_maket_vystup", ID) + prep("kas_maket_os", ID, copies=2) + prep("kas_maket_ruchka", ID) +   # макет мотора:
      prep("kas_podstavka", ID), "cool"),                                                                                              # корпус, выступ, ось, ручка, подставка
     ("105_kasseta_proba", p012drum_j,     # кассета владельца (kasseta/fdm_kasseta.py): проба хода тележки без мотора; 0.12, поддержки только от стола
-     prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие шестерни ×4 (2 запас)
+     prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka_fdm", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие шестерни ×4 (2 запас)
      prep("kas_shesternya_motora", ID) + prep("kas_upor", ID, copies=2), "cool"),                                                  # шестерня мотора — на потом
     ("104_polosa_grifa", p020full_j,     # опыт «дно грифа в руках» (test_polosa_grifa.py, вики 20.8): полоса 2.5 × 295, 52 → 58, по диагонали
      prep("test_polosa_grifa", ID)),
