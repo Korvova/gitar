@@ -241,9 +241,11 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
-    ("106_kasseta_maket_motora", p012_j,  # макет мотора для кассеты (kasseta/maket_motora.py): корпус штырьками вверх, выступ, ось стоя (+запас), ручка, подставка
-     prep("kas_maket_korpus", FLIP) + prep("kas_maket_vystup", ID) + prep("kas_maket_os", ID, copies=2) + prep("kas_maket_ruchka", ID) +
-     prep("kas_podstavka", ID), "cool"),
+    ("106_kasseta_maket_motora", p012drum_j,  # кассета целиком + макет мотора (kasseta/fdm_kasseta.py, maket_motora.py): основание, ползун, тележка,
+     prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие ×4 (2 запас),
+     prep("kas_shesternya_motora", ID, copies=2) + prep("kas_upor", ID, copies=2) +                                                # шестерня мотора ×2, упоры;
+     prep("kas_maket_korpus", FLIP) + prep("kas_maket_vystup", ID) + prep("kas_maket_os", ID, copies=2) + prep("kas_maket_ruchka", ID) +   # макет мотора:
+     prep("kas_podstavka", ID), "cool"),                                                                                              # корпус, выступ, ось, ручка, подставка
     ("105_kasseta_proba", p012drum_j,     # кассета владельца (kasseta/fdm_kasseta.py): проба хода тележки без мотора; 0.12, поддержки только от стола
      prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие шестерни ×4 (2 запас)
      prep("kas_shesternya_motora", ID) + prep("kas_upor", ID, copies=2), "cool"),                                                  # шестерня мотора — на потом
