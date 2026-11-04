@@ -47,6 +47,7 @@ stl("kas2204_osnovanie", "основание под 2204 (не двигаетс�
 bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=27.8 / 2, depth=12.23, location=(0, Y_PIN, 1.2 + 12.23 / 2))
 bpy.context.object.name = "гимбал 2204 (неподвижен; крутится торец)"
 bpy.context.object.data.materials.append(mat("мотор", (0.12, 0.12, 0.14, 1), 0.8))
+stl("kas2204_upor", "упор-вкладыш в конце канавки (клей)", mat("упор", (0.95, 0.15, 0.15, 1)))
 fl = stl("kas2204_flanec", "фланец на торец мотора (4 × М2 на Ø12)", mat("фланец", (0.55, 0.55, 0.6, 1)))
 nz = stl("kas2204_nozhka_shesternya", "ножка с шестернёй Z18", mat("шестерня мотора", (0.95, 0.55, 0.20, 1)))
 flo = [stl("kas_plav_fdm", "плавающая Z12 %d" % (i + 1), mat("плавающие", (0.20, 0.75, 0.35, 1))) for i in range(2)]

@@ -243,7 +243,7 @@ plates = [
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("107_kasseta_2204", p012drum_j,      # кассета под гимбал 2204 с Авито (kasseta/kasseta_2204.py): основание с полкой (стенки выше — под фланцем), фланец на торец
      prep("kas2204_osnovanie", ID) + prep("kas2204_flanec", ID) + prep("kas2204_nozhka_shesternya", ID, copies=2) +             # мотора, ножка с шестернёй ×2; ползун, тележка,
-     prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) + prep("kas_upor", ID, copies=2) +   # плавающие ×4, упоры — как в 106
+     prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) + prep("kas2204_upor", ID, copies=2) +   # плавающие ×4, упор-вкладыш ×2
      prep("kas_podstavka", ID), "cool"),
     ("106_kasseta_maket_motora", p012drum_j,  # кассета целиком + макет мотора (kasseta/fdm_kasseta.py, maket_motora.py): основание, ползун, тележка,
      prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие ×4 (2 запас),
