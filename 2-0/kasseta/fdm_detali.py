@@ -31,13 +31,35 @@ def load(n):
     return import_step(os.path.join(HERE, n + ".step"))
 
 
-def polzun():
+def _polzun_celyi():
     s = load("04_polzun")
     for x in (-SP_FLOAT / 2, SP_FLOAT / 2):
         s = s + Pos(x, Y_FLOAT, (Z_GEAR0 + 0.3 + Z_PLATE1) / 2) * Cylinder(1.0, Z_PLATE1 - Z_GEAR0 - 0.3)
     s = s + Pos(-X_STOP, Y_A, Z_RIB + STOP_H / 2 - 0.01) * Cylinder(STOP_R, STOP_H + 0.02)       # выступ −X (дорожка A)
     s = s - Pos(X_STOP, Y_B, Z_RIB - 0.75) * Cylinder(0.925, 1.6)                                 # гнездо под пруток +X (B)
     return s
+
+
+# 04.11 (владелец): печать без поддержек — ползун из двух частей: ПЛАСТИНА (штырьки, рейка, выступ в паз стенки;
+# печать вверх ногами — всё торчит вверх) и ГРЕБЕНЬ ласточкина хвоста (узкой стороной на стол, расширяется вверх 30°),
+# гребень вклеивается в паз пластины глубиной 0.4 (паз по ширине основания гребня + 0.05 на сторону)
+RIB_Y0, RIB_Y1, RECESS = 9.5, 14.5, 0.4
+_UP = Pos(0, 0, Z_PLATE1 + 5) * Box(60, 60, 10)                                                  # всё выше пластины
+
+
+def polzun_plita():
+    pl = _polzun_celyi() - _UP
+    return pl - Pos(0, (RIB_Y0 + RIB_Y1) / 2, Z_PLATE1 - RECESS / 2 + 0.01) * Box(30, RIB_Y1 - RIB_Y0 + 0.1, RECESS + 0.02)
+
+
+def polzun_greben():
+    g = _polzun_celyi() & _UP
+    return g + Pos(0, (RIB_Y0 + RIB_Y1) / 2, Z_PLATE1 - RECESS / 2) * Box(26.0, RIB_Y1 - RIB_Y0, RECESS + 0.02)
+
+
+def polzun():
+    """собранный ползун (для проверок)"""
+    return polzun_plita() + polzun_greben()
 
 
 def shtyr_prutok():

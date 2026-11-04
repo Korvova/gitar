@@ -61,7 +61,11 @@ def rack(x1, x2, y_back, y_pitch, sign, phase, z0, z1):
 
 # ---------------- основание под 2204 ----------------
 b = BB(-L / 2, L / 2, 0, W, 0, T_BASE)
-b += BB(-L / 2, L / 2, 0, 1.5, ZW, Z_CART0 + 0.2)                                   # левая стенка
+# 04.11 (владелец): печать без поддержек — левая стенка до самого дна (мотор до y 2.6 не доходит); у правой стенки опоры
+# по краям |x| ≥ 14.4 (мотор Ø27.8 задвигается между ними); между опорами — мосты ~29 мм
+b += BB(-L / 2, L / 2, 0, 1.5, T_BASE - 0.01, Z_CART0 + 0.2)                         # левая стенка — сплошная
+for sx in (1, -1):
+    b += BB(*sorted((sx * 14.4, sx * L / 2)), 22.5, W, T_BASE - 0.01, ZW + 0.01)     # опоры правой стенки
 b += BB(-L / 2, L / 2, 22.5, W, ZW, Z_PLATE0 - 0.05)                                # правая стенка с пазом
 b += BB(-L / 2, L / 2, 22.5, W, Z_PLATE1 + 0.05, Z_PLATE1 + 0.85)
 for x1, x2 in ((-L / 2, -L / 2 + 3), (L / 2 - 3, L / 2)):                           # стойки стенок на концах
@@ -105,7 +109,9 @@ nozh += Pos(0, 0, -(FL_T + 0.3 - 0.0)) * extrude(RegularPolygon(HEX / 2 / math.c
 # упор-вкладыш: заполняет конец канавки у открытого края (−X), на клей — ползун ±12, тележка ±24 (зеркально закрытому концу)
 UP_X1 = -(TONGUE / 2 + 12.05)
 upor = BB(UP_X1 - 3.0, UP_X1, 22.55, GROOVE_Y1 - 0.05, Z_PLATE0, Z_PLATE1)
-parts = [("kas2204_osnovanie", b), ("kas2204_flanec", fl), ("kas2204_nozhka_shesternya", nozh), ("kas2204_upor", upor)]
+import fdm_detali as F
+parts = [("kas2204_osnovanie", b), ("kas2204_flanec", fl), ("kas2204_nozhka_shesternya", nozh), ("kas2204_upor", upor),
+         ("kas_polzun_plita", F.polzun_plita()), ("kas_polzun_greben", F.polzun_greben())]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
