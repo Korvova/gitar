@@ -7,7 +7,7 @@ r"""РОЛЬГАНГ под гимбал 2204 (04.11.2026, идея владел
 Все шестерни на штырьках Ø3 из «палубы» над мотором; сверху их держат крышка (над верхними) и рельс тележки (над
 промежуточными) — отдельная деталь «верхняя рамка», клеится на стенки после того, как шестерни надеты.
 Головка зуба 0.85 m у шестерён и 0.7 m у рейки — без подреза малых шестерён. Всё печатается без поддержек.
-Детали: rg_osnovanie, rg_ramka, rg_shesternya_centr (ножка в шестигранник фланца kas2204_flanec), rg_shesternya_kraj ×2,
+Детали: rg_osnovanie_niz + rg_osnovanie_verh (на клей), rg_kryshka, rg_rels, rg_shesternya_centr (в шестигранник kas2204_flanec), крайние прав/лев,
 rg_promezh ×2, rg_telezhka. Запуск: ..\.venv-b123d\Scripts\python rolgang_2204.py
 """
 import math
@@ -160,6 +160,19 @@ for x in (-23.5, 23.5):
         b -= Pos(x, y, T_BASE / 2) * Cylinder(1.1, T_BASE + 0.2)
 
 # крышка над верхними шестернями — клеится на переднюю стенку; рельс тележки — клеится на 3 стойки
+# 04.11 (владелец): основание из двух частей — без поддержек. Разрез по низу палубы (ZW): НИЗ — дно, опоры стенок и 4
+# угловые стойки (дном на стол), ВЕРХ — палуба со штырьками, стенки, стойки рельса (палубой на стол). На стойках низа
+# фиксаторы Ø3 × 2, в палубе дырки Ø3.3 × 2.2; собрать на клей
+_LOWZ = BB(-40, 40, -10, 40, -1, ZW)
+b_niz = b & _LOWZ
+b_verh = b - _LOWZ
+CORNERS = [(sx * 21.5, y) for sx in (1, -1) for y in (2.25, 21.75)]
+for x, y in CORNERS:
+    b_niz += BB(x - 3.5, x + 3.5, y - 2.25, y + 2.25, T_BASE - 0.01, ZW)               # угловые стойки 7 × 4.5
+    b_niz += Pos(x, y, ZW + 1.0) * Cylinder(1.5, 2.0)                                  # фиксатор
+    b_verh -= Pos(x, y, ZW + 1.1) * Cylinder(1.65, 2.2)
+b = b_niz + b_verh                                                                     # для проверок — собранное
+
 kr = BB(-L / 2, L / 2, 0, 13.6, Z_CV0, Z_CV1)
 rl = BB(-L / 2, L / 2, STEM_Y0, STEM_Y1, Z_U0, Z_U1 - 1.0 + 0.01) + BB(-L / 2, L / 2, RAIL_Y0, RAIL_Y1, Z_U1 - 1.0, Z_U1)
 
@@ -177,7 +190,7 @@ for y0, y1, ly0, ly1 in ((19.0, 19.3, 19.0, 19.8), (21.7, 22.0, 21.2, 22.0)):   
     ct += BB(-RK_HALF, RK_HALF, y0, y1, Z_U1 - 1.3, Z_C0 + 0.01)
     ct += BB(-RK_HALF, RK_HALF, ly0, ly1, Z_U1 - 1.3, Z_U1 - 1.1)
 
-parts = [("rg_osnovanie", b), ("rg_kryshka", kr), ("rg_rels", rl), ("rg_shesternya_centr", g_c),
+parts = [("rg_osnovanie_niz", b_niz), ("rg_osnovanie_verh", b_verh), ("rg_kryshka", kr), ("rg_rels", rl), ("rg_shesternya_centr", g_c),
          ("rg_shesternya_kraj_prav", G_K[1]), ("rg_shesternya_kraj_lev", G_K[-1]), ("rg_promezh", g_i), ("rg_telezhka", ct)]
 import json
 json.dump({"PH_I": {str(k): v for k, v in PH_I.items()}, "S": S, "Y_P": Y_P, "Y_I": Y_I, "Z_L0": Z_L0, "FL_COLLAR": FL_COLLAR,

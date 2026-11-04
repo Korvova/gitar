@@ -1,6 +1,7 @@
 сторона +1: промежуточная 24.70° (0.000), низ крайней повёрнут на -13.00° (0.000)
 сторона -1: промежуточная 9.20° (0.000), низ крайней повёрнут на 12.92° (0.000)
-rg_osnovanie: 50.0 x 24.0 x 24.7, solids 1
+rg_osnovanie_niz: 50.0 x 24.0 x 18.9, solids 1
+rg_osnovanie_verh: 50.0 x 24.0 x 7.8, solids 1
 rg_kryshka: 50.0 x 13.6 x 0.5, solids 1
 rg_rels: 50.0 x 2.2 x 3.0, solids 1
 rg_shesternya_centr: 13.4 x 13.4 x 9.7, solids 1
