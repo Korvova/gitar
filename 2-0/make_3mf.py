@@ -241,6 +241,11 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("108_rolgang_osnovanie", p012drum_j,  # рольганг 2204 (kasseta/rolgang_2204.py): основание стоя, поддержки от стола только под палубой над мотором
+     prep("rg_osnovanie", ID), "cool"),
+    ("109_rolgang_detali", p012_j,         # рольганг: крышка, рельс (шляпкой на стол), средняя шестерня (шестернёй на стол), крайние правая • и левая ••,
+     prep("rg_kryshka", ID) + prep("rg_rels", FLIP) + prep("rg_shesternya_centr", FLIP) + prep("rg_shesternya_kraj_prav", ID) +   # промежуточные ×3 (1 запас),
+     prep("rg_shesternya_kraj_lev", ID) + prep("rg_promezh", ID, copies=3) + prep("rg_telezhka", FLIP) + prep("kas2204_flanec", ID), "cool"),   # тележка, фланец
     ("107_kasseta_2204", p012_j,          # кассета под 2204 (kasseta/kasseta_2204.py) — БЕЗ поддержек (04.11): основание стоя (мосты ~30 мм), фланец, ножка с шестернёй
      prep("kas2204_osnovanie", ID) + prep("kas2204_flanec", ID) + prep("kas2204_nozhka_shesternya", FLIP, copies=2) +           # шестернёй на стол ×2;
      prep("kas_polzun_plita", FLIP) + prep("kas_polzun_greben", ID, copies=2) + prep("kas_telezhka_fdm", FLIP) +                # ползун: пластина вверх ногами + гребень ×2 (вклеить);
