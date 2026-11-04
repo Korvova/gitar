@@ -244,7 +244,7 @@ plates = [
     ("106_kasseta_maket_motora", p012drum_j,  # кассета целиком + макет мотора (kasseta/fdm_kasseta.py, maket_motora.py): основание, ползун, тележка,
      prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие ×4 (2 запас),
      prep("kas_shesternya_motora", ID, copies=2) + prep("kas_upor", ID, copies=2) +                                                # шестерня мотора ×2, упоры;
-     prep("kas_maket_korpus", FLIP) + prep("kas_maket_vystup", ID) + prep("kas_maket_os", ID, copies=2) + prep("kas_maket_ruchka", ID) +   # макет мотора:
+     prep("kas_maket_korpus", ID) + prep("kas_maket_vystup", ID) + prep("kas_maket_os", ID, copies=2) + prep("kas_maket_ruchka", ID) +   # макет мотора:
      prep("kas_podstavka", ID), "cool"),                                                                                              # корпус, выступ, ось, ручка, подставка
     ("105_kasseta_proba", p012drum_j,     # кассета владельца (kasseta/fdm_kasseta.py): проба хода тележки без мотора; 0.12, поддержки только от стола
      prep("kas_osnovanie", ID) + prep("kas_polzun_fdm", FLIP) + prep("kas_telezhka", FLIP) + prep("kas_plav_fdm", ID, copies=4) +   # плавающие шестерни ×4 (2 запас)
