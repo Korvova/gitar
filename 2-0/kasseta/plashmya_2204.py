@@ -113,14 +113,14 @@ grif -= BB(-TRAVEL - 3.0, TRAVEL + 3.0, Y_PR0 - 0.5, Y_PR1 + 0.5, -0.1, Z_FL + 0
 # ---------------- крышка на крутящийся торец: 4 × М2 на Ø12, в центре винт М3 (головка — в гнезде, на клей) ----------------
 kr = Cylinder(9.0, 3.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
 kr -= Cylinder(1.65, 10)
-kr -= Pos(0, 0, 3.0 - 2.0) * extrude(RegularPolygon(HEX_R, 6), 2.1)                                          # шестигранная головка М3 (DIN 933, k 2)
+kr -= Pos(0, 0, 3.0 - 2.0) * Cylinder(3.0, 2.1, align=(Align.CENTER, Align.CENTER, Align.MIN))                # круглая головка М3 (DIN 912 из набора, k 3 — торчит на 1)
 for a in (0, 90, 180, 270):
     x, y = 6 * math.cos(math.radians(a + 45)), 6 * math.sin(math.radians(a + 45))
     kr -= Pos(x, y, 0) * Cylinder(1.1, 10)
     kr -= Pos(x, y, 3.0 - 1.5) * Cylinder(2.0, 1.6, align=(Align.CENTER, Align.CENTER, Align.MIN))          # головки М2
 
 # ---------------- ложе: ровная площадка 26 × 30 над мотором на 4 стойках (печать площадкой на стол, стойки вверх) ----------------
-Z_L0 = Z_K1 + 0.8                                                                       # над крышкой и головкой винта
+Z_L0 = Z_K1 + 1.8                                                                       # над головкой винта (торчит на 1 мм над крышкой) + 0.8
 lz = BB(-14.6, 14.6, -15, 15, Z_L0, Z_L0 + 2.0)                                   # шире — стойки не торчат за край
 for sx in (1, -1):
     for sy in (1, -1):
@@ -136,6 +136,7 @@ for n, p in parts:
 # ================= ПРОВЕРКА: ход ±24 =================
 motor = Pos(0, 0, Z_M0 + MOT_H / 2) * Cylinder(MOT_D / 2, MOT_H)
 vint = Pos(0, 0, (Z_G0 + Z_K1) / 2) * Cylinder(1.45, Z_K1 - Z_G0)
+golovka = Pos(0, 0, Z_K1 - 2.0) * Cylinder(2.75, 3.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
 bad = 0
 for c in (-24, -17.3, -9.1, -2.4, 0, 1.3, 7.7, 15.2, 24):
     a = -math.degrees(c / RP)
@@ -147,7 +148,8 @@ for c in (-24, -17.3, -9.1, -2.4, 0, 1.3, 7.7, 15.2, 24):
         if v > 0.01:
             bad += 1
             print("ПЕРЕСЕЧЕНИЕ %s × гриф: %.3f при c = %+.1f" % (nm, v, c))
-    for p1, p2 in (("шестерня", "тележка"), ("крышка", "ложе"), ("мотор", "ложе")):
+    pl["головка"] = Pos(c, 0, 0) * golovka
+    for p1, p2 in (("шестерня", "тележка"), ("крышка", "ложе"), ("мотор", "ложе"), ("головка", "ложе"), ("головка", "крышка")):
         v = (Part() + (pl[p1] & pl[p2])).volume
         if v > 0.01:
             bad += 1
