@@ -64,7 +64,15 @@ def gear_pts(m, z, pa, backlash=0.1, n=12, add=1.0):
 # ---------------- шестерня: впадина на −Y (к рейке), дырка Ø2.6 под винт М3 ----------------
 _p = 360.0 / Z
 OFF = 270.0 - (round(270.0 / _p - 0.5) + 0.5) * _p
-gear = Rot(0, 0, OFF) * extrude(make_face(Polyline(*gear_pts(M, Z, PA, add=ADD_G))), G_T) - Cylinder(1.3, 50)
+# соединение на шестигранниках: снизу в шестерне гнездо под гайку М3 (под ключ 5.5, h 2.4) — гайка вдвинута до верха гнезда,
+# сверху ступица Ø4.4 сквозь окно тележки до внутреннего кольца подшипника (z 12): затянул гайку — пакет крышка·мотор·шестерня
+HEX_R = (5.5 + 0.3) / math.sqrt(3)                     # описанный радиус шестигранника под ключ 5.5 с зазором
+NUT_TOP = 4.1                                          # верх гнезда гайки от низа шестерни (винт М3×20 кончается на 1.63)
+HUB_R, HUB_TOP = 2.2, Z_M0 - Z_G0                       # ступица до низа мотора
+gear = Rot(0, 0, OFF) * extrude(make_face(Polyline(*gear_pts(M, Z, PA, add=ADD_G))), G_T)
+gear += Cylinder(HUB_R, HUB_TOP - G_T + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, G_T - 0.01)))
+gear -= Cylinder(1.65, 50)
+gear -= extrude(RegularPolygon(HEX_R, 6), NUT_TOP)
 
 # ---------------- кусок грифа: плита, рейка поперёк, два рельса ----------------
 grif = BB(GX0, GX1, -21, 21, 0, Z_FL)
@@ -105,7 +113,7 @@ grif -= BB(-TRAVEL - 3.0, TRAVEL + 3.0, Y_PR0 - 0.5, Y_PR1 + 0.5, -0.1, Z_FL + 0
 # ---------------- крышка на крутящийся торец: 4 × М2 на Ø12, в центре винт М3 (головка — в гнезде, на клей) ----------------
 kr = Cylinder(9.0, 3.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
 kr -= Cylinder(1.65, 10)
-kr -= Pos(0, 0, 3.0 - 2.0) * Cylinder(3.0, 2.1, align=(Align.CENTER, Align.CENTER, Align.MIN))                # головка М3
+kr -= Pos(0, 0, 3.0 - 2.0) * extrude(RegularPolygon(HEX_R, 6), 2.1)                                          # шестигранная головка М3 (DIN 933, k 2)
 for a in (0, 90, 180, 270):
     x, y = 6 * math.cos(math.radians(a + 45)), 6 * math.sin(math.radians(a + 45))
     kr -= Pos(x, y, 0) * Cylinder(1.1, 10)
@@ -146,5 +154,6 @@ for c in (-24, -17.3, -9.1, -2.4, 0, 1.3, 7.7, 15.2, 24):
             print("ПЕРЕСЕЧЕНИЕ %s × %s: %.3f при c = %+.1f" % (p1, p2, v, c))
 g_off = Pos(0, 0, Z_G0) * Rot(0, 0, 15) * gear
 print("шестерня на пол-зуба × рейка: %.2f мм³ (> 0 — в зацеплении)" % (Part() + (g_off & grif)).volume)
-print("винт × шестерня (саморез в Ø2.6): %.2f; винт × тележка: %.3f" % ((Part() + (vint & Pos(0, 0, Z_G0) * gear)).volume, (Part() + (vint & ct)).volume))
+print("винт × шестерня: %.3f; винт × тележка: %.3f; ступица × тележка: %.3f" % ((Part() + (vint & Pos(0, 0, Z_G0) * gear)).volume,
+      (Part() + (vint & ct)).volume, (Part() + (Pos(0, 0, Z_G0) * gear & ct)).volume))
 print("мотор плашмя: %s; высота до ложа %.1f мм" % ("чисто" if not bad else "ЕСТЬ ПЕРЕСЕЧЕНИЯ: %d" % bad, Z_L0 + 2.0))
