@@ -46,21 +46,15 @@ mot.name = "гимбал 2204 плашмя"
 mot.data.materials.append(mat("мотор", (0.12, 0.12, 0.14, 1)))
 kr = stl("pl_kryshka", "крышка на крутящемся торце", mat("крышка", (0.6, 0.6, 0.65, 1)))
 g = stl("pl_shesternya", "шестерня под тележкой", mat("шестерня", (0.95, 0.55, 0.20, 1)))
-# винт М3×20 из набора (DIN 912: круглая головка Ø5.5 × 3, шестигранник внутри) — сверху в гнездо крышки; внизу гайка М3 в гнезде шестерни
+# винт М3×20 из набора (DIN 912: круглая головка Ø5.5 × 3) — сверху в гнездо крышки, внизу сам нарезает резьбу в квадратной дырке шестерни
 Z_HEAD = Z_M0 + MOT_H + 3.0 - 2.0                      # дно гнезда головки в крышке
-HR = 5.5 / math.sqrt(3)
+
 m_v = mat("винт", (0.85, 0.85, 0.9, 1))
 bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=1.5, depth=20.0, location=(0, 0, Z_HEAD - 10.0))
 vint = bpy.context.object
 vint.name = "винт М3×20 — вставляется сверху"
 bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=2.75, depth=3.0, location=(0, 0, Z_HEAD + 1.5))
 hd = bpy.context.object
-bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=HR, depth=2.4, location=(0, 0, Z_G0 + 4.1 - 1.2))
-nut = bpy.context.object
-nut.name = "гайка М3 — снизу в гнезде шестерни"
-nut.data.materials.append(m_v)
-bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-nut.select_set(False)
 for o in (vint, hd):
     o.select_set(True)
 bpy.context.view_layer.objects.active = vint
@@ -86,7 +80,7 @@ for f in range(1, FR + 1):
         ob.keyframe_insert("location", frame=f)
     mot.location = (c, 0, Z_M0 + MOT_H / 2)
     mot.keyframe_insert("location", frame=f)
-    for ob in (vint, nut):
+    for ob in (vint,):
         ob.location, ob.rotation_euler = (c, 0, 0), (0, 0, -c / RP)
         ob.keyframe_insert("location", frame=f)
         ob.keyframe_insert("rotation_euler", index=2, frame=f)
