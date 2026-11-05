@@ -108,7 +108,27 @@ ct += Pos(0, Y_PIN, z_drum_top + 1.0) * Rot(180, 0, 0) * Cone(TIP + 1.0, 0.0, TI
 print("барабан Ø%.1f × %.0f, ось %.1f над столом, шаг %.0f мм/об, подъём витка %.0f°, сила ≈ %.0f г/А"
       % (2 * R_OUT, D_LEN, Z_AX, LEAD, math.degrees(math.atan(LEAD / (2 * math.pi * R_OUT))), 0.037 * 2 * math.pi / (LEAD / 1000) / 9.81 * 1000))
 
-parts = [("bar_baraban", drum), ("bar_rama", rama), ("bar_rels", rl), ("bar_telezhka", ct), ("bar_os", os_)]
+# ---------------- РУЧНАЯ ПРОБА (05.11, владелец): без мотора, крутить ручкой — то же снаружи ----------------
+HEX_AF = 5.0
+drum_r = Cylinder(R_OUT, D_LEN, align=(Align.CENTER, Align.CENTER, Align.MIN)) - groove
+for t in (0.0, 1.0):
+    pe = helix @ t
+    drum_r -= Pos(pe.X, pe.Y, pe.Z) * Sphere(G_W / 2)
+drum_r -= Pos(0, 0, D_LEN - 10.0) * Cylinder(2.75, 10.1, align=(Align.CENTER, Align.CENTER, Align.MIN))       # ось Ø5 справа
+drum_r -= Pos(0, 0, -0.1) * extrude(RegularPolygon((HEX_AF + 0.3) / 2 / math.cos(math.radians(30)), 6), 8.1)   # гнездо слева
+rama_r = rama + BB(XL - CHEEK_T, XL, -6, 6, 3.0 - 0.01, Z_AX - 2.9)                                          # заделать окно проводов
+rama_r += Pos(XL - CHEEK_T / 2, 0, Z_AX) * Rot(0, 90, 0) * (Cylinder(5.2, CHEEK_T) - Cylinder(2.7, CHEEK_T + 1))   # окно → втулка Ø5.4
+# ручка: диск Ø24 × 4 с насечкой, вал Ø5 сквозь щеку и зазор 2.5, шестигранник 5 × 7 в барабан
+L_SH = CHEEK_T + 0.3 + (X0 - XL)                                                                             # от наружной грани щеки до торца барабана
+ruchka = Cylinder(12.0, 4.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
+for k in range(16):
+    a_ = math.radians(22.5 * k)
+    ruchka -= Pos(12.3 * math.cos(a_), 12.3 * math.sin(a_), 2.0) * Cylinder(1.0, 4.2)
+ruchka += Pos(0, 0, 4.0 - 0.01) * Cylinder(2.5, L_SH + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))
+ruchka += Pos(0, 0, 4.0 + L_SH - 0.01) * extrude(RegularPolygon(HEX_AF / 2 / math.cos(math.radians(30)), 6), 7.0)
+
+parts = [("bar_baraban", drum), ("bar_rama", rama), ("bar_rels", rl), ("bar_telezhka", ct), ("bar_os", os_),
+         ("bar_baraban_ruchnoj", drum_r), ("bar_rama_ruchnaja", rama_r), ("bar_ruchka", ruchka)]
 for n, p in parts:
     p = Part() + p
     bb = p.bounding_box()
@@ -150,3 +170,10 @@ for dr in (-6, 6):
 for nm, part in (("рама", rama), ("рельс", rl)):
     print("барабан × %s: %.3f мм³" % (nm, (Part() + (drum_at(0) & part)).volume))
 print("рельс × тележка: %.3f мм³; рельс × рама (в гнёздах): %.3f" % ((Part() + (rl & ct)).volume, (Part() + (rl & rama)).volume))
+
+# ручная проба: ручка сквозь щеку в гнездо барабана, ходом пальца — как у моторной (снаружи барабан тот же)
+rk_w = Pos(XL - CHEEK_T - 4.0 - 0.3, 0, Z_AX) * Rot(0, 90, 0) * ruchka
+print("ручка × рама: %.3f, ручка × барабан (шестигранник в гнезде): %.3f" %
+      ((Part() + (rk_w & rama_r)).volume, (Part() + (rk_w & DR * drum_r)).volume))
+v, r = pin_rho(0.0)
+print("ручной барабан: палец × барабан при c = 0: %.3f" % (Part() + (DR * Rot(0, 0, r) * drum_r & ct)).volume)
