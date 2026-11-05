@@ -241,6 +241,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
+    ("110_baraban_2204", p012_j,          # барабанный кулачок на 2204 (kasseta/baraban_2204.py): рама дном на стол, барабан стоя глухим торцом вниз,
+     prep("bar_rama", ID) + prep("bar_baraban", FLIP) + prep("bar_rels", ID) + prep("bar_telezhka", FLIP) + prep("bar_os", ID, copies=2), "cool"),   # рельс, тележка вверх ногами, ось ×2
     ("108_rolgang_osnovanie", p012_j,      # рольганг 2204 (kasseta/rolgang_2204.py): основание из двух частей на клей — без поддержек (идея владельца):
      prep("rg_osnovanie_niz", ID) + prep("rg_osnovanie_verh", ID), "cool"),                                        # низ дном на стол, верх палубой на стол
     ("109_rolgang_detali", p012_j,         # рольганг: крышка, рельс (полоской на стол, гребень вверх), средняя шестерня (шестернёй на стол), крайние правая • и левая ••,
