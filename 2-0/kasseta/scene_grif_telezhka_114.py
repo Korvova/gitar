@@ -49,9 +49,7 @@ stl("gt_nozhka", "ножка 2", LEGM, math.pi)
 SVET = mat("кубик", (0.86, 0.83, 0.77, 1), 0.45)
 cart = [stl("gt_kubik", "кубик", SVET), stl("gt_niz", "нижний этаж", mat("низ", (0.75, 0.72, 0.66, 1))),
         stl("gt_bort", "борт ложа 1", mat("борт", (0.86, 0.83, 0.77, 1))), stl("gt_bort", "борт ложа 2", bpy.data.materials["борт"], math.pi)]
-for o in cart[2:]:
-    pass
-RZ = {cart[2].name: 0.0, cart[3].name: math.pi}
+cart.append(stl("gt_plastina", "прижимная пластина", mat("пластина", (0.65, 0.62, 0.56, 1))))
 M_G = mat("шестерня", (0.95, 0.55, 0.15, 1))
 rot = [stl("gt_shesternya", "шестерня", M_G), stl("gt_flanec", "фланец", mat("фланец", (0.9, 0.75, 0.25, 1)))]
 bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=13.9, depth=12.23, location=(0, 0, 4.02 + 12.23 / 2))
