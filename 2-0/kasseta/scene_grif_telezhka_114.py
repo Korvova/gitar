@@ -43,7 +43,8 @@ BLK = mat("чёрный", (0.06, 0.06, 0.07, 1))
 LEGM = mat("ножки", (0.45, 0.45, 0.5, 1))
 stl("gt_platforma", "платформа", BLK)
 stl("gt_upor", "упор x+ (клеить после надевания)", mat("упор", (0.8, 0.2, 0.2, 1)))
-stl("gt_stoyka", "П-стойка", LEGM)
+stl("gt_vkladka", "вкладка 1", LEGM)
+stl("gt_vkladka", "вкладка 2", LEGM, math.pi)
 SVET = mat("кубик", (0.86, 0.83, 0.77, 1), 0.45)
 cart = [stl("gt_kubik", "кубик", SVET), stl("gt_niz", "нижний этаж", mat("низ", (0.75, 0.72, 0.66, 1))),
         stl("gt_bort", "борт ложа 1", mat("борт", (0.86, 0.83, 0.77, 1))), stl("gt_bort", "борт ложа 2", bpy.data.materials["борт"], math.pi)]

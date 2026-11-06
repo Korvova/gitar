@@ -114,6 +114,9 @@ for sx in (1, -1):
     x0, x1 = sorted((sx * 24.3, sx * PX))
     stoyka += BB(x0, x1, -PY, PY, Z_ST0 + 1.49, Z_PL0)                                 # стенки по краям хода; вдоль грифа открыто — там идут провода к плате
 
+vkladka = stoyka & BB(T_X0, PX + 1, -PY - 1, PY + 1, Z_ST0 - 1, 1)                     # две одинаковые вкладки вместо цельной стойки: снизу и вдоль грифа открыто
+vkladka2 = Rot(0, 0, 180) * vkladka
+
 # ---------------- (2) шестерня: зубья и шейка, сверху квадрат; печать зубьями на стол. Просвет Ø3.2 под провода ----------------
 _p = 360.0 / Z_T
 OFF = 90.0 - (round(90.0 / _p - 0.5) + 0.5) * _p                                       # впадина на +Y, к рейке
@@ -190,7 +193,7 @@ for sx in (1, -1):
         ni -= CZ(1.0, Z_P1 - 0.85, Z_P1 + 1, sx * 12.6, sy * 13.2)                     # гнёзда штырьков
         ni -= Pos(sx * 12.6, sy * 13.2, Z_P1 - 0.85 - 1.0 + 0.01) * Cone(0.0, 1.0, 1.0, align=(Align.CENTER, Align.CENTER, Align.MIN))  # потолок гнезда — конус
 
-parts = [("gt_platforma", pl), ("gt_upor", upor), ("gt_stoyka", stoyka), ("gt_shesternya", gear), ("gt_flanec", fl),
+parts = [("gt_platforma", pl), ("gt_upor", upor), ("gt_vkladka", vkladka), ("gt_shesternya", gear), ("gt_flanec", fl),
          ("gt_kubik", ku), ("gt_plastina", plast), ("gt_bort", bort), ("gt_niz", ni)]
 for n, p in parts:
     p = Part() + p
@@ -236,6 +239,6 @@ print("упор: при c = +22 щёчка × упор x+ %.3f; при c = +22.3
     vol(Pos(22, 0, 0) * ni, upor), vol(Pos(22.3, 0, 0) * ni, upor), vol(Pos(-22.3, 0, 0) * ni, pl)))
 print("надевание с торца x+ без упора: c = 30: %.3f; c = 45: %.3f" % (
     vol(Pos(30, 0, 0) * ni, pl) + vol(Pos(30, 0, 0) * Rot(0, 0, math.degrees(30 / RP)) * gear, pl), vol(Pos(45, 0, 0) * ni, pl)))
-print("П-стойка × платформа: %.3f; щель под трубкой ±1.5 при Ø3.2" % vol(stoyka, pl))
+print("вкладки × платформа: %.3f, %.3f; вкладка × вкладка: %.3f" % (vol(vkladka, pl), vol(vkladka2, pl), vol(vkladka, vkladka2)))
 print("зазоры: кубик у мотора %.2f, стенка %.2f; дно паза %.2f" % (R_CUT - 13.9, HX - R_CUT, Z_SLOT - Z_PL0))
 print("стенд: %s; от низа платформы до крыши %.1f мм; винт М2×4 с шайбой в мотор %.2f мм, в крышу %.2f мм" % ("чисто" if not bad else "ЕСТЬ ПЕРЕСЕЧЕНИЯ: %d" % bad, Z_TOP - Z_PL0, 4.0 - (Z_FL1 - Z_FB) - 0.4, 4.0 - PL_T - (Z_TOP - Z_M1)))
