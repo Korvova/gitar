@@ -242,7 +242,7 @@ plates = [
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("114_grif_telezhka", p012_j,          # стенд на одну тележку по вики 19.42/19.43 (kasseta/grif_telezhka_114.py): мотор перевёрнут, всё без поддержек
-     prep("gt_platforma", ID) + prep("gt_upor", ID) + prep("gt_stoyka", FLIP) + prep("gt_shesternya", ID, copies=2) + prep("gt_flanec", ID, copies=2) + prep("gt_kubik", FLIP) + prep("gt_plastina", FLIP) + prep("gt_bort", LAYY, copies=2) + prep("gt_niz", FLIP), "cool"),
+     prep("gt_platforma", ID) + prep("gt_upor", ID) + prep("gt_stoyka", ID) + prep("gt_shesternya", ID, copies=2) + prep("gt_flanec", ID, copies=2) + prep("gt_kubik", FLIP) + prep("gt_plastina", FLIP) + prep("gt_bort", LAYY, copies=2) + prep("gt_niz", FLIP), "cool"),
     ("113_disk_ruchnoj", p012_j, prep("disk_osnovanie", ID) + prep("disk_disk", ID) + prep("disk_rels", ID, copies=2) + prep("disk_telezhka", FLIP), "cool"),
     ("112_plashmya_2204", p012_j,         # мотор плашмя в тележке (kasseta/plashmya_2204.py): кусок грифа с рейкой и рельсами, тележка вверх ногами,
      prep("pl_grif", ID) + prep("pl_telezhka", FLIP) + prep("pl_kryshka", ID) + prep("pl_shesternya", ID, copies=2) + prep("pl_lozhe", FLIP), "cool"),   # крышка, шестерня ×2, ложе
