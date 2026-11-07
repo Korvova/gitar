@@ -201,10 +201,13 @@ S49 = BB(S_X - 1.5, S_X + 1.5, S_Y - 2.05, S_Y + 2.05, 0.9, 2.4)                
 ni += BB(SX0, SX1 + 0.7, SY0 - 0.6, SY1 + 0.6, 0.6, Z_P1)                               # башенка под плашкой
 ni -= BB(SX0 - 0.1, SX1, SY0, SY1, 0.0, Z_P1 + 1)
 ni += BB(SX1 - 0.3, SX1 + 0.01, SY0 - 0.01, SY1 + 0.01, 0.6, 0.9)                       # полочка: упор датчика, снизу открыто к магниту
-CH_X, CH_Y = 10.0, -12.2                                                                # канал проводов в углу кубика
-ku -= CZ(1.25, Z_P1 - 1, Z_M1 + 0.75, CH_X, CH_Y)
-ku -= BB(CH_X - 1.25, CH_X + 1.25, CH_Y - 1.25, CH_Y + 1.25, Z_P1 - 0.1, Z_M0 - 0.1) & CZ(16.0, Z_P1 - 1, Z_M0)  # выход из полости в канал
-ku -= BB(5.4, CH_X + 1.2, CH_Y - 1.0, CH_Y + 1.2, Z_M1 - 0.1, Z_M1 + 0.75)              # по потолку к окну
+CH_X, CH_Y, CH_R = 10.2, -12.4, 1.4                                                     # канал проводов в углу кубика, Ø2.8
+CH_A = math.degrees(math.atan2(CH_Y, CH_X))
+CH_RR = math.hypot(CH_X, CH_Y)
+ku -= CZ(CH_R, Z_P1 - 1, Z_M1 + 0.75, CH_X, CH_Y)
+# вход из полости в канал: широкий проём по радиусу, над плашкой, под мотором
+ku -= Pos((CH_RR - 2.0) * math.cos(math.radians(CH_A)), (CH_RR - 2.0) * math.sin(math.radians(CH_A)), Z_P1) * Rot(0, 0, CH_A) * Box(4.0, 2.8, 1.75, align=(Align.CENTER, Align.CENTER, Align.MIN))
+ku -= BB(5.4, CH_X + CH_R, CH_Y - 1.2, CH_Y + 1.2, Z_M1 - 0.1, Z_M1 + 0.75)             # по потолку к окну
 
 parts = [("gt_platforma", pl), ("gt_upor", upor), ("gt_vkladka", vkladka), ("gt_shesternya", gear), ("gt_flanec", fl),
          ("gt_kubik", ku), ("gt_plastina", plast), ("gt_bort", bort), ("gt_niz", ni)]
@@ -247,6 +250,11 @@ print("мотор × кубик: %.3f; мотор × низ: %.3f; шестер�
     vol(motor, ku), vol(motor, ni), vol(gear, fl), vol(ku, ni), vol(bort, ku)))
 print("пластина × кубик: %.3f; пластина × борт: %.3f; высота над проводами %.2f мм; винт М2×4 в мотор на %.2f мм (не больше 1.5); верх головки %.1f (борта %.1f)" % (
     vol(plast, ku), vol(plast, bort) + vol(plast, bort2), Z_TOP - Z_M1 + 0.5, 4.0 - PL_T - (Z_TOP - Z_M1), Z_TOP + PL_T + 2.0, Z_B1))
+_a = math.radians(CH_A)
+print("путь провода Ø1 свободен (0 — да): вход %.3f, канал %.3f, потолок %.3f" % (
+    vol(ku, Pos((CH_RR - 2.5) * math.cos(_a), (CH_RR - 2.5) * math.sin(_a), Z_P1 + 0.9) * Rot(0, 0, CH_A) * Box(5.0, 1.0, 1.0)),
+    vol(ku, CZ(0.5, Z_P1, Z_M1 + 0.6, CH_X, CH_Y)),
+    vol(ku, BB(5.6, CH_X, CH_Y - 0.5, CH_Y + 0.5, Z_M1 - 0.05, Z_M1 + 0.6))))
 print("шестерня на пол-зуба × рейка: %.2f мм³ (> 0 — в зацеплении)" % vol(Rot(0, 0, 15) * gear, pl))
 print("упор: при c = +22 щёчка × упор x+ %.3f; при c = +22.3 %.3f (> 0 — упирается); при c = −22.3 × упор x− %.3f" % (
     vol(Pos(22, 0, 0) * ni, upor), vol(Pos(22.3, 0, 0) * ni, upor), vol(Pos(-22.3, 0, 0) * ni, pl)))
