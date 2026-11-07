@@ -69,7 +69,7 @@ for i, (fn, rz) in enumerate(FILES):
     s49 = bpy.context.object
     s49.name = "датчик 49E %d" % (i + 1)
     s49.scale = (4.1, 3.0, 1.5)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     s49.data.materials.append(M_49)
     bpy.ops.object.select_all(action='DESELECT')
     cart = [s49, stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
