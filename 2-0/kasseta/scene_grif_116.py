@@ -50,6 +50,8 @@ M_F = mat("фланец", (0.9, 0.75, 0.25, 1))
 M_M = mat("мотор", (0.12, 0.12, 0.14, 1))
 PAD = mat("площадка", (0.10, 0.25, 0.75, 1))
 RED = mat("упор", (0.8, 0.2, 0.2, 1))
+M_MAG = mat("магнит", (0.8, 0.8, 0.85, 1))
+M_49 = mat("датчик", (0.9, 0.1, 0.5, 1))
 stl("gt4_platforma", "платформа на 4", BLK)
 stl("gt4_vkladka", "вкладка 1", LEGM)
 stl("gt4_vkladka", "вкладка 2", LEGM, 0.0, math.pi)
@@ -59,7 +61,18 @@ for i, (fn, rz) in enumerate(FILES):
     y0 = (i - 1.5) * 30.0
     stl("gt_upor", "упор x+ %d" % (i + 1), RED, y0)
     has_m = i < 2
-    cart = [stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
+    for mx in (-22.0, -13.2, -4.4, 4.4, 13.2):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=2.0, depth=1.9, location=(mx, y0 - 13.35, -0.95))
+        bpy.context.object.name = "магнит"
+        bpy.context.object.data.materials.append(M_MAG)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, y0 - 12.5, 3.25))
+    s49 = bpy.context.object
+    s49.name = "датчик 49E %d" % (i + 1)
+    s49.scale = (4.1, 3.0, 1.5)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    s49.data.materials.append(M_49)
+    bpy.ops.object.select_all(action='DESELECT')
+    cart = [s49, stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
             stl(fn, "площадка %d" % (i + 1), PAD, y0, rz)]
     rot = []
     if has_m:
