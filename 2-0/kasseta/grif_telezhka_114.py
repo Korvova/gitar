@@ -211,6 +211,10 @@ ku -= CZ(CH_R, Z_P1 - 1, Z_M1 + 0.75, CH_X, CH_Y)
 ku -= Pos((CH_RR - 2.0) * math.cos(math.radians(CH_A)), (CH_RR - 2.0) * math.sin(math.radians(CH_A)), Z_P1) * Rot(0, 0, CH_A) * Box(4.0, 2.8, 1.75, align=(Align.CENTER, Align.CENTER, Align.MIN))
 ku -= BB(5.4, CH_X + CH_R, CH_Y - 1.2, CH_Y + 1.2, Z_M1 - 0.1, Z_M1 + 0.75)             # по потолку к окну
 
+# магниты Ø4 × 1.9 в дне паза, дырка насквозь: под датчиком на струнах 1–5; на струне 6 датчик за краем платформы
+for x_ in (-22.0, -13.2, -4.4, 4.4, 13.2):
+    pl -= CZ(2.05, Z_PL0 - 1, Z_SLOT + 0.5, x_ + S_X, -5.0)
+
 parts = [("gt_platforma", pl), ("gt_upor", upor), ("gt_vkladka", vkladka), ("gt_shesternya", gear), ("gt_flanec", fl),
          ("gt_kubik", ku), ("gt_plastina", plast), ("gt_bort", bort), ("gt_niz", ni)]
 for n, p in parts:
