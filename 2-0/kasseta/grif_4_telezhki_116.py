@@ -58,6 +58,7 @@ vk4b = Rot(0, 0, 180) * vk4
 PAD_Y, PAD_X, PAD_T = 22.0, 24.0, 2.0
 Z_PAD0 = Z_TOP + PL_T + 2.0 + 0.1                       # над головками винтов
 RAIL_END = HY - 1.0
+BORT_Y, BORT_H, BORT_P = 10.0, 3.8, 5.0                  # борт: половина длины, высота над площадкой, штырьки
 
 
 def lozhe(d):
@@ -69,12 +70,23 @@ def lozhe(d):
         p += BB(x0, x1, r0, r1, Z_TOP, Z_PAD0 + PAD_T)                                 # стойка до верха площадки — печать без навеса
         for sy in (1, -1):
             p += BB(x0, x1, sy * 5.0 - 0.6, sy * 5.0 + 0.6, Z_M1 + 0.2, Z_TOP + 0.01)
+            p -= BB(x0 - 0.1, x1 + 0.1, d + sy * BORT_P - 0.7, d + sy * BORT_P + 0.7, Z_PAD0 + 0.1, Z_PAD0 + PAD_T + 1)   # гнёзда борта
     return p
 
 
+# борт ложа на площадке (x+; второй тот же, разворот на 180°), отдельно: печать лёжа, штырьки той же толщины
+bort4 = BB(10.5, 12.0, -BORT_Y, BORT_Y, Z_PAD0 + PAD_T, Z_PAD0 + PAD_T + BORT_H)
+for sy in (1, -1):
+    bort4 += BB(10.5, 12.0, sy * BORT_P - 0.6, sy * BORT_P + 0.6, Z_PAD0 + 0.5, Z_PAD0 + PAD_T + 0.01)
+
+
 lz9, lz3 = lozhe(9.0), lozhe(3.0)
-PADS = [lz9, lz3, Rot(0, 0, 180) * lz3, Rot(0, 0, 180) * lz9]
-for n, p in (("gt4_platforma", pl4), ("gt4_vkladka", vk4), ("gt4_lozhe_9", lz9), ("gt4_lozhe_3", lz3)):
+def s_bortami(lz, d):
+    return lz + Pos(0, d, 0) * bort4 + Pos(0, d, 0) * Rot(0, 0, 180) * bort4
+
+
+PADS = [s_bortami(lz9, 9.0), s_bortami(lz3, 3.0), Rot(0, 0, 180) * s_bortami(lz3, 3.0), Rot(0, 0, 180) * s_bortami(lz9, 9.0)]
+for n, p in (("gt4_platforma", pl4), ("gt4_vkladka", vk4), ("gt4_lozhe_9", lz9), ("gt4_lozhe_3", lz3), ("gt4_bort", bort4)):
     p = Part() + p
     bb = p.bounding_box()
     print("%s: %.1f x %.1f x %.1f, solids %d" % (n, bb.size.X, bb.size.Y, bb.size.Z, len(p.solids())))
@@ -116,5 +128,5 @@ for i in range(3):                                       # соседи в ра�
                 hit("площадка × соседний " + nm, B * PADS[i + 1], A * p, tag_)
             hit("кубик × кубик", A * ku, B * ku, tag_)
             hit("низ × низ", A * ni, B * ni, tag_)
-print("проба на 4: %s; длина платформы %.0f мм; верх площадки %.1f от низа платформы; зазор между площадками %.1f мм" % (
-    "чисто" if not bad4 else "ЕСТЬ ПЕРЕСЕЧЕНИЯ: %d" % bad4, 2 * Y4, Z_PAD0 + PAD_T - Z_PL0, PITCH_F - PAD_Y))
+print("проба на 4: %s; длина платформы %.0f мм; верх площадки %.1f, верх бортов %.1f от низа платформы; зазор между площадками %.1f мм" % (
+    "чисто" if not bad4 else "ЕСТЬ ПЕРЕСЕЧЕНИЯ: %d" % bad4, 2 * Y4, Z_PAD0 + PAD_T - Z_PL0, Z_PAD0 + PAD_T + BORT_H - Z_PL0, PITCH_F - PAD_Y))

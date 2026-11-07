@@ -50,6 +50,7 @@ M_F = mat("фланец", (0.9, 0.75, 0.25, 1))
 M_M = mat("мотор", (0.12, 0.12, 0.14, 1))
 PAD = mat("площадка", (0.10, 0.25, 0.75, 1))
 RED = mat("упор", (0.8, 0.2, 0.2, 1))
+BORT = mat("борт ложа", (0.75, 0.75, 0.72, 1))
 M_MAG = mat("магнит", (0.8, 0.8, 0.85, 1))
 M_49 = mat("датчик", (0.9, 0.1, 0.5, 1))
 stl("gt4_platforma", "платформа на 4", BLK)
@@ -74,6 +75,11 @@ for i, (fn, rz) in enumerate(FILES):
     bpy.ops.object.select_all(action='DESELECT')
     cart = [s49, stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
             stl(fn, "площадка %d" % (i + 1), PAD, y0, rz)]
+    yb = (i - 1.5) * 24.0
+    bo = []
+    for k, rb in enumerate((0.0, math.pi)):
+        b_ = stl("gt4_bort", "борт ложа %d-%d" % (i + 1, k + 1), BORT, yb, rb)
+        bo.append(b_)
     rot = []
     if has_m:
         cart.append(stl("gt_plastina", "пластина %d" % (i + 1), PLA, y0))
@@ -86,13 +92,16 @@ for i, (fn, rz) in enumerate(FILES):
         mo.location = (0, y0, 0)
         bpy.ops.object.select_all(action='DESELECT')
         rot.append(mo)
-    carts.append((cart, rot, y0, 0.13 * i, 2 - i % 2))
+    carts.append((cart, rot, y0, 0.13 * i, 2 - i % 2, bo, yb))
 for f in range(1, FR + 1):
     t = (f - 1) / (FR - 1)
-    for cart, rot, y0, ph, n in carts:
+    for cart, rot, y0, ph, n, bo, yb in carts:
         c = 22.0 * math.sin(2 * math.pi * (t * n + ph))
         for ob in cart:
             ob.location = (c, y0, 0)
+            ob.keyframe_insert("location", index=0, frame=f)
+        for ob in bo:
+            ob.location = (c, yb, 0)
             ob.keyframe_insert("location", index=0, frame=f)
         for ob in rot:
             ob.location = (c, y0, 0)
