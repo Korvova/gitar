@@ -61,11 +61,11 @@ for i, (fn, rz) in enumerate(FILES):
     y0 = (i - 1.5) * 30.0
     stl("gt_upor", "упор x+ %d" % (i + 1), RED, y0)
     has_m = i < 2
-    for mx in (-12.05, -3.25, 5.55, 14.35, 23.15):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=2.0, depth=1.9, location=(mx, y0 - 5.0, -2.55))
+    for mx in (-11.5, -2.7, 6.1, 14.9, 23.7):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=2.0, depth=1.9, location=(mx, y0 - 5.2, -2.55))
         bpy.context.object.name = "магнит"
         bpy.context.object.data.materials.append(M_MAG)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(9.95, -5.2, 1.65))
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(10.5, -5.8, 1.85))
     s49 = bpy.context.object
     s49.name = "датчик 49E %d" % (i + 1)
     s49.scale = (3.0, 4.1, 1.5)
