@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Струны 49E</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#f4f1ea; color:#1d1d1f; margin:0; padding:16px; }
+  .wrap { max-width:640px; margin:0 auto; }
+  .card { background:#fff; border-radius:12px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  h1 { font-size:20px; margin:0 0 10px; }
+  button { font-size:16px; padding:10px 16px; border-radius:8px; border:1px solid #bbb; background:#fff; cursor:pointer; margin:4px 6px 4px 0; }
+  button.go { background:#2f6fd6; border-color:#2f6fd6; color:#fff; font-size:20px; padding:14px 24px; }
+  button:disabled { opacity:.45; cursor:default; }
+  #big { font-size:72px; font-weight:700; line-height:1.1; }
+  #step { font-size:26px; font-weight:700; margin:6px 0 10px; }
+  #live { font-size:22px; color:#555; }
+  .mut { color:#6b6b6b; font-size:14px; }
+  table { width:100%; border-collapse:collapse; font-size:16px; }
+  td, th { padding:5px 4px; border-bottom:1px solid #eee; text-align:left; }
+  tr.now td { background:#dfeaff; font-weight:700; }
+  .bad { color:#c0392b; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Струны по датчику 49E (рукой, мотор выключен)</h1>
+    <button id="bConn">Подключить COM7</button>
+    <span id="st" class="mut">не подключено</span>
+    <div id="live">—</div>
+  </div>
+
+  <div class="card" id="wiz">
+    <div id="step">Сначала подключите плату</div>
+    <button id="bRec" class="go" disabled>Записать</button>
+    <button id="bBack" disabled>Назад</button>
+    <button id="bAgain">Записать заново</button>
+    <div class="mut">Поставьте тележку точно на струну, отпустите, нажмите «Записать» — 1 секунда.</div>
+  </div>
+
+  <div class="card">
+    <div class="mut">Сейчас</div>
+    <div id="big">—</div>
+    <div id="hint" class="mut"></div>
+    <div style="margin-top:8px" class="mut">Допуск, единиц: <input id="tol" type="number" value="60" style="width:70px;font-size:15px">
+      <span id="tolHint"></span></div>
+  </div>
+
+  <div class="card">
+    <table id="tab"></table>
+    <div id="warn" class="mut" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let cal = [null, null, null, null, null, null], step = 0, recording = null;
+let cur = null, cand = null, candN = 0, smooth = [], lastH = null;
+const KEY = 'struny49e';
+try { const v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v) && v.length === 6) { cal = v; } } catch (e) {}
+step = cal.findIndex(v => v === null); if (step < 0) step = 6;
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(cal)); } catch (e) {} }
+function ready() { return cal.every(v => v !== null); }
+function autoTol() {
+  if (!ready()) return null;
+  let m = 1e9;
+  for (let i = 1; i < 6; i++) m = Math.min(m, Math.abs(cal[i] - cal[i - 1]));
+  return Math.max(15, Math.round(m * 0.45));
+}
+function render() {
+  $('step').textContent = step < 6 ? 'Поставьте на струну ' + (step + 1) : 'Готово: все струны записаны';
+  $('bRec').textContent = step < 6 ? 'Записать струну ' + (step + 1) : 'Записать';
+  $('bRec').disabled = step >= 6 || !connected || recording !== null;
+  $('bBack').disabled = step === 0 || recording !== null;
+  let rows = '<tr><th>Струна</th><th>Значение</th><th>От соседней</th></tr>';
+  for (let i = 0; i < 6; i++) {
+    const d = i && cal[i] !== null && cal[i - 1] !== null ? Math.abs(cal[i] - cal[i - 1]) : '';
+    rows += '<tr class="' + (cur === i ? 'now' : '') + '"><td>' + (i + 1) + '</td><td>' + (cal[i] === null ? '—' : cal[i]) + '</td><td>' + d + '</td></tr>';
+  }
+  $('tab').innerHTML = rows;
+  const t = autoTol();
+  $('tolHint').textContent = t ? '(советую ' + t + ')' : '';
+  let close = [];
+  if (ready()) for (let i = 1; i < 6; i++) if (Math.abs(cal[i] - cal[i - 1]) < 40) close.push((i) + ' и ' + (i + 1));
+  $('warn').innerHTML = close.length ? '<span class="bad">Слишком похожи соседние струны: ' + close.join(', ') + '. Их не различить.</span>' : (ready() ? 'Соседние струны различаются.' : '');
+}
+$('bRec').onclick = () => {
+  if (step >= 6) return;
+  recording = { i: step, v: [] };
+  $('bRec').textContent = 'Записываю…';
+  render(); $('bRec').textContent = 'Записываю…';
+};
+$('bBack').onclick = () => { if (step > 0) { step--; cal[step] = null; save(); cur = null; render(); } };
+$('bAgain').onclick = () => { cal = [null, null, null, null, null, null]; step = 0; cur = null; cand = null; save(); $('big').textContent = '—'; $('hint').textContent = ''; render(); };
+
+function detect(h) {
+  smooth.push(h); if (smooth.length > 4) smooth.shift();
+  const v = smooth.reduce((a, b) => a + b, 0) / smooth.length;
+  if (!ready()) return;
+  const tol = +$('tol').value || 60;
+  // ищем только соседние струны от текущей: это и есть последовательность
+  const list = cur === null ? [0, 1, 2, 3, 4, 5] : [cur - 1, cur, cur + 1].filter(i => i >= 0 && i < 6);
+  let best = -1, bd = 1e9;
+  for (const i of list) { const d = Math.abs(v - cal[i]); if (d < bd) { bd = d; best = i; } }
+  if (bd > tol) { cand = null; candN = 0; $('hint').textContent = cur === null ? 'поставьте тележку на струну' : 'между струнами, последняя ' + (cur + 1); return; }
+  $('hint').textContent = '';
+  if (best === cur) { cand = null; candN = 0; return; }
+  if (best === cand) candN++; else { cand = best; candN = 1; }
+  if (candN >= 4) { cur = best; cand = null; candN = 0; $('big').textContent = 'Струна ' + (cur + 1); render(); }
+}
+
+let port = null, connected = false;
+function onLine(l) {
+  const m = l.match(/ h (\d+)/);
+  if (!m) return;
+  const h = +m[1]; lastH = h;
+  $('live').textContent = 'датчик: ' + h;
+  if (recording) {
+    recording.v.push(h);
+    if (recording.v.length >= 25) {
+      const r = recording; recording = null;
+      cal[r.i] = Math.round(r.v.reduce((a, b) => a + b, 0) / r.v.length);
+      save(); step = r.i + 1; render();
+      if (step >= 6) { const t = autoTol(); if (t) $('tol').value = t; cur = null; render(); }
+    }
+    return;
+  }
+  detect(h);
+}
+$('bConn').onclick = async () => {
+  if (!('serial' in navigator)) { alert('Нужен Chrome или Edge'); return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    connected = true; $('st').textContent = 'подключено'; render();
+    const reader = port.readable.getReader(), dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value);
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) { onLine(buf.slice(0, i).trim()); buf = buf.slice(i + 1); }
+    }
+  } catch (e) { $('st').textContent = 'ошибка: ' + e.message; }
+  connected = false; render();
+};
+render();
+if (ready()) { const t = autoTol(); if (t) $('tol').value = t; }
+</script>
+</body>
+</html>
