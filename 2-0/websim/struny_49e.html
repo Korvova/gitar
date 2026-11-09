@@ -126,13 +126,14 @@ function detect(h) {
     const sg = d > 0 ? 1 : -1;
     if (pk !== sg) { pk = sg; pkMax = a; pkStart = cur; $('hint').textContent = ''; }
     pkMax = Math.max(pkMax, a);
-    // кандидаты: струна, с которой вошли в пик, и две соседние, знак совпадает; выбираем по высоте пика
-    let best = -1, bs = 1e9;
-    for (const i of [pkStart - 1, pkStart, pkStart + 1]) {
+    // раскладка 0 − − + + − (идея владельца): у соседей каждой струны разные знаки, поэтому по знаку видно, куда поехали.
+    // Знак как у своей струны и есть сосед с тем же знаком — значит, переехали на него
+    let best = -1;
+    for (const i of [pkStart - 1, pkStart + 1]) {
       if (i < 0 || i > 5 || i === m.n0 || Math.sign(m.dev[i]) !== sg) continue;
-      const sc = Math.abs(Math.abs(m.dev[i]) - pkMax);
-      if (sc < bs) { bs = sc; best = i; }
+      best = i;
     }
+    if (best < 0 && pkStart !== m.n0 && Math.sign(m.dev[pkStart]) === sg) best = pkStart;
     if (best >= 0 && best !== cur) setCur(best); else $('big').textContent = 'Струна ' + (cur + 1);
     return;
   }
