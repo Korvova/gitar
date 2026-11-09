@@ -262,7 +262,7 @@ function guessStr(h) {                               // ближайшая за�
 strTable();
 
 // ручной режим: счёт пиков от струны 6
-let hBase = null, hStr = null, hDir = -1, hIn = 0, hMax = 0, hLast = 0, hZero = 0, hTrail = [], hLog = [];
+let hTick = 0, hBase = null, hStr = null, hDir = -1, hIn = 0, hMax = 0, hLast = 0, hZero = 0, hTrail = [], hLog = [];
 const cvT = $('cvT'), cxT = cvT.getContext('2d');
 function hShow() {
   $('hCur').textContent = hStr === null ? 'нажмите кнопку на струне 6' : 'Струна ' + hStr;
@@ -279,12 +279,12 @@ function hDraw() {
   cxT.strokeStyle = '#ddd';
   for (const v of [b, b + T, b - T]) { cxT.beginPath(); cxT.moveTo(0, Y(v)); cxT.lineTo(W, Y(v)); cxT.stroke(); }
   cxT.strokeStyle = '#2f6fd6'; cxT.lineWidth = 2; cxT.beginPath();
-  hTrail.forEach((v, i) => { const x = i / 250 * W; i ? cxT.lineTo(x, Y(v)) : cxT.moveTo(x, Y(v)); });
+  hTrail.forEach((v, i) => { const x = i / 2000 * W; i ? cxT.lineTo(x, Y(v)) : cxT.moveTo(x, Y(v)); });
   cxT.stroke();
 }
 function handFeed(h) {
-  hTrail.push(h); if (hTrail.length > 250) hTrail.shift();
-  if (hTrail.length % 3 === 0) hDraw();
+  hTrail.push(h); if (hTrail.length > 2000) hTrail.shift();
+  if (++hTick % 20 === 0) hDraw();
   if (hBase === null || hStr === null) return;
   const d = h - hBase, T = +$('hT').value;
   if (Math.abs(d) > T) {
@@ -303,12 +303,12 @@ function handFeed(h) {
     hLog.push((sg > 0 ? '+' : '−') + hMax + '→' + hStr);
     hShow();
   }
-  if (!hIn && hStr === 5 && ++hZero > 18) {          // долго нет поля после струны 5 — это струна 6
+  if (!hIn && hStr === 5 && ++hZero > 140) {          // долго нет поля после струны 5 — это струна 6
     hStr = 6; hDir = -1; hLast = 0; hLog.push('[6]'); hShow();
   }
 }
 $('bBase').onclick = () => {
-  const v = hTrail.slice(-12);
+  const v = hTrail.slice(-100);
   if (!v.length) return;
   hBase = Math.round(v.reduce((a, b) => a + b, 0) / v.length);
   hStr = 6; hDir = -1; hIn = 0; hLast = 0; hZero = 0; hLog = ['покой ' + hBase + ':'];
@@ -351,7 +351,7 @@ async function readLoop() {
             lastH = +m[2]; $('hval').textContent = lastH;
             hBuf.push(lastH); guessStr(lastH); handFeed(lastH);
             pts.push([+m[1], lastH]); if (pts.length > 4000) pts.shift();
-            if (pts.length % 5 === 0) draw();
+            if (pts.length % 40 === 0) draw();
           }
           continue;
         }

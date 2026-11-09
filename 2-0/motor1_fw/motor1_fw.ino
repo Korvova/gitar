@@ -104,10 +104,10 @@ void loop() {
     if (ch == '\n') { handle(line); line = ""; }
     else if (ch != '\r') line += ch;
   }
-  if (millis() - tPrint > 40) {
+  if (millis() - tPrint >= 5) {               // 200 значений в секунду: пик магнита узкий
     tPrint = millis();
     long sum = 0;
-    for (int i = 0; i < 16; i++) sum += analogRead(HALL_PIN);
-    Serial.printf("pos %.2f h %ld\n", posMm(), sum / 16);
+    for (int i = 0; i < 4; i++) sum += analogRead(HALL_PIN);
+    Serial.printf("pos %.2f h %ld\n", posMm(), sum / 4);
   }
 }

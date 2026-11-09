@@ -111,13 +111,13 @@ function model() {
 }
 function setCur(i) { cur = i; $('big').textContent = 'Струна ' + (cur + 1); render(); }
 function detect(h) {
-  smooth.push(h); if (smooth.length > 2) smooth.shift();
+  smooth.push(h); if (smooth.length > 6) smooth.shift();
   if (!ready()) return;
   const v = smooth.reduce((a, b) => a + b, 0) / smooth.length;
   const m = model(), d = v - m.base, a = Math.abs(d), T = +$('tol').value || m.T;
   if (cur === null) {                                // старт: только со струны без магнита, там число надёжно
     $('hint').textContent = 'поставьте на струну ' + (m.n0 + 1) + ' (без магнита), чтобы начать счёт';
-    if (a < T && ++zeroN > 12) { zeroN = 0; dir = 0; setCur(m.n0); $('hint').textContent = ''; }
+    if (a < T && ++zeroN > 100) { zeroN = 0; dir = 0; setCur(m.n0); $('hint').textContent = ''; }
     else if (a >= T) zeroN = 0;
     return;
   }
@@ -145,13 +145,13 @@ function detect(h) {
   }
   if (a < T * 0.6) {
     pk = 0;
-    if (Math.abs(cur - m.n0) === 1 && ++zeroN > 18) { dir = m.n0 - cur; setCur(m.n0); zeroN = 0; }   // долго нет поля рядом со струной без магнита
+    if (Math.abs(cur - m.n0) === 1 && ++zeroN > 140) { dir = m.n0 - cur; setCur(m.n0); zeroN = 0; }   // долго нет поля рядом со струной без магнита
   }
 }
 
-// волна: последние 20 секунд
-const WN = 500;
-let wave = [], wavePaused = false;
+// волна: последние 12 секунд
+const WN = 2400;
+let wave = [], wavePaused = false, waveTick = 0;
 const cvW = $('wave'), cxW = cvW.getContext('2d');
 function drawWave() {
   const W = cvW.width, H = cvW.height;
@@ -184,10 +184,10 @@ function onLine(l) {
   if (!m) return;
   const h = +m[1]; lastH = h;
   $('live').textContent = 'датчик: ' + h;
-  if (!wavePaused) { wave.push(h); if (wave.length > WN) wave.shift(); if (wave.length % 3 === 0) drawWave(); }
+  if (!wavePaused) { wave.push(h); if (wave.length > WN) wave.shift(); if (++waveTick % 20 === 0) drawWave(); }
   if (recording) {
     recording.v.push(h);
-    if (recording.v.length >= 25) {
+    if (recording.v.length >= 200) {
       const r = recording; recording = null;
       cal[r.i] = Math.round(r.v.reduce((a, b) => a + b, 0) / r.v.length);
       save(); step = r.i + 1; render();
