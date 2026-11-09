@@ -100,7 +100,7 @@ $('bAgain').onclick = () => { cal = [null, null, null, null, null, null]; step =
 
 // последовательность: струна меняется только на соседнюю, по знаку пика, размеру пика и направлению движения.
 // Абсолютное число не сравниваем: оно плавает от точного положения, а знак и порядок — нет.
-let pk = 0, pkMax = 0, dir = 0, zeroN = 0;
+let pk = 0, pkMax = 0, pkStart = 0, dir = 0, zeroN = 0;
 function model() {
   const v = cal.slice().sort((a, b) => a - b), med = (v[2] + v[3]) / 2;
   let n0 = 0;
@@ -124,24 +124,16 @@ function detect(h) {
   if (a > T) {
     zeroN = 0;
     const sg = d > 0 ? 1 : -1;
-    if (pk !== sg) {                                 // вошли в новый пик: выбираем из текущей и двух соседних
-      pk = sg; pkMax = a;
-      let best = -1, bs = 1e9;
-      for (const i of [cur - 1, cur, cur + 1]) {
-        if (i < 0 || i > 5 || i === m.n0) continue;
-        if (Math.sign(m.dev[i]) !== sg) continue;
-        let sc = 1;
-        const st = i - cur;
-        if (st && dir && st === dir) sc = 0.5;       // дальше в ту же сторону вероятнее
-        if (!st) sc = 0.8;
-        if (sc < bs) { bs = sc; best = i; }
-      }
-      if (best >= 0 && best !== cur) { dir = best - cur; setCur(best); }
-      else if (best === cur) dir = -dir;
-      $('big').textContent = 'Струна ' + (cur + 1);
-      $('hint').textContent = '';
-    }
+    if (pk !== sg) { pk = sg; pkMax = a; pkStart = cur; $('hint').textContent = ''; }
     pkMax = Math.max(pkMax, a);
+    // кандидаты: струна, с которой вошли в пик, и две соседние, знак совпадает; выбираем по высоте пика
+    let best = -1, bs = 1e9;
+    for (const i of [pkStart - 1, pkStart, pkStart + 1]) {
+      if (i < 0 || i > 5 || i === m.n0 || Math.sign(m.dev[i]) !== sg) continue;
+      const sc = Math.abs(Math.abs(m.dev[i]) - pkMax);
+      if (sc < bs) { bs = sc; best = i; }
+    }
+    if (best >= 0 && best !== cur) setCur(best); else $('big').textContent = 'Струна ' + (cur + 1);
     return;
   }
   if (a < T * 0.6) {
