@@ -31,6 +31,14 @@
     <div id="live">—</div>
   </div>
 
+  <div class="card">
+    <h1>Волна: ведите тележку слева направо</h1>
+    <canvas id="wave" width="900" height="320" style="width:100%;background:#fff;border:1px solid #ddd"></canvas>
+    <button id="bPause">Пауза</button>
+    <button id="bClear">Очистить</button>
+    <span id="waveInfo" class="mut"></span>
+  </div>
+
   <div class="card" id="wiz">
     <div id="step">Сначала подключите плату</div>
     <button id="bRec" class="go" disabled>Записать</button>
@@ -141,12 +149,42 @@ function detect(h) {
   }
 }
 
+// волна: последние 20 секунд
+const WN = 500;
+let wave = [], wavePaused = false;
+const cvW = $('wave'), cxW = cvW.getContext('2d');
+function drawWave() {
+  const W = cvW.width, H = cvW.height;
+  cxW.clearRect(0, 0, W, H);
+  if (wave.length < 2) return;
+  let lo = Math.min(...wave), hi = Math.max(...wave);
+  if (hi - lo < 200) { const c = (hi + lo) / 2; lo = c - 100; hi = c + 100; }
+  const Y = v => H - 20 - (v - lo) / (hi - lo) * (H - 40);
+  cxW.font = '14px sans-serif'; cxW.fillStyle = '#888'; cxW.strokeStyle = '#eee';
+  for (let k = 0; k <= 4; k++) {
+    const v = lo + (hi - lo) * k / 4;
+    cxW.beginPath(); cxW.moveTo(0, Y(v)); cxW.lineTo(W, Y(v)); cxW.stroke();
+    cxW.fillText(Math.round(v), 4, Y(v) - 3);
+  }
+  if (ready()) {
+    const b = model().base;
+    if (b >= lo && b <= hi) { cxW.strokeStyle = '#c0392b'; cxW.beginPath(); cxW.moveTo(0, Y(b)); cxW.lineTo(W, Y(b)); cxW.stroke(); }
+  }
+  cxW.strokeStyle = '#2f6fd6'; cxW.lineWidth = 2; cxW.beginPath();
+  wave.forEach((v, i) => { const x = i / (WN - 1) * W; i ? cxW.lineTo(x, Y(v)) : cxW.moveTo(x, Y(v)); });
+  cxW.stroke(); cxW.lineWidth = 1;
+  $('waveInfo').textContent = 'мин ' + Math.min(...wave) + ', макс ' + Math.max(...wave);
+}
+$('bPause').onclick = () => { wavePaused = !wavePaused; $('bPause').textContent = wavePaused ? 'Дальше' : 'Пауза'; };
+$('bClear').onclick = () => { wave = []; drawWave(); };
+
 let port = null, connected = false;
 function onLine(l) {
   const m = l.match(/ h (\d+)/);
   if (!m) return;
   const h = +m[1]; lastH = h;
   $('live').textContent = 'датчик: ' + h;
+  if (!wavePaused) { wave.push(h); if (wave.length > WN) wave.shift(); if (wave.length % 3 === 0) drawWave(); }
   if (recording) {
     recording.v.push(h);
     if (recording.v.length >= 25) {
