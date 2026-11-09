@@ -36,14 +36,14 @@
     <button id="bRec" class="go" disabled>Записать</button>
     <button id="bBack" disabled>Назад</button>
     <button id="bAgain">Записать заново</button>
-    <div class="mut">Поставьте тележку точно на струну, отпустите, нажмите «Записать» — 1 секунда.</div>
+    <div class="mut">Поставьте тележку на струну, отпустите, нажмите «Записать». Точность не важна: запись нужна только для знака каждого магнита.</div>
   </div>
 
   <div class="card">
     <div class="mut">Сейчас</div>
     <div id="big">—</div>
     <div id="hint" class="mut"></div>
-    <div style="margin-top:8px" class="mut">Допуск, единиц: <input id="tol" type="number" value="60" style="width:70px;font-size:15px">
+    <div style="margin-top:8px" class="mut">Порог пика, единиц: <input id="tol" type="number" value="60" style="width:70px;font-size:15px">
       <span id="tolHint"></span></div>
   </div>
 
@@ -63,12 +63,7 @@ step = cal.findIndex(v => v === null); if (step < 0) step = 6;
 
 function save() { try { localStorage.setItem(KEY, JSON.stringify(cal)); } catch (e) {} }
 function ready() { return cal.every(v => v !== null); }
-function autoTol() {
-  if (!ready()) return null;
-  let m = 1e9;
-  for (let i = 1; i < 6; i++) m = Math.min(m, Math.abs(cal[i] - cal[i - 1]));
-  return Math.max(15, Math.round(m * 0.45));
-}
+function autoTol() { return ready() ? model().T : null; }
 function render() {
   $('step').textContent = step < 6 ? 'Поставьте на струну ' + (step + 1) : 'Готово: все струны записаны';
   $('bRec').textContent = step < 6 ? 'Записать струну ' + (step + 1) : 'Записать';
@@ -93,34 +88,57 @@ $('bRec').onclick = () => {
   render(); $('bRec').textContent = 'Записываю…';
 };
 $('bBack').onclick = () => { if (step > 0) { step--; cal[step] = null; save(); cur = null; render(); } };
-$('bAgain').onclick = () => { cal = [null, null, null, null, null, null]; step = 0; cur = null; cand = null; save(); $('big').textContent = '—'; $('hint').textContent = ''; render(); };
+$('bAgain').onclick = () => { cal = [null, null, null, null, null, null]; step = 0; cur = null; cand = null; save(); pk = 0; dir = 0; zeroN = 0; $('big').textContent = '—'; $('hint').textContent = ''; render(); };
 
+// последовательность: струна меняется только на соседнюю, по знаку пика, размеру пика и направлению движения.
+// Абсолютное число не сравниваем: оно плавает от точного положения, а знак и порядок — нет.
+let pk = 0, pkMax = 0, dir = 0, zeroN = 0;
+function model() {
+  const v = cal.slice().sort((a, b) => a - b), med = (v[2] + v[3]) / 2;
+  let n0 = 0;
+  cal.forEach((x, i) => { if (Math.abs(x - med) < Math.abs(cal[n0] - med)) n0 = i; });
+  const base = cal[n0], dev = cal.map(x => x - base);
+  const mags = dev.map(Math.abs).filter(x => x > 0).sort((a, b) => a - b);
+  return { n0, base, dev, T: Math.max(60, Math.round(mags[0] * 0.5)) };
+}
+function setCur(i) { cur = i; $('big').textContent = 'Струна ' + (cur + 1); render(); }
 function detect(h) {
-  smooth.push(h); if (smooth.length > 4) smooth.shift();
-  const v = smooth.reduce((a, b) => a + b, 0) / smooth.length;
+  smooth.push(h); if (smooth.length > 2) smooth.shift();
   if (!ready()) return;
-  const tol = +$('tol').value || 60;
-  // ищем только соседние струны от текущей: это и есть последовательность
-  const list = cur === null ? [0, 1, 2, 3, 4, 5] : [cur - 1, cur, cur + 1].filter(i => i >= 0 && i < 6);
-  let best = -1, bd = 1e9;
-  for (const i of list) { const d = Math.abs(v - cal[i]); if (d < bd) { bd = d; best = i; } }
-  if (bd > tol) {
-    cand = null; candN = 0;
-    // тележка стоит, а соседние струны не подходят: значит, проскочили — ищем по всем струнам
-    stillV.push(v); if (stillV.length > 15) stillV.shift();
-    if (stillV.length === 15 && Math.max(...stillV) - Math.min(...stillV) < 30) {
-      let g = -1, gd = 1e9;
-      for (let i = 0; i < 6; i++) { const d = Math.abs(v - cal[i]); if (d < gd) { gd = d; g = i; } }
-      if (gd <= tol) { cur = g; stillV = []; $('big').textContent = 'Струна ' + (cur + 1); $('hint').textContent = ''; render(); return; }
-    }
-    $('hint').textContent = cur === null ? 'поставьте тележку на струну' : 'между струнами, последняя ' + (cur + 1);
+  const v = smooth.reduce((a, b) => a + b, 0) / smooth.length;
+  const m = model(), d = v - m.base, a = Math.abs(d), T = +$('tol').value || m.T;
+  if (cur === null) {                                // старт: только со струны без магнита, там число надёжно
+    $('hint').textContent = 'поставьте на струну ' + (m.n0 + 1) + ' (без магнита), чтобы начать счёт';
+    if (a < T && ++zeroN > 12) { zeroN = 0; dir = 0; setCur(m.n0); $('hint').textContent = ''; }
+    else if (a >= T) zeroN = 0;
     return;
   }
-  stillV = [];
-  $('hint').textContent = '';
-  if (best === cur) { cand = null; candN = 0; return; }
-  if (best === cand) candN++; else { cand = best; candN = 1; }
-  if (candN >= 4) { cur = best; cand = null; candN = 0; $('big').textContent = 'Струна ' + (cur + 1); render(); }
+  if (a > T) {
+    zeroN = 0;
+    const sg = d > 0 ? 1 : -1;
+    if (pk !== sg) {                                 // вошли в новый пик: выбираем из текущей и двух соседних
+      pk = sg; pkMax = a;
+      let best = -1, bs = 1e9;
+      for (const i of [cur - 1, cur, cur + 1]) {
+        if (i < 0 || i > 5 || i === m.n0) continue;
+        if (Math.sign(m.dev[i]) !== sg) continue;
+        let sc = 1;
+        const st = i - cur;
+        if (st && dir && st === dir) sc = 0.5;       // дальше в ту же сторону вероятнее
+        if (!st) sc = 0.8;
+        if (sc < bs) { bs = sc; best = i; }
+      }
+      if (best >= 0 && best !== cur) { dir = best - cur; setCur(best); }
+      else if (best === cur) dir = -dir;
+      $('hint').textContent = '';
+    }
+    pkMax = Math.max(pkMax, a);
+    return;
+  }
+  if (a < T * 0.6) {
+    pk = 0;
+    if (Math.abs(cur - m.n0) === 1 && ++zeroN > 18) { dir = m.n0 - cur; setCur(m.n0); zeroN = 0; }   // долго нет поля рядом со струной без магнита
+  }
 }
 
 let port = null, connected = false;
