@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Струны 3×49E</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#f4f1ea; color:#1d1d1f; margin:0; padding:16px; }
+  .wrap { max-width:640px; margin:0 auto; }
+  .card { background:#fff; border-radius:12px; padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  h1 { font-size:20px; margin:0 0 10px; }
+  button { font-size:16px; padding:10px 16px; border-radius:8px; border:1px solid #bbb; background:#fff; cursor:pointer; margin:4px 6px 4px 0; }
+  button.go { background:#2f6fd6; border-color:#2f6fd6; color:#fff; font-size:20px; padding:14px 24px; }
+  button:disabled { opacity:.45; cursor:default; }
+  #big { font-size:72px; font-weight:700; line-height:1.1; }
+  #step { font-size:26px; font-weight:700; margin:6px 0 10px; }
+  #live { font-size:20px; color:#555; }
+  .mut { color:#6b6b6b; font-size:14px; }
+  table { width:100%; border-collapse:collapse; font-size:16px; }
+  td, th { padding:5px 4px; border-bottom:1px solid #eee; text-align:left; }
+  tr.now td { background:#dfeaff; font-weight:700; }
+  .bad { color:#c0392b; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Струны: 3 датчика на платформе, 2 магнита на тележке</h1>
+    <button id="bConn">Подключить COM7</button>
+    <span id="st" class="mut">не подключено</span>
+    <div id="live">—</div>
+  </div>
+  <div class="card">
+    <div class="mut">Сейчас</div>
+    <div id="big">—</div>
+    <div id="hint" class="mut"></div>
+  </div>
+  <div class="card">
+    <div id="step">Сначала подключите плату</div>
+    <button id="bRec" class="go" disabled>Записать</button>
+    <button id="bBack" disabled>Назад</button>
+    <button id="bAgain">Записать заново</button>
+    <div class="mut">Поставьте тележку на струну и нажмите «Записать». Сравнивается только какой датчик сработал и с каким знаком, точное число не важно.</div>
+    <div class="mut" style="margin-top:6px">Порог, единиц: <input id="tol" type="number" value="150" style="width:70px;font-size:15px"> <span id="tolHint"></span></div>
+  </div>
+  <div class="card">
+    <table id="tab"></table>
+    <div id="warn" class="mut" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h1>Волна трёх датчиков</h1>
+    <canvas id="wave" width="900" height="300" style="width:100%;background:#fff;border:1px solid #ddd"></canvas>
+    <button id="bPause">Пауза</button>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const KEY = 'struny3x49e';
+let cal = [null, null, null, null, null, null], step = 0, rec = null, connected = false;
+try { const v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v) && v.length === 6) cal = v; } catch (e) {}
+step = cal.findIndex(v => v === null); if (step < 0) step = 6;
+const ready = () => cal.every(v => v !== null);
+function save() { try { localStorage.setItem(KEY, JSON.stringify(cal)); } catch (e) {} }
+
+// покой каждого датчика: медиана записанных (на 4 струнах из 6 датчик не видит магнит)
+function model() {
+  const base = [0, 1, 2].map(k => { const v = cal.map(c => c[k]).sort((a, b) => a - b); return (v[2] + v[3]) / 2; });
+  const codes = cal.map(c => {
+    let s = 0, m = 0;
+    for (let k = 0; k < 3; k++) { const d = c[k] - base[k]; if (Math.abs(d) > Math.abs(m)) { m = d; s = k; } }
+    return { s, sg: Math.sign(m), a: Math.round(Math.abs(m)) };
+  });
+  return { base, codes };
+}
+let cur = null, cand = null, candN = 0, smooth = [];
+function render() {
+  $('step').textContent = step < 6 ? 'Поставьте на струну ' + (step + 1) : 'Готово: все струны записаны';
+  $('bRec').textContent = step < 6 ? 'Записать струну ' + (step + 1) : 'Записать';
+  $('bRec').disabled = step >= 6 || !connected || rec !== null;
+  $('bBack').disabled = step === 0 || rec !== null;
+  let m = ready() ? model() : null;
+  let rows = '<tr><th>Струна</th><th>Датчик</th><th>Знак</th><th>Размах</th></tr>';
+  for (let i = 0; i < 6; i++) {
+    const c = m ? m.codes[i] : null;
+    rows += '<tr class="' + (cur === i ? 'now' : '') + '"><td>' + (i + 1) + '</td><td>' + (c ? c.s + 1 : (cal[i] ? 'записано' : '—')) + '</td><td>' + (c ? (c.sg > 0 ? '+' : '−') : '') + '</td><td>' + (c ? c.a : '') + '</td></tr>';
+  }
+  $('tab').innerHTML = rows;
+  let w = '';
+  if (m) {
+    const key = m.codes.map(c => c.s + '/' + c.sg), dup = key.filter((k, i) => key.indexOf(k) !== i);
+    const mn = Math.min(...m.codes.map(c => c.a));
+    $('tolHint').textContent = '(советую ' + Math.max(60, Math.round(mn * 0.4)) + ')';
+    if (dup.length) w = '<span class="bad">Две струны дают один и тот же сигнал: проверьте полюса магнитов (один +, другой −) и запишите заново.</span>';
+    else if (mn < 150) w = '<span class="bad">Слабый сигнал на какой-то струне (' + mn + '): магнит далеко или сдвинут.</span>';
+    else w = 'Все 6 струн различаются.';
+  }
+  $('warn').innerHTML = w;
+}
+$('bRec').onclick = () => { if (step < 6) { rec = { i: step, v: [[], [], []] }; render(); $('bRec').textContent = 'Записываю…'; } };
+$('bBack').onclick = () => { if (step > 0) { step--; cal[step] = null; save(); cur = null; render(); } };
+$('bAgain').onclick = () => { cal = [null, null, null, null, null, null]; step = 0; cur = null; save(); $('big').textContent = '—'; $('hint').textContent = ''; render(); };
+
+function detect(h) {
+  smooth.push(h); if (smooth.length > 6) smooth.shift();
+  if (!ready()) return;
+  const v = [0, 1, 2].map(k => smooth.reduce((a, b) => a + b[k], 0) / smooth.length);
+  const m = model(), T = +$('tol').value || 150;
+  let s = -1, d = 0;
+  for (let k = 0; k < 3; k++) { const x = v[k] - m.base[k]; if (Math.abs(x) > Math.abs(d)) { d = x; s = k; } }
+  if (Math.abs(d) < T) { cand = null; candN = 0; $('hint').textContent = cur === null ? 'поставьте тележку на струну' : 'между струнами, последняя ' + (cur + 1); return; }
+  $('hint').textContent = '';
+  const found = m.codes.findIndex(c => c.s === s && c.sg === Math.sign(d));
+  if (found < 0 || found === cur) { cand = null; candN = 0; if (found === cur && cur !== null) $('big').textContent = 'Струна ' + (cur + 1); return; }
+  if (found === cand) candN++; else { cand = found; candN = 1; }
+  if (candN >= 8) { cur = found; cand = null; candN = 0; $('big').textContent = 'Струна ' + (cur + 1); render(); }
+}
+
+const WN = 2000;
+let wave = [], paused = false, tick = 0;
+const cv = $('wave'), cx = cv.getContext('2d'), COL = ['#2f6fd6', '#c0392b', '#2e8b57'];
+function draw() {
+  const W = cv.width, H = cv.height;
+  cx.clearRect(0, 0, W, H);
+  if (wave.length < 2) return;
+  let lo = 1e9, hi = -1e9;
+  for (const p of wave) for (const v of p) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  if (hi - lo < 200) { const c = (hi + lo) / 2; lo = c - 100; hi = c + 100; }
+  const Y = v => H - 16 - (v - lo) / (hi - lo) * (H - 32);
+  cx.font = '13px sans-serif';
+  for (let k = 0; k < 3; k++) {
+    cx.strokeStyle = COL[k]; cx.lineWidth = 2; cx.beginPath();
+    wave.forEach((p, i) => { const x = i / (WN - 1) * W; i ? cx.lineTo(x, Y(p[k])) : cx.moveTo(x, Y(p[k])); });
+    cx.stroke(); cx.fillStyle = COL[k]; cx.fillText('датчик ' + (k + 1), 8 + k * 80, 14);
+  }
+}
+$('bPause').onclick = () => { paused = !paused; $('bPause').textContent = paused ? 'Дальше' : 'Пауза'; };
+
+function onLine(l) {
+  const m = l.match(/ h (\d+) (\d+) (\d+)/);
+  if (!m) return;
+  const h = [+m[1], +m[2], +m[3]];
+  $('live').textContent = 'датчики: ' + h.join('  ');
+  if (!paused) { wave.push(h); if (wave.length > WN) wave.shift(); if (++tick % 20 === 0) draw(); }
+  if (rec) {
+    h.forEach((v, k) => rec.v[k].push(v));
+    if (rec.v[0].length >= 200) {
+      const r = rec; rec = null;
+      cal[r.i] = r.v.map(a => Math.round(a.reduce((x, y) => x + y, 0) / a.length));
+      save(); step = r.i + 1; render();
+      if (ready()) { const mn = Math.min(...model().codes.map(c => c.a)); $('tol').value = Math.max(60, Math.round(mn * 0.4)); render(); }
+    }
+    return;
+  }
+  detect(h);
+}
+$('bConn').onclick = async () => {
+  if (!('serial' in navigator)) { alert('Нужен Chrome или Edge'); return; }
+  try {
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    connected = true; $('st').textContent = 'подключено'; render();
+    const reader = port.readable.getReader(), dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value);
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) { onLine(buf.slice(0, i).trim()); buf = buf.slice(i + 1); }
+    }
+  } catch (e) { $('st').textContent = 'ошибка: ' + e.message; }
+  connected = false; render();
+};
+render();
+</script>
+</body>
+</html>

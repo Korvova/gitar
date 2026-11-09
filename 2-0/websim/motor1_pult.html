@@ -343,7 +343,7 @@ async function readLoop() {
       let i;
       while ((i = buf.indexOf('\n')) >= 0) {
         const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
-        const m = l.match(/^pos (-?[\d.]+)(?: h (\d+))?$/);
+        const m = l.match(/^pos (-?[\d.]+)(?: h (\d+)(?: \d+ \d+)?)?$/);
         if (m) {
           $('pos').textContent = (+m[1]).toFixed(1) + ' мм';
           lastPos = +m[1];

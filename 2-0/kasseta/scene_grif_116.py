@@ -62,18 +62,22 @@ for i, (fn, rz) in enumerate(FILES):
     y0 = (i - 1.5) * 30.0
     stl("gt_upor", "упор x+ %d" % (i + 1), RED, y0)
     has_m = i < 2
-    for mx in (-11.5, -2.7, 6.1, 14.9, 23.7):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=2.0, depth=1.9, location=(mx, y0 - 5.2, -2.55))
-        bpy.context.object.name = "магнит"
-        bpy.context.object.data.materials.append(M_MAG)
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(10.5, -5.8, 1.85))
-    s49 = bpy.context.object
-    s49.name = "датчик 49E %d" % (i + 1)
-    s49.scale = (3.0, 4.1, 1.5)
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    s49.data.materials.append(M_49)
+    for mx in (-8.8, 0.0, 8.8):                          # датчики неподвижно в дне паза
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(mx, y0 - 5.2, -2.28))
+        o_ = bpy.context.object
+        o_.name = "датчик 49E"
+        o_.scale = (4.1, 3.0, 1.45)
+        o_.data.materials.append(M_49)
+    mags = []
+    for k_, mx in enumerate((13.2, -13.2)):              # магниты на тележке, + и −
+        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=2.0, depth=1.9, location=(mx, -5.2, 1.67))
+        o_ = bpy.context.object
+        o_.name = "магнит %d" % (k_ + 1)
+        o_.data.materials.append(M_MAG)
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        mags.append(o_)
     bpy.ops.object.select_all(action='DESELECT')
-    cart = [s49, stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
+    cart = mags + [stl("gt_kubik", "кубик %d" % (i + 1), SVET if has_m else SVET2, y0), stl("gt_niz", "низ %d" % (i + 1), NIZ, y0),
             stl(fn, "площадка %d" % (i + 1), PAD, y0, rz)]
     yb = (i - 1.5) * 24.0
     bo = []

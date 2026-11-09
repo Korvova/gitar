@@ -9,7 +9,7 @@
 // Путь тележки = угол вала × 6 мм (шестерня m1 z12, стенд 114; на стенде 101 было 13). Подключение: IN1 25, IN2 26, IN3 27, EN 14 (nSLEEP).
 #define EN_PIN 14
 #define LED_PIN 2
-#define HALL_PIN 32       // 49E: питание 3.3 В, выход на GPIO 32
+const int HALL[3] = {32, 33, 34};   // три 49E: питание 3.3 В
 
 const int PINS[3] = {25, 26, 27};
 const float RP = 6.0;           // мм — делительный радиус шестерни (стенд 114: m1 z12)
@@ -80,7 +80,7 @@ void setup() {
   pinMode(EN_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
   analogReadResolution(12);
-  analogSetPinAttenuation(HALL_PIN, ADC_11db);
+  for (int i = 0; i < 3; i++) analogSetPinAttenuation(HALL[i], ADC_11db);
   for (int i = 0; i < 3; i++) ledcAttach(PINS[i], 20000, 10);
   setOn(false);                                       // после включения вал свободен — «on» с пульта
   tLast = micros();
@@ -106,8 +106,8 @@ void loop() {
   }
   if (millis() - tPrint >= 5) {               // 200 значений в секунду: пик магнита узкий
     tPrint = millis();
-    long sum = 0;
-    for (int i = 0; i < 4; i++) sum += analogRead(HALL_PIN);
-    Serial.printf("pos %.2f h %ld\n", posMm(), sum / 4);
+    long h[3] = {0, 0, 0};
+    for (int k = 0; k < 3; k++) { for (int i = 0; i < 4; i++) h[k] += analogRead(HALL[k]); h[k] /= 4; }
+    Serial.printf("pos %.2f h %ld %ld %ld\n", posMm(), h[0], h[1], h[2]);
   }
 }
