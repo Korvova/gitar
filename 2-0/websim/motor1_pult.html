@@ -102,6 +102,20 @@
     <div class="row"><button id="bAll">Записать все 1–6</button><span id="nowStr" style="font-size:20px;margin-left:12px"></span></div>
     <table id="strTab" style="width:100%;border-collapse:collapse;font-size:14px;margin-top:6px"></table>
   </div>
+
+  <div class="card">
+    <h2>Рукой, без мотора: последовательность</h2>
+    <div id="hCur" style="font-size:44px;font-weight:700">—</div>
+    <div id="hSeq" class="hint" style="font-size:16px"></div>
+    <canvas id="cvT" width="640" height="200" style="width:100%;background:#fff;border:1px solid #ccc"></canvas>
+    <div class="row">
+      <button id="bBase">Я на струне 6 (поля нет)</button>
+      <span class="hint">порог</span>
+      <input type="number" id="hT" value="120" style="width:70px">
+    </div>
+    <div class="hint">Мотор выключен. Поставьте тележку на струну 6, нажмите кнопку и ведите рукой к струне 1. Смена знака пика — следующая струна, тот же знак — вернулись обратно.
+      Если доехать до соседнего магнита и вернуться, счёт собьётся: один датчик направление не видит. Сброс — снова кнопка на струне 6.</div>
+  </div>
 </main>
 
 <div class="cmdline">
@@ -247,6 +261,61 @@ function guessStr(h) {                               // ближайшая за�
 }
 strTable();
 
+// ручной режим: счёт пиков от струны 6
+let hBase = null, hStr = null, hDir = -1, hIn = 0, hMax = 0, hLast = 0, hZero = 0, hTrail = [], hLog = [];
+const cvT = $('cvT'), cxT = cvT.getContext('2d');
+function hShow() {
+  $('hCur').textContent = hStr === null ? 'нажмите кнопку на струне 6' : 'Струна ' + hStr;
+  $('hSeq').textContent = hLog.slice(-14).join(' ');
+}
+function hDraw() {
+  const W = cvT.width, H = cvT.height;
+  cxT.clearRect(0, 0, W, H);
+  if (hTrail.length < 2) return;
+  const b = hBase === null ? hTrail[0] : hBase, T = +$('hT').value;
+  let a = T * 1.5;
+  for (const v of hTrail) a = Math.max(a, Math.abs(v - b));
+  const Y = v => H / 2 - (v - b) / a * (H / 2 - 6);
+  cxT.strokeStyle = '#ddd';
+  for (const v of [b, b + T, b - T]) { cxT.beginPath(); cxT.moveTo(0, Y(v)); cxT.lineTo(W, Y(v)); cxT.stroke(); }
+  cxT.strokeStyle = '#2f6fd6'; cxT.lineWidth = 2; cxT.beginPath();
+  hTrail.forEach((v, i) => { const x = i / 250 * W; i ? cxT.lineTo(x, Y(v)) : cxT.moveTo(x, Y(v)); });
+  cxT.stroke();
+}
+function handFeed(h) {
+  hTrail.push(h); if (hTrail.length > 250) hTrail.shift();
+  if (hTrail.length % 3 === 0) hDraw();
+  if (hBase === null || hStr === null) return;
+  const d = h - hBase, T = +$('hT').value;
+  if (Math.abs(d) > T) {
+    hZero = 0;
+    const sg = d > 0 ? 1 : -1;
+    if (hIn !== sg) { hIn = sg; hMax = 0; }
+    hMax = Math.max(hMax, Math.abs(d));
+    return;
+  }
+  if (hIn && Math.abs(d) < T * 0.6) {                // вышли из магнита: пик закончен
+    const sg = hIn; hIn = 0;
+    if (!hLast) { hStr = Math.max(1, Math.min(6, hStr + hDir)); }
+    else if (sg !== hLast) { hStr = Math.max(1, Math.min(6, hStr + hDir)); }
+    else { hDir = -hDir; hLog.push('↩'); }
+    hLast = sg;
+    hLog.push((sg > 0 ? '+' : '−') + hMax + '→' + hStr);
+    hShow();
+  }
+  if (!hIn && hStr === 5 && ++hZero > 18) {          // долго нет поля после струны 5 — это струна 6
+    hStr = 6; hDir = -1; hLast = 0; hLog.push('[6]'); hShow();
+  }
+}
+$('bBase').onclick = () => {
+  const v = hTrail.slice(-12);
+  if (!v.length) return;
+  hBase = Math.round(v.reduce((a, b) => a + b, 0) / v.length);
+  hStr = 6; hDir = -1; hIn = 0; hLast = 0; hZero = 0; hLog = ['покой ' + hBase + ':'];
+  hShow(); hDraw();
+};
+hShow();
+
 $('bSend').onclick = () => { const v = $('cmd').value.trim(); if (v) send(v); $('cmd').value = ''; };
 $('cmd').onkeydown = e => { if (e.key === 'Enter') $('bSend').onclick(); };
 
@@ -280,7 +349,7 @@ async function readLoop() {
           lastPos = +m[1];
           if (m[2]) {
             lastH = +m[2]; $('hval').textContent = lastH;
-            hBuf.push(lastH); guessStr(lastH);
+            hBuf.push(lastH); guessStr(lastH); handFeed(lastH);
             pts.push([+m[1], lastH]); if (pts.length > 4000) pts.shift();
             if (pts.length % 5 === 0) draw();
           }
