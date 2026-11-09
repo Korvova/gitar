@@ -56,7 +56,7 @@
 <script>
 const $ = id => document.getElementById(id);
 let cal = [null, null, null, null, null, null], step = 0, recording = null;
-let cur = null, cand = null, candN = 0, smooth = [], lastH = null;
+let cur = null, cand = null, candN = 0, smooth = [], lastH = null, stillV = [];
 const KEY = 'struny49e';
 try { const v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v) && v.length === 6) { cal = v; } } catch (e) {}
 step = cal.findIndex(v => v === null); if (step < 0) step = 6;
@@ -104,7 +104,19 @@ function detect(h) {
   const list = cur === null ? [0, 1, 2, 3, 4, 5] : [cur - 1, cur, cur + 1].filter(i => i >= 0 && i < 6);
   let best = -1, bd = 1e9;
   for (const i of list) { const d = Math.abs(v - cal[i]); if (d < bd) { bd = d; best = i; } }
-  if (bd > tol) { cand = null; candN = 0; $('hint').textContent = cur === null ? 'поставьте тележку на струну' : 'между струнами, последняя ' + (cur + 1); return; }
+  if (bd > tol) {
+    cand = null; candN = 0;
+    // тележка стоит, а соседние струны не подходят: значит, проскочили — ищем по всем струнам
+    stillV.push(v); if (stillV.length > 15) stillV.shift();
+    if (stillV.length === 15 && Math.max(...stillV) - Math.min(...stillV) < 30) {
+      let g = -1, gd = 1e9;
+      for (let i = 0; i < 6; i++) { const d = Math.abs(v - cal[i]); if (d < gd) { gd = d; g = i; } }
+      if (gd <= tol) { cur = g; stillV = []; $('big').textContent = 'Струна ' + (cur + 1); $('hint').textContent = ''; render(); return; }
+    }
+    $('hint').textContent = cur === null ? 'поставьте тележку на струну' : 'между струнами, последняя ' + (cur + 1);
+    return;
+  }
+  stillV = [];
   $('hint').textContent = '';
   if (best === cur) { cand = null; candN = 0; return; }
   if (best === cand) candN++; else { cand = best; candN = 1; }
