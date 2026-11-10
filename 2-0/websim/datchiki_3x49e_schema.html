@@ -1,0 +1,39 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Три датчика 49E</title>
+<style>
+:root{--bg:#f6f6f3;--panel:#fff;--tx:#222;--mut:#6b6b66;--ln:#ddd;--cart:#8a4fbf;--neck:#d8cdb8;--str:#a08f72;--pos:#d6452f;--neg:#2c6fd6;--off:#9b9b95}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1d1e20;--panel:#282a2d;--tx:#eee;--mut:#a4a39d;--ln:#3d3f43;--neck:#4c4537;--str:#a99878;--off:#77776f}}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}h1{font-size:20px;margin:0 0 4px}p{margin:4px 0;color:var(--mut)}
+.card{background:var(--panel);border:1px solid var(--ln);border-radius:10px;padding:12px;margin-top:12px}
+label{display:flex;gap:10px;align-items:center;margin:8px 0}label span{min-width:190px}label b{min-width:68px;text-align:right}input[type=range]{flex:1;min-width:0}
+canvas{width:100%;display:block}.res{font-size:22px;font-weight:700}.ok{color:#2a9d4a}.no{color:var(--mut)}.bad{color:#d6452f}
+.bars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.bar{text-align:center}.tr{position:relative;height:120px;background:var(--bg);border:1px solid var(--ln);border-radius:6px;overflow:hidden}.fill{position:absolute;left:18%;right:18%}.mid{position:absolute;left:0;right:0;top:50%;border-top:1px solid var(--mut)}.th{position:absolute;left:0;right:0;border-top:1px dashed var(--mut)}
+@media(max-width:520px){label{flex-wrap:wrap}label span{min-width:100%}}
+</style></head><body><main>
+<h1>Три датчика 49E и два магнита</h1><p>Двигай тележку ползунком. Поле считается как у диполя: это приближение, реальные значения снимаются на стенде.</p>
+<div class="card"><label><span>Положение тележки</span><input id="x" type="range" min="-24" max="24" step="0.1" value="4.4"><b id="xv"></b></label><canvas id="c" height="230"></canvas><div class="res" id="res"></div><p id="sub"></p></div>
+<div class="card"><div class="bars" id="bars"></div></div>
+<div class="card"><p>Карта по всему ходу: где какая струна определяется</p><canvas id="m" height="62"></canvas></div>
+<div class="card"><label><span>Расстояние магнит–кристалл, мм</span><input id="z" type="range" min="1.5" max="6" step="0.1" value="2.8"><b id="zv"></b></label>
+<label><span>Порог срабатывания, % от пика</span><input id="th" type="range" min="10" max="80" step="1" value="35"><b id="thv"></b></label>
+<label><span>Помеха мотора над датчиком, %</span><input id="n" type="range" min="-60" max="60" step="1" value="0"><b id="nv"></b></label>
+<p>Помеха неизвестна, её надо измерить: это проверка, что будет, если мотор смещает показания датчика, над которым стоит.</p></div></main>
+<script>
+const S=[-8.8,0,8.8],STR=[-22,-13.2,-4.4,4.4,13.2,22],M=[[13.2,1],[-13.2,-1]],$=i=>document.getElementById(i);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const f=(d,z)=>{const u=d/z;return(2-u*u)/Math.pow(1+u*u,2.5)/2};
+function B(s,x,z,n){let v=0;for(const[o,p]of M)v+=p*f(s-(x+o),z);if(Math.abs(s-x)<13.9)v+=n/100;return v}
+function det(x,z,t,n){let bi=-1,bv=0;S.forEach((s,i)=>{const v=B(s,x,z,n);if(Math.abs(v)>Math.abs(bv)){bv=v;bi=i}});if(Math.abs(bv)<t)return null;return{i:bi,sign:Math.sign(bv),str:bv>0?bi:bi+3}}
+function fit(c){const r=c.getBoundingClientRect(),d=devicePixelRatio||1,h=+c.getAttribute('height');c.width=r.width*d;c.height=h*d;c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(d,0,0,d,0,0);return[g,r.width,h]}
+const bars=$('bars');S.forEach((s,i)=>{bars.innerHTML+=`<div class="bar"><div>Датчик ${i+1} (x = ${s})</div><div class="tr"><div class="mid"></div><div class="th" id="a${i}"></div><div class="th" id="b${i}"></div><div class="fill" id="f${i}"></div></div><div id="t${i}"></div></div>`});
+function draw(){const x=+$('x').value,z=+$('z').value,t=+$('th').value/100,n=+$('n').value;$('xv').textContent=x.toFixed(1)+' мм';$('zv').textContent=z.toFixed(1);$('thv').textContent=Math.round(t*100)+'%';$('nv').textContent=n+'%';
+const[g,w,h]=fit($('c')),X=v=>w/2+v*(w/2-8)/40,P=css('--pos'),Ne=css('--neg');g.clearRect(0,0,w,h);g.fillStyle=css('--neck');g.fillRect(X(-26),30,X(26)-X(-26),h-60);g.strokeStyle=css('--str');g.fillStyle=css('--mut');g.font='12px system-ui';g.textAlign='center';STR.forEach((s,i)=>{g.beginPath();g.moveTo(X(s),24);g.lineTo(X(s),h-24);g.stroke();g.fillText('стр. '+(i+1),X(s),16)});
+g.globalAlpha=.3;g.fillStyle=css('--cart');g.fillRect(X(x-12.5),60,X(x+12.5)-X(x-12.5),h-120);g.globalAlpha=1;g.fillStyle=css('--cart');g.beginPath();g.arc(X(x),h/2,3,0,7);g.fill();
+const d=det(x,z,t,n);S.forEach((s,i)=>{g.fillStyle=d&&d.i===i?'#2a9d4a':css('--off');g.fillRect(X(s)-8,h/2-11,16,22);g.fillStyle='#fff';g.textAlign='center';g.fillText(i+1,X(s),h/2+4)});
+M.forEach(([o,p])=>{const mx=x+o;g.fillStyle=p>0?P:Ne;g.beginPath();g.arc(X(mx),h/2-34,10,0,7);g.fill();g.fillStyle='#fff';g.font='bold 14px system-ui';g.fillText(p>0?'+':'−',X(mx),h/2-29);g.font='12px system-ui'});
+S.forEach((s,i)=>{const v=B(s,x,z,n),p=Math.min(1,Math.abs(v))*50,F=$('f'+i);F.style.background=v>=0?P:Ne;F.style.height=p+'%';F.style.top=v>=0?(50-p)+'%':'50%';$('a'+i).style.top=(50-t*50)+'%';$('b'+i).style.top=(50+t*50)+'%';$('t'+i).textContent=(v>=0?'+':'−')+Math.abs(v*100).toFixed(0)+'%'});
+let nr=0;STR.forEach((s,i)=>{if(Math.abs(s-x)<Math.abs(STR[nr]-x))nr=i});const R=$('res'),q=$('sub');
+if(!d){R.textContent='Между струнами: ни один датчик не сработал';R.className='res no';q.textContent='Ближайшая струна: '+(nr+1)+', до неё '+Math.abs(STR[nr]-x).toFixed(1)+' мм'}else{const good=d.str===nr;R.textContent='Струна '+(d.str+1)+(good?'':' — ОШИБКА, рядом струна '+(nr+1));R.className='res '+(good?'ok':'bad');q.textContent='Датчик '+(d.i+1)+', знак '+(d.sign>0?'плюс':'минус')}
+const[gm,wm,hm]=fit($('m')),Xm=v=>wm/2+v*(wm/2-8)/24;gm.clearRect(0,0,wm,hm);const col=['#d6452f','#e38b2c','#c7b52e','#2a9d4a','#2c6fd6','#8a4fbf'];for(let a=-24;a<24;a+=.1){const e=det(a,z,t,n);gm.fillStyle=e?col[e.str]:css('--ln');gm.fillRect(Xm(a),20,Math.max(1,Xm(a+.1)-Xm(a)),24)}gm.fillStyle=css('--tx');gm.fillRect(Xm(x)-1,12,2,40);gm.fillStyle=css('--mut');gm.font='11px system-ui';gm.textAlign='center';STR.forEach((s,i)=>gm.fillText(i+1,Xm(s),60))}
+['x','z','th','n'].forEach(i=>$(i).addEventListener('input',draw));addEventListener('resize',draw);draw();
+</script></body></html>
