@@ -26,6 +26,8 @@ pcb = BB(-XE + 0.15, XE - 0.15, -YI + 0.15, YI - 0.15, Z_FL, Z_PCB)
 walls = BB(-XE + 0.15, XE - 0.15, -YI + 0.15, Y_WC, Z_PCB - 0.01, Z_LD0 - 0.1)
 for x in PX:
     walls -= BB(x - CELL, x + CELL, -YI, YI, Z_PCB - 1, Z_LD0)
+for sx in (1, -1):                                                         # за крайними ячейками оставалась стенка 0.05 — убрана
+    walls -= BB(*sorted((sx * (PX[-1] + CELL - 0.01), sx * (XE + 1))), -YI, YI, Z_PCB - 1, Z_LD0)
 pcb += walls
 btns = Part() + [BB(x - 2.6, x + 2.6, BY - 2.6, BY + 2.6, Z_PCB, Z_BT) for x in PX]
 # крышка с рельсами-хвостом
