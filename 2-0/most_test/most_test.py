@@ -8,43 +8,54 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.jo
 from build123d import *
 import most_v2 as M
 os.chdir(HERE); os.makedirs("stl", exist_ok=True); os.makedirs("asm", exist_ok=True)
-BB, CZ, PX, BY = M.BB, M.CZ, M.PX, M.BY
-H, XE, YI, YW = M.H, M.XE, M.YI, M.YW
-Z_FL, Z_PCB, Z_BT, Z_LD0, Z_LD1 = M.Z_FL, M.Z_PCB, M.Z_BT, M.Z_LD0, M.Z_LD1
-PIN = [(-23.7, 0.0), (23.7, 0.0)]
+BB, CZ, BY = M.BB, M.CZ, M.BY
+YI, YW, YT, CW, CY = M.YI, M.YW, M.YT, M.CW, M.CY
+Z_FL, Z_PCB, Z_BT, Z_LD0, Z_LD1, Z_RL, Z_CT = M.Z_FL, M.Z_PCB, M.Z_BT, M.Z_LD0, M.Z_LD1, M.Z_RL, M.Z_CT
+PX = tuple(8.5 * (i - 2.5) for i in range(6))                              # кнопки с одинаковым шагом 8.5: ±4.25, ±12.75, ±21.25
+H, XE = 25.0, 24.2                                                         # длина 50 как гриф, торцы 0.8 (крепление крышки — клей, потом придумаем)
+PIN = []
 Y_WC = 2.4                                                                 # канал проводов: y 2.4..3.6
-# корпус
+# корпус (крышку пока на клей)
 tray = BB(-H, H, -YW, YW, 0, Z_LD0) - BB(-XE, XE, -YI, YI, Z_FL, Z_LD0 + 1)
 for x, y in PIN:
     tray += CZ(0.8, Z_LD0 - 0.01, Z_LD0 + 1.0, x, y)                       # штырёк под крышку
-tray -= BB(-H - 1, -XE + 0.5, Y_WC - 0.2, YI - 0.4, Z_PCB, Z_LD0 + 1)     # прорезь проводов в торце (над пластиной)
+tray -= BB(-H - 1, -XE + 0.5, Y_WC - 0.2, YI - 0.4, Z_PCB, Z_LD0 + 1)     # прорезь проводов в торце
 # пластина с ячейками
-CELL = 2.75                                                                # полуразмер ячейки (кнопка 5.2 + 0.3)
+CELL = 2.75
 pcb = BB(-XE + 0.15, XE - 0.15, -YI + 0.15, YI - 0.15, Z_FL, Z_PCB)
 walls = BB(-XE + 0.15, XE - 0.15, -YI + 0.15, Y_WC, Z_PCB - 0.01, Z_LD0 - 0.1)
 for x in PX:
     walls -= BB(x - CELL, x + CELL, -YI, YI, Z_PCB - 1, Z_LD0)
 pcb += walls
 btns = Part() + [BB(x - 2.6, x + 2.6, BY - 2.6, BY + 2.6, Z_PCB, Z_BT) for x in PX]
-# крышка: шире выемка под ленту, отверстия под штырьки (у M.lid уже Ø1.9)
-TY = 3.6
-lid = M.lid + BB(-22.75, 22.75, -5.2, -4.4, M.Z_RL - 0.6, M.Z_RL)        # без канавки упора (в тесте не нужна)
-lid -= BB(-22.6, 22.6, -YW + 1.0, YW - 1.0, Z_LD1 - 0.6, Z_LD1 + 1)      # выемка до самых рельсов — без щели-овражка
-# лента с П-прорезями
-tape = BB(-22.5, 22.5, -TY, TY, Z_LD1 - 0.6, Z_LD1)
+# крышка с рельсами-хвостом
+TL = 24.8                                                                  # полудлина ленты
+lid = M.prof_x([(-YW, Z_LD0), (YW, Z_LD0), (YT, Z_RL), (-YT, Z_RL)], -H, H) - BB(-H - 1, H + 1, -YW + 1.0, YW - 1.0, Z_LD1 - 0.6, Z_RL + 1)
+lid += BB(-H, H, -YW + 1.0, YW - 1.0, Z_LD0, Z_LD1 - 0.6)
 for x in PX:
-    if abs(x) > 19:                                                        # крайние: корень к торцу ленты, рамка замкнута (не рвётся)
-        d = 1 if x > 0 else -1
-        xa, xb = sorted((x - d * 2.6, x + d * 2.4)); xi = sorted((x - d * 2.2, x + d * 2.5))
-    else:                                                                  # средние: корень к середине ленты
-        sx = 1 if x < 0 else -1
-        xa, xb = sorted((x - sx * 2.6, x + sx * 3.4)); xi = sorted((x - sx * 2.2, x + sx * 3.5))
-    u = BB(xa, xb, -2.6, 2.6, 0, 10) - BB(*xi, -2.2, 2.2, 0, 10)
-    tape -= u & BB(-30, 30, -5, 5, Z_LD1 - 0.7, Z_LD1 + 0.1)
+    lid -= BB(x - 2.2, x + 2.2, BY - 2.2, BY + 2.2, Z_LD0 - 1, Z_LD1 + 1)   # окно 4.4×4.4
+for x, y in PIN:
+    lid -= CZ(0.95, Z_LD0 - 1, Z_LD1 + 1, x, y)
+for x, y in PIN:
+    lid -= CZ(0.95, Z_LD0 - 1, Z_LD1 + 1, x, y)
+# лента: все П в одну сторону (корень к +X)
+TY = 3.6
+tape = BB(-TL, TL, -TY, TY, Z_LD1 - 0.6, Z_LD1)
+TP0, TP1 = -2.2, 3.5                                                       # язычок ленты: кончик / корень от центра кнопки
+for x in PX:
+    u = BB(x + TP0 - 0.4, x + TP1 - 0.1, -2.6, 2.6, 0, 10) - BB(x + TP0, x + TP1, -2.2, 2.2, 0, 10)
+    tape -= u & BB(-40, 40, -5, 5, Z_LD1 - 0.7, Z_LD1 + 0.1)
 tape += Part() + [BB(x - 2.0, x + 2.0, BY - 2.0, BY + 2.0, Z_BT, Z_LD1 - 0.59) for x in PX]
-cart, cover = M.cart - BB(-0.75, 0.75, -5.1, -4.5, M.Z_RL - 0.6, M.Z_RL), None   # без зуба упора, без накладки (тест)
-for x, y in M.PEG:
-    cart += CZ(0.66, M.Z_CT - 1.01, M.Z_CT, x, y)                         # гнёзда штырьков накладки заделать
+# тележка: один П-язычок того же размера и в ту же сторону, что П ленты — линии совпали = можно жать
+cart = BB(-CW, CW, -CY, CY, Z_RL, Z_CT)
+for s_ in (-1, 1):
+    pts = [(s_ * CY, M.Z_LP), (s_ * CY, Z_RL + 0.01), (s_ * (YT + M.CL), Z_RL + 0.01), (s_ * (YW + M.CL), Z_LD0), (s_ * (YW + M.CL), M.Z_LP)]
+    cart += M.prof_x(pts if s_ > 0 else pts[::-1], -CW, CW)
+T_TG = 0.6
+TG_R, TG_Y = 8.5, 5.0                                                      # широкий язычок под палец: корень +8.5, полуширина 5
+cart -= BB(TP0 - 0.4, TG_R, -TG_Y - 0.4, TG_Y + 0.4, Z_RL - 1, Z_CT + 1)   # перекладина П на той же линии, что у ленты
+cart += BB(TP0, TG_R + 0.01, -TG_Y, TG_Y, Z_CT - T_TG, Z_CT)              # язычок 10.7×10×0.6, корень к +X
+cart += BB(-0.8, 0.8, -1.5, 1.5, Z_LD1 + 0.2, Z_CT - T_TG + 0.01)          # нажимник над центром кнопки, до ленты 0.2
 PRINT = [("01_korpus", tray, 0), ("02_plastina_jachejki", pcb, 0), ("03_kryshka", lid, 0), ("04_lenta_PLA_ili_TPU", tape, 180),
          ("05_telezhka", cart, 180)]
 if __name__ == "__main__":
@@ -59,7 +70,7 @@ if __name__ == "__main__":
         for b in ns[i + 1:]:
             v = iv(P[a], P[b])
             if v > 0.02: bad += 1; print("  ПЕРЕСЕЧЕНИЕ %s × %s %.2f" % (a, b, v))
-    for xc in (-22, -13.2, -4.4, 0, 4.4, 8.8, 13.2, 19.5, 22):
+    for xc in (-22, -21.25, -12.75, -4.25, 0, 4.25, 8.5, 12.75, 21.25, 22):
         for a, A in (("тележка", cart),):
             for b in ns:
                 v = iv(Pos(xc, 0, 0) * A, P[b])
