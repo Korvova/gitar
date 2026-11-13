@@ -49,6 +49,9 @@ for x in PX:
     u = BB(x + TP0 - 0.4, x + tp1 - 0.1, -2.6, 2.6, 0, 10) - BB(x + TP0, x + tp1, -2.2, 2.2, 0, 10)
     tape -= u & BB(-40, 40, -5, 5, Z_LD1 - 0.7, Z_LD1 + 0.1)
 tape += Part() + [BB(x - 2.0, x + 2.0, BY - 2.0, BY + 2.0, Z_BT, Z_LD1 - 0.59) for x in PX]
+# плёнка поверх ленты (владелец 14.11): гладкая дорожка, нажимник не цепляется за прорези; концы на клей к крышке
+T_PL = 0.24
+plenka = BB(-TL, TL, -(YW - 1.1), YW - 1.1, Z_LD1, Z_LD1 + T_PL)          # в желобке крышки над лентой
 # тележка: один П-язычок того же размера и в ту же сторону, что П ленты — линии совпали = можно жать
 cart = BB(-CW, CW, -CY, CY, Z_RL, Z_CT)
 for s_ in (-1, 1):
@@ -58,17 +61,17 @@ T_TG = 0.6
 TG_R, TG_Y = 8.5, 5.0                                                      # широкий язычок под палец: корень +8.5, полуширина 5
 cart -= BB(TP0 - 0.4, TG_R, -TG_Y - 0.4, TG_Y + 0.4, Z_RL - 0.01, Z_CT + 1)  # только сквозь крышу: ниже прорезь подрезала скос паза на 0.07   # перекладина П на той же линии, что у ленты
 cart += BB(TP0, TG_R + 0.01, -TG_Y, TG_Y, Z_CT - T_TG, Z_CT)              # язычок 10.7×10×0.6, корень к +X
-_zt, _zb = Z_CT - T_TG + 0.01, Z_LD1 + 0.2                               # нажимник на кончике язычка — пирамидкой, чтобы не закусывал (владелец 13.11)
+_zt, _zb = Z_CT - T_TG + 0.01, Z_LD1 + T_PL + 0.2                               # нажимник на кончике язычка — пирамидкой, чтобы не закусывал (владелец 13.11)
 cart += Plane(origin=(TP0 + 0.8, 0, _zt), z_dir=(0, 0, -1)) * extrude(Rectangle(1.6, 3.0), _zt - _zb, taper=22)
 PRINT = [("01_korpus", tray, 0), ("02_plastina_jachejki", pcb, 0), ("03_kryshka", lid, 0), ("04_lenta_PLA_ili_TPU", tape, 180),
-         ("05_telezhka", cart, 180)]
+         ("05_telezhka", cart, 180), ("06_plenka", plenka, 0)]
 if __name__ == "__main__":
     import trimesh
     def iv(a, b):
         try:
             r = a & b; return 0.0 if r is None else r.volume
         except Exception: return 0.0
-    P = {"корпус": tray, "пластина": pcb, "кнопки": btns, "крышка": lid, "лента": tape}
+    P = {"корпус": tray, "пластина": pcb, "кнопки": btns, "крышка": lid, "лента": tape, "плёнка": plenka}
     bad = 0; ns = list(P)
     for i, a in enumerate(ns):
         for b in ns[i + 1:]:

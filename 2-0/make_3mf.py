@@ -242,7 +242,7 @@ plates = [
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("117_balka_v2", p012_j,                # проба балки v2, вики 19.54 (most_test/most_test.py): STL уже лежат как печатать
-     sum([prep("C:/App/gitar/2-0/most_test/stl/" + n) for n in ("01_korpus", "02_plastina_jachejki", "03_kryshka", "04_lenta_PLA_ili_TPU", "05_telezhka")], []), "cool"),
+     sum([prep("C:/App/gitar/2-0/most_test/stl/" + n) for n in ("01_korpus", "02_plastina_jachejki", "03_kryshka", "04_lenta_PLA_ili_TPU", "05_telezhka", "06_plenka")], []), "cool"),
     ("116_grif_4_palca", p012_j,           # проба на 4 пальца (kasseta/grif_4_telezhki_116.py): платформа на 4, вкладки, 2 тележки без мотора, площадки со сдвигом
      prep("gt4_platforma", ID) + prep("gt4_vkladka", ID, copies=2) + prep("gt_upor", ID, copies=4) + prep("gt_kubik", FLIP, copies=4) + prep("gt_niz", FLIP, copies=4) + prep("gt_plastina", FLIP, copies=4) + prep("gt_shesternya", ID, copies=4) + prep("gt_flanec", ID, copies=4) + prep("gt4_lozhe_9", FLIP, copies=2) + prep("gt4_lozhe_3", FLIP, copies=2) + prep("gt4_bort", LAYY, copies=8), "cool"),
     ("115_stoyka_nizkaya", p012_j, prep("gt_vkladka", ID, copies=2), "cool"),   # только две вкладки вместо стойки
