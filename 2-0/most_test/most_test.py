@@ -4,7 +4,7 @@ r"""Проба балки с кнопками (13.11.2026) — без приво
 Пластина вместо текстолита: перегородки между кнопками, кнопки кладутся в ячейки (выводы вдоль Y), вдоль +Y канал проводов → прорезь в торце.
 Лента: вокруг каждого бугорка П-прорезь — бугорок на язычке, можно печатать даже из PLA."""
 import os, sys
-HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(os.path.dirname(HERE), "gitar_most_v2"))
+HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(os.path.dirname(HERE), "gitar_most_v2")); sys.path.insert(0, os.path.join(os.path.dirname(HERE), "most_v2"))
 from build123d import *
 import most_v2 as M
 os.chdir(HERE); os.makedirs("stl", exist_ok=True); os.makedirs("asm", exist_ok=True)
@@ -55,7 +55,7 @@ T_TG = 0.6
 TG_R, TG_Y = 8.5, 5.0                                                      # широкий язычок под палец: корень +8.5, полуширина 5
 cart -= BB(TP0 - 0.4, TG_R, -TG_Y - 0.4, TG_Y + 0.4, Z_RL - 1, Z_CT + 1)   # перекладина П на той же линии, что у ленты
 cart += BB(TP0, TG_R + 0.01, -TG_Y, TG_Y, Z_CT - T_TG, Z_CT)              # язычок 10.7×10×0.6, корень к +X
-cart += BB(-0.8, 0.8, -1.5, 1.5, Z_LD1 + 0.2, Z_CT - T_TG + 0.01)          # нажимник над центром кнопки, до ленты 0.2
+cart += BB(TP0, TP0 + 1.6, -1.5, 1.5, Z_LD1 + 0.2, Z_CT - T_TG + 0.01)    # нажимник на самом кончике язычка (владелец 13.11): ход больше, над бугорком ленты
 PRINT = [("01_korpus", tray, 0), ("02_plastina_jachejki", pcb, 0), ("03_kryshka", lid, 0), ("04_lenta_PLA_ili_TPU", tape, 180),
          ("05_telezhka", cart, 180)]
 if __name__ == "__main__":
