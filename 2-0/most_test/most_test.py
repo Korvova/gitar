@@ -42,16 +42,17 @@ for x, y in PIN:
     lid -= CZ(0.95, Z_LD0 - 1, Z_LD1 + 1, x, y)
 # лента: все П в одну сторону (корень к +X)
 TY = 3.6
+SKIN = 0.24                                                                # кожица поверх прорезей ленты (владелец 14.11), 2 слоя
 tape = BB(-TL, TL, -TY, TY, Z_LD1 - 0.6, Z_LD1)
 TP0, TP1 = -2.2, 3.5                                                       # язычок ленты: кончик / корень от центра кнопки
 for x in PX:
     tp1 = min(TP1, TL - 0.9 - x)                                            # у торца ленты оставить край 0.8 (было 0.15, не печаталось)
     u = BB(x + TP0 - 0.4, x + tp1 - 0.1, -2.6, 2.6, 0, 10) - BB(x + TP0, x + tp1, -2.2, 2.2, 0, 10)
-    tape -= u & BB(-40, 40, -5, 5, Z_LD1 - 0.7, Z_LD1 + 0.1)
+    tape -= u & BB(-40, 40, -5, 5, Z_LD1 - 0.7, Z_LD1 - SKIN)              # прорезь снизу, сверху сплошная кожица: нажимник не цепляется, П видно как линии
 tape += Part() + [BB(x - 2.0, x + 2.0, BY - 2.0, BY + 2.0, Z_BT, Z_LD1 - 0.59) for x in PX]
 # плёнка поверх ленты (владелец 14.11): гладкая дорожка, нажимник не цепляется за прорези; концы на клей к крышке
-T_PL = 0.24
-plenka = BB(-TL, TL, -(YW - 1.1), YW - 1.1, Z_LD1, Z_LD1 + T_PL)          # в желобке крышки над лентой
+T_PL = 0.0                                                                 # отдельная плёнка больше не нужна: кожица на самой ленте
+# plenka = BB(-TL, TL, -(YW - 1.1), YW - 1.1, Z_LD1, Z_LD1 + 0.24)  # отдельная плёнка — запасной вариант
 # тележка: один П-язычок того же размера и в ту же сторону, что П ленты — линии совпали = можно жать
 cart = BB(-CW, CW, -CY, CY, Z_RL, Z_CT)
 for s_ in (-1, 1):
@@ -64,14 +65,14 @@ cart += BB(TP0, TG_R + 0.01, -TG_Y, TG_Y, Z_CT - T_TG, Z_CT)              # яз
 _zt, _zb = Z_CT - T_TG + 0.01, Z_LD1 + T_PL + 0.2                               # нажимник на кончике язычка — пирамидкой, чтобы не закусывал (владелец 13.11)
 cart += Plane(origin=(TP0 + 0.8, 0, _zt), z_dir=(0, 0, -1)) * extrude(Rectangle(1.6, 3.0), _zt - _zb, taper=22)
 PRINT = [("01_korpus", tray, 0), ("02_plastina_jachejki", pcb, 0), ("03_kryshka", lid, 0), ("04_lenta_PLA_ili_TPU", tape, 180),
-         ("05_telezhka", cart, 180), ("06_plenka", plenka, 0)]
+         ("05_telezhka", cart, 180)]
 if __name__ == "__main__":
     import trimesh
     def iv(a, b):
         try:
             r = a & b; return 0.0 if r is None else r.volume
         except Exception: return 0.0
-    P = {"корпус": tray, "пластина": pcb, "кнопки": btns, "крышка": lid, "лента": tape, "плёнка": plenka}
+    P = {"корпус": tray, "пластина": pcb, "кнопки": btns, "крышка": lid, "лента": tape}
     bad = 0; ns = list(P)
     for i, a in enumerate(ns):
         for b in ns[i + 1:]:
