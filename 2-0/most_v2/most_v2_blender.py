@@ -1,5 +1,5 @@
 import bpy, os
-D = os.path.join(os.path.expanduser("~"), "Documents", "App", "mcp-blender-cloude", "gitar_most_v2")
+D = os.path.dirname(os.path.abspath(__file__))   # папка скрипта (рядом asm/)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'
 for f, n, c in (("tray", "Лоток (стенки = рельсы)", (.55, .58, .62, 1)), ("lid", "Крышка лотка", (.7, .72, .76, 1)), ("plungers", "Лента TPU", (.12, .12, .25, 1)),

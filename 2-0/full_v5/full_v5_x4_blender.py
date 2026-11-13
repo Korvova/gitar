@@ -1,6 +1,6 @@
 # 4 модуля v5 вдоль струн: повёрнут/прямой/повёрнут/прямой (вплотную), пальцы шаг 24 — синие маркеры
 import bpy, os, math
-D = os.path.join(os.path.expanduser("~"), "Documents", "App", "mcp-blender-cloude", "gitar_full_v5")
+D = os.path.dirname(os.path.abspath(__file__))   # папка скрипта (рядом asm/)
 A, S, RF, RM, YM, FR = 2.5 * math.pi * 0.8, 11.0, 4.8, 4.4, 15.5, 240
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'; sc.frame_end = FR
