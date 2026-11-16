@@ -207,9 +207,13 @@ for ang in H_ANG:
     most += BB(hx - 2.6, hx + 2.6, YB0, YB1, Z_SB - 0.4, L2[0] + 0.01)             # бобышка с полом 0.4
     most -= BB(hx - 2.1, hx + 2.1, hy - 1.6, YB1 + 1, Z_SB, Z_SB + 1.6)            # паз: открыт назад, датчик задвигается до упора
     hall += BB(hx - 2.05, hx + 2.05, hy - 1.5, hy + 1.5, Z_SB, Z_SB + 1.5)
+# подушка из двух половинок, склеить плоскостями (владелец 16.11): у каждой пластинка 0.4 и свой штырёк — печать без поддержек
+_zm = Z_LT + PAD_T / 2
+pad_lo = pads[1] & BB(-40, 40, -40, 60, -10, _zm)                                    # низ: штырёк вниз в ножку
+pad_hi = pads[1] & BB(-40, 40, -40, 60, _zm, 60)                                     # верх: штырёк вверх в мост
 PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1), ("03a_platforma_rotora", plat, 0, 1), ("03b_shest_motora", gear_m, 180, 1), ("04_maket_motora", motor, 0, 1),
          ("05_polzun", sl, 0, 1), ("06_shest_plav_x2", flo0, 0, 2), ("07_planka_osej", strap, 0, 1), ("08_telezhka", cart, 180, 1),
-         ("09_bort_x2", Rot(0, 90, 0) * bort, 0, 2), ("10_brusok", beam, 0, 1), ("11_nozhka_mosta_L", legs[0], 0, 1), ("12_nozhka_mosta_P", legs[1], 0, 1), ("13_podushka_TPU_x2_bokom", Rot(0, 90, 0) * pads[0], 0, 2)]
+         ("09_bort_x2", Rot(0, 90, 0) * bort, 0, 2), ("10_brusok", beam, 0, 1), ("11_nozhka_mosta_L", legs[0], 0, 1), ("12_nozhka_mosta_P", legs[1], 0, 1), ("13a_podushka_niz_x2", pad_lo, 180, 2), ("13b_podushka_verh_x2", pad_hi, 0, 2)]
 
 
 def pose(s):
