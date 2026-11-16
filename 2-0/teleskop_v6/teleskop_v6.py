@@ -129,8 +129,8 @@ PL_R, MG_R, MG_N = 13.5, 9.0, 8                                                 
 plat = CZ(PL_R, Z_M1 + 0.1, Z_M1 + 0.1 + DZ)
 for k in range(MG_N):
     a = 2 * math.pi * k / MG_N
-    plat -= CZ(2.55, Z_M1 + 0.1 + DZ - 2.1, Z_M1 + 0.1 + DZ + 1, MG_R * math.cos(a), MG_R * math.sin(a))
-mags = Part() + [CZ(2.5, Z_M1 + 0.1 + DZ - 2.0, Z_M1 + 0.1 + DZ, MG_R * math.cos(2 * math.pi * k / MG_N), MG_R * math.sin(2 * math.pi * k / MG_N)) for k in range(MG_N)]
+    plat -= CZ(2.05, Z_M1 + 0.1 + DZ - 2.0, Z_M1 + 0.1 + DZ + 1, MG_R * math.cos(a), MG_R * math.sin(a))   # магнит владельца Ø4 × 1.9
+mags = Part() + [CZ(2.0, Z_M1 + 0.1 + DZ - 1.9, Z_M1 + 0.1 + DZ, MG_R * math.cos(2 * math.pi * k / MG_N), MG_R * math.sin(2 * math.pi * k / MG_N)) for k in range(MG_N)]
 pin_m0 = plat + gear(ZM, Z_M1 + 0.1 + DZ - 0.01, L1[1], -90) - CZ(R_MB, 0, 40)                    # у оси мотора, x = y = 0
 pin_m = Pos(0, YM, 0) * pin_m0
 motor = CZ(13.9, Z_FL, Z_M1, 0, YM) + CZ(1.5, Z_M1 - 0.01, L1[1], 0, YM)
@@ -185,13 +185,19 @@ btns = Part() + [BB(sx * 22.5 - 2.6, sx * 22.5 + 2.6, YBP - 2.6, YBP + 2.6, Z_FL
 # 49E ×2 под мостом над кольцом магнитов, в квадратуре: углы −6° и 196.5° (разница 22.5° по модулю 90° при 8 полюсах)
 H_ANG = (-11.0, 191.5)
 hall = Part()
+# 49E владельца 4.1 × 3.0 × 1.5 лежит плашмя лицом вниз в бобышке под мостом, зазор до магнитов 1.5 (было 4.2 — гнездо в самом мосту);
+# 4.1 — радиально (вдоль X), ножки к +Y, гнутся вверх в канал и уходят канавкой снизу моста к торцу
+Z_MG1 = Z_M1 + 0.1 + DZ                                                          # верх магнитов
+Z_SB = Z_MG1 + 1.5                                                               # лицо датчика
 for ang in H_ANG:
-    a = math.radians(ang); hx, hy = MG_R * math.cos(a), YM + MG_R * math.sin(a)
-    most -= Pos(hx, hy, L2[0] + 0.75) * Rot(0, 0, ang) * Box(4.3, 1.8, 1.6)            # гнездо 49E снизу моста
-    sxe = 1 if hx > 0 else -1                                                            # провода — канавкой СНИЗУ моста к торцу (сверху дырок нет)
-    most -= BB(hx - 0.6, hx + 0.6, min(hy, 16.6) - 0.6, 16.95, L2[0] - 1, L2[0] + 1.0)
-    most -= BB(*sorted((hx, sxe * (HALF + 1))), 16.25, 16.95, L2[0] - 1, L2[0] + 1.0)
-    hall += Pos(hx, hy, L2[0] + 0.75) * Rot(0, 0, ang) * Box(4.0, 1.5, 1.5)
+    a = math.radians(ang); hx = MG_R * math.cos(a); hy = max(YM + MG_R * math.sin(a), 14.2)
+    most += BB(hx - 2.6, hx + 2.6, YB0, YB1, Z_SB, L2[0] + 0.01)                   # бобышка под мостом (в пределах низа моста)
+    most -= BB(hx - 2.1, hx + 2.1, hy - 1.6, hy + 1.6, Z_SB - 0.1, Z_SB + 1.6)    # гнездо датчика, снизу открыто
+    most -= BB(hx - 1.5, hx + 1.5, hy + 1.4, 16.95, Z_SB - 0.1, L2[0] + 1.0)      # канал ножек, снизу открыт (печать без мостиков)
+    most -= BB(*sorted((hx, sxe0 := (1 if hx > 0 else -1)) and sorted((hx - sxe0 * 1.5, sxe0 * (abs(hx) + 2.7)))), 15.9, 16.95, Z_SB - 0.1, L2[0])   # канавка сквозь бобышку
+    sxe = 1 if hx > 0 else -1
+    most -= BB(*sorted((hx, sxe * (HALF + 1))), 15.9, 16.95, L2[0] - 1, L2[0] + 1.0)   # канавка проводов снизу моста к торцу
+    hall += BB(hx - 2.05, hx + 2.05, hy - 1.5, hy + 1.5, Z_SB, Z_SB + 1.5)
 PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1), ("03_shest_motora", pin_m0, 0, 1), ("04_maket_motora", motor, 0, 1),
          ("05_polzun", sl, 0, 1), ("06_shest_plav_x2", flo0, 0, 2), ("07_planka_osej", strap, 0, 1), ("08_telezhka", cart, 180, 1),
          ("09_bort_x2", Rot(0, 90, 0) * bort, 0, 2), ("10_brusok", beam, 0, 1), ("11_nozhka_mosta_L", legs[0], 0, 1), ("12_nozhka_mosta_P", legs[1], 0, 1), ("13_podushka_TPU_x2_bokom", Rot(0, 90, 0) * pads[0], 0, 2)]
