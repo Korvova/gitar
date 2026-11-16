@@ -16,7 +16,7 @@ def imp(n, name=None):
     bpy.ops.wm.stl_import(filepath=os.path.join(D, "asm", n + ".stl"))
     o = bpy.context.selected_objects[0]; o.name = name or NAMES[n]
     m = bpy.data.materials.new(o.name); m.diffuse_color = COL[n]; o.data.materials.append(m); return o
-for n in ("base", "beam", "most", "motor", "slider", "strap", "cart", "pin_m", "legs", "pads", "coins", "btns", "hall", "mags"):
+for n in ("base", "beam", "most", "motor", "slider", "strap", "cart", "pin_m", "legs", "pads", "btns", "hall", "mags"):
     ob[n] = imp(n)
 f1, f2 = imp("flo", "Плавающая шестерня 1"), imp("flo", "Плавающая шестерня 2")
 for f in range(1, FR + 1):
