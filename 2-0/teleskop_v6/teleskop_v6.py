@@ -27,7 +27,7 @@ Z_M1 = Z_FL + MOT_H
 LG_Y = (12.15, 23.1)                       # ножка моста по Y
 Z_SL = 9.0                                 # высота направляющих стенок ножек
 YM = 15.5                                  # ось мотора
-DZ = 2.4                                   # v6: всё над мотором выше на толщину платформы с магнитами
+DZ = 4.4                                   # v6: всё над мотором выше на толщину платформы с магнитами (4.4: под головкой М2 2 мм — в мотор 1.5)
 L1 = (15.0 + DZ, 18.5 + DZ)                          # шестерня мотора + ползун
 L2 = (18.7 + DZ + 0.3, 21.2 + DZ + 0.3)                          # плавающие шестерни + рейки + мост
 Z_P0, Z_P1 = 21.4 + DZ + 0.3, 23.4 + DZ + 0.3                    # ложе
@@ -125,13 +125,24 @@ for sx in (-1, 1):
     most -= CZ(0.85, L2[0] - 1, L2[0] + 1.2, sx * 22.5, YBP)                      # гнездо штырька TPU-подушки
 
 # (3) шестерня мотора и макет мотора
-PL_R, MG_R, MG_N = 13.5, 9.0, 8                                                   # платформа на роторе, кольцо магнитов Ø5×2 (полюса N/S через один)
+PL_R, MG_R, MG_N = 13.5, 10.0, 8                                                   # платформа на роторе, кольцо магнитов Ø5×2 (полюса N/S через один)
 plat = CZ(PL_R, Z_M1 + 0.1, Z_M1 + 0.1 + DZ)
 for k in range(MG_N):
     a = 2 * math.pi * k / MG_N
     plat -= CZ(2.05, Z_M1 + 0.1 + DZ - 2.0, Z_M1 + 0.1 + DZ + 1, MG_R * math.cos(a), MG_R * math.sin(a))   # магнит владельца Ø4 × 1.9
 mags = Part() + [CZ(2.0, Z_M1 + 0.1 + DZ - 1.9, Z_M1 + 0.1 + DZ, MG_R * math.cos(2 * math.pi * k / MG_N), MG_R * math.sin(2 * math.pi * k / MG_N)) for k in range(MG_N)]
-pin_m0 = plat + gear(ZM, Z_M1 + 0.1 + DZ - 0.01, L1[1], -90) - CZ(R_MB, 0, 40)                    # у оси мотора, x = y = 0
+# крепление к крутящемуся торцу 2204 (владелец 16.11): 4 × М2 на Ø12 между магнитами, головки утоплены на 2 — под головкой 2.0, М2×4 входит в мотор на 1.5;
+# шестерня отдельно (иначе к винтам не подлезть): квадрат 4.9 в гнездо платформы, на клей; в центре Ø3.3 по трубке мотора
+Z_PT = Z_M1 + 0.1 + DZ                                                           # верх платформы
+plat -= CZ(R_MB, 0, 40)
+for k in range(4):
+    a = math.radians(22.5 + 90 * k)
+    plat -= CZ(1.1, Z_PT - DZ - 1, Z_PT + 1, 6 * math.cos(a), 6 * math.sin(a))
+    plat -= CZ(1.95, Z_PT - 2.0, Z_PT + 1, 6 * math.cos(a), 6 * math.sin(a))
+plat -= Pos(0, 0, Z_PT - 1.5) * Box(5.1, 5.1, 3.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
+gear_m = gear(ZM, Z_PT, L1[1], -90) + Pos(0, 0, Z_PT - 1.4) * Box(4.9, 4.9, 1.41, align=(Align.CENTER, Align.CENTER, Align.MIN))
+gear_m -= CZ(R_MB, 0, 40)
+pin_m0 = plat + gear_m                                                            # у оси мотора, x = y = 0
 pin_m = Pos(0, YM, 0) * pin_m0
 motor = CZ(13.9, Z_FL, Z_M1, 0, YM) + CZ(1.5, Z_M1 - 0.01, L1[1], 0, YM)
 
@@ -196,7 +207,7 @@ for ang in H_ANG:
     most += BB(hx - 2.6, hx + 2.6, YB0, YB1, Z_SB - 0.4, L2[0] + 0.01)             # бобышка с полом 0.4
     most -= BB(hx - 2.1, hx + 2.1, hy - 1.6, YB1 + 1, Z_SB, Z_SB + 1.6)            # паз: открыт назад, датчик задвигается до упора
     hall += BB(hx - 2.05, hx + 2.05, hy - 1.5, hy + 1.5, Z_SB, Z_SB + 1.5)
-PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1), ("03_shest_motora", pin_m0, 0, 1), ("04_maket_motora", motor, 0, 1),
+PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1), ("03a_platforma_rotora", plat, 0, 1), ("03b_shest_motora", gear_m, 180, 1), ("04_maket_motora", motor, 0, 1),
          ("05_polzun", sl, 0, 1), ("06_shest_plav_x2", flo0, 0, 2), ("07_planka_osej", strap, 0, 1), ("08_telezhka", cart, 180, 1),
          ("09_bort_x2", Rot(0, 90, 0) * bort, 0, 2), ("10_brusok", beam, 0, 1), ("11_nozhka_mosta_L", legs[0], 0, 1), ("12_nozhka_mosta_P", legs[1], 0, 1), ("13_podushka_TPU_x2_bokom", Rot(0, 90, 0) * pads[0], 0, 2)]
 
