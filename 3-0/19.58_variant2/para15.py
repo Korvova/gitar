@@ -34,35 +34,44 @@ def rack_part():
     return r
 
 
-def hook(y_out, z_lip):
-    """загиб вниз по плоскости y = y_out и крюк внутрь (+y) на высоте z_lip"""
-    h = BB(-CW, CW, y_out, y_out + SK, z_lip, ZB + 0.01)
-    h += BB(-CW, CW, y_out, y_out + SK + C + 0.8, z_lip, z_lip + 1.0)
+# крюк идёт прямо от рейки (владелец 18.11): спинка рейки продолжается вниз в паз передней стенки, внизу крюк вперёд (−y) в подрез.
+# Назад (+y) крюку некуда — там сразу ползун, поэтому крюк смотрит вперёд, в толщу стенки.
+Y_RB = -RF - 0.05 - DED - 0.3                                                     # спинка рейки −6.11
+Y_RF = -RF - 0.05 - 0.1                                                           # к зубьям −5.0 (ниже шестерён зубьев нет)
+Z_LIP0, Z_LIP1 = 20.5, 21.5                                                       # крюк
+LIP = 1.4
+
+
+def rack_hook():
+    h = BB(-CW, CW, Y_RB, Y_RF, Z_LIP0, L2[0] + 0.01)                             # стойка крюка вниз от рейки
+    h += BB(-CW, CW, Y_RB - LIP, Y_RF, Z_LIP0, Z_LIP1)                            # крюк вперёд
     return h
 
 
-# ---------------- тележка А ----------------
-YA0 = T.Y0 - C - SK                                                               # −9.9
+slot = BB(-HALF - 1, HALF + 1, Y_RB - C, Y_RF + C, Z_LIP0 - C, 40)                # паз в стенке под стойку
+slot += BB(-HALF - 1, HALF + 1, Y_RB - LIP - C, Y_RF + C, Z_LIP0 - C, Z_LIP1 + C)  # подрез под крюк
+base1 = base1 - slot
+
+# ---------------- тележка А: площадка от спинки рейки назад, над шестернями ----------------
+YA0 = Y_RB
 YA1 = YA0 + W
-Z_SA = 18.0                                                                       # крюк А в щели передней стенки
-cartA = rack_part() + BB(-CW, CW, YA0, YA1, ZB, ZT) + hook(YA0, Z_SA + C)
-slotA = BB(-HALF - 1, HALF + 1, T.Y0 - 1, T.Y0 + 0.8 + C, Z_SA, Z_SA + 1.0 + 2 * C)
+cartA = rack_part() + rack_hook() + BB(-CW, CW, YA0, YA1, ZB, ZT)
 Y_PA = (YA0 + YA1) / 2
 
-# ---------------- тележка Б (в своих координатах) ----------------
+# ---------------- тележка Б: площадка вынесена вперёд, держится крюком рейки в своей стенке; спереди лежит на балке ----------------
 Y_PB = Y_PA + 24.0 - D
 YB0, YB1 = Y_PB - W / 2, Y_PB + W / 2
-Z_BM0 = 24.4                                                                      # низ балки
-cartB = rack_part() + BB(-CW, CW, YB0, YB1, ZB, ZT)                               # площадка
-cartB += BB(-CW, CW, YB1 - 0.01, -3.9, ZB, V.Z_P1)                                # подложка до рейки, ниже площадки на 1.6
-cartB += hook(YB0, Z_BM0 - C - 1.0)
-YM0 = YB0 + SK + C                                                                # балка
-beam = BB(-HALF, HALF, YM0, YM0 + 3.0, Z_BM0, L2[1])
+cartB = rack_part() + rack_hook() + BB(-CW, CW, YB0, YB1, ZB, ZT)
+if YB1 < -3.9:
+    cartB += BB(-CW, CW, YB1 - 0.01, -3.9, ZB, V.Z_P1)                            # подложка до рейки, ниже площадки на 1.6
+Z_BM1 = ZB - C                                                                    # балка: опора площадки Б при нажатии
+YM0 = YB0 + 3.0
+beam = BB(-HALF, HALF, YM0, YM0 + 3.0, Z_BM1 - 1.5, Z_BM1)
 for sx in (-1, 1):
-    beam -= CZ(0.85, Z_BM0 - 0.1, Z_BM0 + 1.0, sx * 23.0, YM0 + 2.25)
+    beam -= CZ(0.85, Z_BM1 - 1.6, Z_BM1 - 0.5, sx * 23.0, YM0 + 1.5)
 cols = None
 for sx in (-1, 1):
-    c = BB(*sorted((sx * 21.0, sx * HALF)), YM0 + 1.5, YM0 + 3.0, T.Z_FL - 0.01, Z_BM0 - 0.02) + CZ(0.75, Z_BM0 - 0.03, Z_BM0 + 0.9, sx * 23.0, YM0 + 2.25)
+    c = BB(*sorted((sx * 21.0, sx * HALF)), YM0, YM0 + 3.0, T.Z_FL - 0.01, Z_BM1 - 1.52) + CZ(0.75, Z_BM1 - 1.53, Z_BM1 - 0.6, sx * 23.0, YM0 + 1.5)
     cols = c if cols is None else cols + c
 
 
@@ -89,11 +98,10 @@ def pieces(cart):
     return cart
 
 
-partsA = Part() + [rack_part(), BB(-CW, CW, YA0, YA1, ZB, ZT), BB(-CW, CW, YA0, YA0 + SK, Z_SA + C, ZB), BB(-CW, CW, YA0, YA0 + SK + C + 0.8, Z_SA + C, Z_SA + C + 1.0)]
-partsB = Part() + [rack_part(), BB(-CW, CW, YB0, YB1, ZB, ZT), BB(-CW, CW, YB1, -3.9, ZB, V.Z_P1), BB(-CW, CW, YB0, YB0 + SK, Z_BM0 - C - 1.0, ZB),
-                   BB(-CW, CW, YB0, YB0 + SK + C + 0.8, Z_BM0 - C - 1.0, Z_BM0 - C)]
+partsA = Part() + [rack_part(), BB(-CW, CW, Y_RB - LIP, Y_RF, Z_LIP0, L2[0] + 0.01), BB(-CW, CW, YA0, YA1, ZB, ZT)]
+partsB = Part() + [rack_part(), BB(-CW, CW, Y_RB - LIP, Y_RF, Z_LIP0, L2[0] + 0.01), BB(-CW, CW, YB0, max(YB1, -3.9), ZB, ZT)]
 envA, envB = env(partsA, 0.0), env(partsB, D)
-baseA = base1 - slotA - envB
+baseA = base1 - envB
 baseB = Pos(0, D, 0) * base1 - envA
 base = baseA + baseB + (Pos(0, D, 0) * cols - envA)
 beamW = Pos(0, D, 0) * beam
@@ -111,7 +119,7 @@ def poseB(s):
 
 PRINT = [("01_osnovanie_para", base, 0, 1), ("02_rejka_nepodvizhnaja_x2", V.fix2, 180, 2), ("03a_kolpak_rotora_x2", T.jacket, 180, 2),
          ("03b_shest_motora_x2", T.gear_m, 180, 2), ("05_polzun_x2", T.sl, 0, 2), ("06_shest_plav_x4", T.flo0, 0, 4),
-         ("08_telezhka_A_15", cartA, 180, 1), ("08_telezhka_B_15", cartB, 180, 1), ("10_brusok_x2", T.beam, 0, 2), ("12_balka_B", beam, 180, 1)]
+         ("08_telezhka_A_15", cartA, 180, 1), ("08_telezhka_B_15", cartB, 180, 1), ("10_brusok_x2", T.beam, 0, 2), ("12_balka_B", beam, 0, 1)]
 
 if __name__ == "__main__":
     import trimesh
@@ -144,7 +152,9 @@ if __name__ == "__main__":
         v = iv(stat[a], stat[b])
         if v > 0.05:
             bad += 1; print("  статика %s × %s %.2f" % (a, b, v))
-    for nm, c, other in (("А", poseA(0)["тележка"], base), ("Б", poseB(0)["тележка"], beamW)):
+    if iv(Pos(0, 0, -0.3) * poseB(0)["тележка"], beamW) < 0.01:
+        print("  внимание: площадка Б не ложится на балку при нажатии")
+    for nm, c, other in (("А", poseA(0)["тележка"], base), ("Б", poseB(0)["тележка"], base)):
         if iv(Pos(0, 0, 0.5) * c, other) < 0.01:
             bad += 1; print("  тележка %s поднимается на 0.5 — не держится" % nm)
     print("пара 15: %s; площадки 15 мм, центры y %.2f и %.2f (шаг %.2f); зазор колпаков %.2f" % (
