@@ -16,9 +16,9 @@ S, A, RF, RM, YM, CW, HALF, L2 = T.S, T.A, T.RF, T.RM, T.YM, T.CW, T.HALF, T.L2
 DED, DT, C = K.DED, 1.0, 0.2
 W, Z_T, Z_PD0, Z_PD1 = R.W, R.Z_T, R.Z_PD0, R.Z_PD1
 P12 = 30.4                                                                         # крайний к соседнему: шестернями друг к другу
-CM = [-15.0 - P12, -15.0, 15.0, 45.0]                                              # оси моторов
-ROT = [True, False, False, False]
-PADC = [-34.0, -10.0, 14.0, 38.0]                                                  # центры площадок (шаг 24)
+CM = [-15.0 - P12, -15.0, 15.0, 15.0 + P12]                                       # вторая пара — зеркало первой (владелец 19.11)                                              # оси моторов
+ROT = [True, False, True, False]
+PADC = [-36.0, -12.0, 12.0, 36.0]                                                  # центры площадок (шаг 24)
 
 # ---------------- крайний модуль (в локальных координатах концепта В) ----------------
 Y_FO = K.Y_CART                                                                    # неподвижная рейка за шестернями, зубья к ним (−y)
@@ -62,14 +62,13 @@ def place(i, p):
 
 
 OUT = (0, 3)
-pads = {0: pad_o(0), 3: pad_o(3), 1: R.pads[1], 2: R.pads[2]}
+pads = {0: pad_o(0), 3: pad_o(3), 1: R.pad_part(local_pad_center(1) - R.YCC), 2: R.pad_part(local_pad_center(2) - R.YCC)}
 
 
 def stat(i):
     if i in OUT:
-        d = {"основание": base_o + (cols_f if i == 0 else Pos(0, 0, -100) * Box(0.1, 0.1, 0.1)), "рейка": fix_o, "брусок": K.beam, "мотор": K.motor}
-        if i == 0:
-            d["балка"] = beam_f
+        d = {"основание": base_o + cols_f, "рейка": fix_o, "брусок": K.beam, "мотор": K.motor}
+        d["балка"] = beam_f
     else:
         d = {"основание": R.base1, "рейка": K.fix, "брусок": K.beam, "мост": K.most, "мотор": K.motor}
     return {k: place(i, v) for k, v in d.items()}
@@ -84,8 +83,8 @@ def moving(i, s):
     return {k: place(i, v) for k, v in d.items()}
 
 
-filler = BB(-HALF, HALF, CM[0] + 15.0 - 0.01, CM[1] - 15.0 + 0.01, 0, T.Z_FL)       # пол между крайним и соседним (0.4)
-base_row = Part() + [stat(i)["основание"] for i in range(4)] + [filler]
+fillers = [BB(-HALF, HALF, CM[0] + 15.0 - 0.01, CM[1] - 15.0 + 0.01, 0, T.Z_FL), BB(-HALF, HALF, CM[2] + 15.0 - 0.01, CM[3] - 15.0 + 0.01, 0, T.Z_FL)]
+base_row = Part() + [stat(i)["основание"] for i in range(4)] + fillers
 
 if __name__ == "__main__":
     def iv(a, b):
@@ -106,7 +105,7 @@ if __name__ == "__main__":
                 for b in ("рейка", "основание"):
                     v = iv(m[a], st[b])
                     if v > 0.05: bad += 1; print("  модуль %d s=%+.1f %s × %s %.2f" % (i + 1, s, a, b, v))
-        if i == 0 and iv(Pos(0, 0, -0.3) * moving(i, 0)["тележка"], stat(i)["балка"]) < 0.01:
+        if iv(Pos(0, 0, -0.3) * moving(i, 0)["тележка"], stat(i)["балка"]) < 0.01:
             print("  внимание: площадка левого крайнего не ложится на балку")
         if iv(Pos(0, 0, 0.6) * moving(i, 0)["тележка"], stat(i)["рейка"]) < 0.01:
             bad += 1; print("  модуль %d: тележка поднимается" % (i + 1))
@@ -125,7 +124,7 @@ if __name__ == "__main__":
     bb = base_row.bounding_box()
     print("ряд В×4 Б: %s; площадки на %s; длина платформы %.1f, высота до верха площадок %.1f" % ("ЧИСТО" if not bad else "%d проблем" % bad, PADC, bb.size.Y, Z_PD1))
     for n, p in (("base_row", base_row), ("fix", K.fix), ("fix_o", fix_o), ("beam", K.beam), ("most", K.most), ("motor", K.motor), ("slider", K.sl),
-                 ("flo", K.flo0), ("cart", K.cart), ("cart_o", cart_o), ("gm", K.gm), ("plat", K.plat), ("beam_f", place(0, beam_f))):
+                 ("flo", K.flo0), ("cart", K.cart), ("cart_o", cart_o), ("gm", K.gm), ("plat", K.plat), ("beam_f", place(0, beam_f) + place(3, beam_f))):
         export_stl(Part() + p, "asm_V4b/%s.stl" % n, tolerance=0.02, angular_tolerance=0.2)
     for i in range(4):
         export_stl(Part() + pads[i], "asm_V4b/pad%d.stl" % i, tolerance=0.02, angular_tolerance=0.2)

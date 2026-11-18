@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Ряд В×4 вариант Б: крайние модули с тележкой спереди (левый развёрнут), площадки на шаге 24. Пробел — анимация.
+# Ряд В×4 вариант Б (вторая пара зеркальна первой): крайние модули с тележкой спереди (левый развёрнут), площадки на шаге 24. Пробел — анимация.
 import bpy, os, math
 D = os.path.dirname(os.path.abspath(__file__)); P = os.path.join(D, "asm_V4b")
 v = list(map(float, open(os.path.join(P, "params.txt")).read().split())); CM, YM, YG = v[:4], v[4], v[5]
-ROT = [True, False, False, False]; OUT = (0, 3)
+ROT = [True, False, True, False]; OUT = (0, 3)
 A, RF, RM, S, FR = 2.5 * math.pi * 0.8, 4.8, 4.4, 11.0, 240
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'; sc.frame_end = FR
