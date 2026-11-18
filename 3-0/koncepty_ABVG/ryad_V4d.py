@@ -26,6 +26,9 @@ def motor_for(i):
 
 
 CM = [motor_for(i) for i in range(4)]
+SHIFT_Z = 5.0                                                                      # крайние модули З ближе к П на 5 мм вместе с балкой (владелец 19.11)
+CM[0] += SHIFT_Z; CM[3] -= SHIFT_Z
+PADC = [PADC[0] + SHIFT_Z, PADC[1], PADC[2], PADC[3] - SHIFT_Z]
 pad_H = BB(-CW, CW, C_H - W / 2, C_H + W / 2, R.Z_PD0, R.Z_PD1) + BB(-CW, CW, V.Y_CO0, V.YB_R + V.DT + 1.4, R.Z_T - 0.01, R.Z_PD0 + 0.01)
 cart_H = V.cart_o + pad_H
 
