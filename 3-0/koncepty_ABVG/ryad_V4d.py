@@ -13,9 +13,13 @@ os.chdir(HERE); os.makedirs("asm_V4d", exist_ok=True)
 BB, CZ = T.BB, T.CZ
 S, A, RF, RM, YM, CW, HALF = T.S, T.A, T.RF, T.RM, T.YM, T.CW, T.HALF
 W = 15.0
-C_H = (V.Y_CO0 + V.YB_R + V.DT + 1.4) / 2                                         # центр тележки П (площадка целиком на ней)
+# 19.11, владелец: шаг всех пальцев одинаковый и меньше 24. Модули П в середине — шестернями друг к другу, ближе 30.4 их не поставить
+# (ползуны), поэтому шаг 17: моторы П на ±15.2, площадки П на ±8.5, площадки З на ±25.5, моторы З — от своих площадок.
+PITCH = 17.0
+CM_H = 15.2
 C_Z = (Z.Y_P0 + Z.Y_P1) / 2                                                        # центр площадки З (за мотором)
-PADC = [-36.0, -12.0, 12.0, 36.0]
+C_H = YM - (CM_H - PITCH / 2)                                                      # центр площадки П на тележке (8.8)
+PADC = [-1.5 * PITCH, -0.5 * PITCH, 0.5 * PITCH, 1.5 * PITCH]
 ROT = [True, True, False, False]
 TYPE = ["З", "П", "П", "З"]
 
@@ -26,9 +30,6 @@ def motor_for(i):
 
 
 CM = [motor_for(i) for i in range(4)]
-SHIFT_Z = 5.0                                                                      # крайние модули З ближе к П на 5 мм вместе с балкой (владелец 19.11)
-CM[0] += SHIFT_Z; CM[3] -= SHIFT_Z
-PADC = [PADC[0] + SHIFT_Z, PADC[1], PADC[2], PADC[3] - SHIFT_Z]
 pad_H = BB(-CW, CW, C_H - W / 2, C_H + W / 2, R.Z_PD0, R.Z_PD1) + BB(-CW, CW, V.Y_CO0, V.YB_R + V.DT + 1.4, R.Z_T - 0.01, R.Z_PD0 + 0.01)
 cart_H = V.cart_o + pad_H
 
