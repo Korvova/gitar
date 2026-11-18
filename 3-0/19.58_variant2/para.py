@@ -15,7 +15,9 @@ for d in ("stl_para", "asm_para"):
 BB, CZ = T.BB, T.CZ
 S, A, HALF, L2 = T.S, T.A, T.HALF, T.L2
 c2 = V.cart2.bounding_box(); cb = B.cart.bounding_box()
-D = round(24.0 + (c2.min.Y + c2.max.Y) / 2 - (cb.min.Y + cb.max.Y) / 2, 2)    # 38.43: тележки на шаге 24
+Y_PA = (V.RY0 - V.DT - 1.4 + V.YB_R + V.DT + 1.4) / 2                          # центр площадки тележки А
+Y_PB = (B.Y_CF + B.Y_CB) / 2                                                    # центр площадки тележки Б
+D = round(24.0 + Y_PA - Y_PB, 2)                                                 # площадки под пальцы на шаге 24
 CL = 0.3
 
 
@@ -67,7 +69,7 @@ def poseB(s):
 
 PRINT = [("01_osnovanie_para", base, 0, 1), ("02_rejka_nepodvizhnaja_x2", V.fix2, 180, 2), ("03a_kolpak_rotora_x2", T.jacket, 180, 2),
          ("03b_shest_motora_x2", T.gear_m, 180, 2), ("05_polzun_x2", T.sl, 0, 2), ("06_shest_plav_x4", T.flo0, 0, 4),
-         ("08_telezhka_A", V.cart2, 180, 1), ("08_telezhka_B_dlinnaja", B.cart, 180, 1), ("10_brusok_x2", T.beam, 0, 2), ("12_perekladina", B.per, 0, 1)]
+         ("08_telezhka_A", V.cart2, 180, 1), ("08_telezhka_B_dlinnaja", B.cart, 180, 1), ("10_brusok_x2", T.beam, 0, 2), ("12_perekladina", B.per, 180, 1)]
 
 if __name__ == "__main__":
     import trimesh
@@ -106,8 +108,8 @@ if __name__ == "__main__":
     if iv(Pos(0, 0, -0.3) * poseB(0)["тележка"], per) < 0.01:
         print("  внимание: тележка Б не опирается на перекладину")
     bbx = bb(base)
-    print("пара: %s; основание %.1f × %.1f × %.1f; тележки центры y %.1f и %.1f" % ("ЧИСТО" if not bad else "%d пересечений" % bad, bbx.size.X, bbx.size.Y, bbx.size.Z,
-          (c2.min.Y + c2.max.Y) / 2, (cb.min.Y + cb.max.Y) / 2 + D))
+    print("пара: %s; основание %.1f × %.1f × %.1f; площадки под пальцы: центры y %.2f и %.2f" % ("ЧИСТО" if not bad else "%d пересечений" % bad, bbx.size.X, bbx.size.Y, bbx.size.Z,
+          Y_PA, Y_PB + D))
     for n, p, flip, cnt in PRINT:
         p = Rot(flip, 0, 0) * (Part() + p)
         b = p.bounding_box()
