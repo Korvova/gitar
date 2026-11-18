@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>49E монитор</title>
+<style>
+  :root { --bg:#f6f6f4; --fg:#1d1d1b; --mut:#6b6b66; --card:#fff; --line:#e3e2dd; --a:#2a6fdb; --b:#e0702a; --ok:#2e8b57; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151514; --fg:#ecebe6; --mut:#9a9993; --card:#1f1f1d; --line:#33332f; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui, sans-serif; }
+  header { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:14px 16px; border-bottom:1px solid var(--line); }
+  h1 { font-size:17px; margin:0 12px 0 0; }
+  button { font:inherit; padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; }
+  button.main { background:var(--a); color:#fff; border-color:var(--a); }
+  #st { color:var(--mut); }
+  main { display:grid; grid-template-columns: 1fr 320px; gap:14px; padding:14px 16px; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .card h2 { font-size:13px; font-weight:600; color:var(--mut); margin:0 0 8px; text-transform:uppercase; letter-spacing:.04em; }
+  canvas { width:100%; display:block; }
+  .big { font-size:42px; font-weight:700; font-variant-numeric: tabular-nums; }
+  .row { display:flex; justify-content:space-between; font-variant-numeric: tabular-nums; padding:3px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border:0; }
+  .lg span { display:inline-block; width:12px; height:3px; vertical-align:middle; margin:0 4px 0 10px; }
+  .hint { color:var(--mut); font-size:13px; margin-top:8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>49E монитор — телескоп v6</h1>
+  <button class="main" id="con">Подключить ESP</button>
+  <button id="zero" disabled>Ноль датчиков (z)</button>
+  <button id="rst" disabled>Сброс угла (r)</button>
+  <span id="st">не подключено · нужен Chrome или Edge</span>
+</header>
+<main>
+  <div>
+    <div class="card">
+      <h2>Сигналы датчиков <span class="lg"><span style="background:var(--a)"></span>A <span style="background:var(--b)"></span>B</span></h2>
+      <canvas id="wave" height="260"></canvas>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Угол ротора по времени</h2>
+      <canvas id="ang" height="180"></canvas>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <h2>Угол ротора</h2>
+      <div class="big" id="turn">—</div>
+      <div class="hint">1 струна ≈ 55° ротора, весь ход ≈ ±143°</div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Круг A–B (должен быть кругом)</h2>
+      <canvas id="xy" height="280"></canvas>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="row"><span>A</span><span id="va">—</span></div>
+      <div class="row"><span>B</span><span id="vb">—</span></div>
+      <div class="row"><span>Фаза</span><span id="vp">—</span></div>
+      <div class="row"><span>Размах A</span><span id="ra">—</span></div>
+      <div class="row"><span>Размах B</span><span id="rb">—</span></div>
+      <div class="hint">Хорошо: размах ≥ 200 у обоих, круг ровный, угол возвращается к той же цифре в той же точке.</div>
+    </div>
+  </div>
+</main>
+<script>
+const N = 600; const A = [], B = [], T = [];
+let port, writer, last = null;
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+$('con').onclick = async () => {
+  if (!('serial' in navigator)) { $('st').textContent = 'Браузер не поддерживает Web Serial — открой в Chrome или Edge'; return; }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    $('st').textContent = 'подключено'; $('zero').disabled = $('rst').disabled = false; $('con').disabled = true;
+    readLoop();
+  } catch (e) { $('st').textContent = 'ошибка: ' + e.message; }
+};
+const send = c => writer && writer.write(new TextEncoder().encode(c));
+$('zero').onclick = () => { send('z'); A.length = B.length = T.length = 0; };
+$('rst').onclick = () => send('r');
+
+async function readLoop() {
+  const dec = new TextDecoderStream(); port.readable.pipeTo(dec.writable);
+  const rd = dec.readable.getReader(); let buf = '';
+  while (true) {
+    const { value, done } = await rd.read(); if (done) break;
+    buf += value; let i;
+    while ((i = buf.indexOf('\n')) >= 0) { parse(buf.slice(0, i).trim()); buf = buf.slice(i + 1); }
+  }
+}
+function parse(l) {
+  if (l.startsWith('#')) { $('st').textContent = 'подключено · ' + l.slice(1).trim(); return; }
+  const m = l.match(/A:(-?[\d.]+) B:(-?[\d.]+) phase:(-?[\d.]+) turn:(-?[\d.]+)/); if (!m) return;
+  const a = +m[1], b = +m[2], p = +m[3], t = +m[4];
+  A.push(a); B.push(b); T.push(t); if (A.length > N) { A.shift(); B.shift(); T.shift(); }
+  last = { a, b, p, t };
+}
+function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; if (c.width !== r.width * d) { c.width = r.width * d; c.height = c.getAttribute('height') * d; } return d; }
+function grid(g, w, h) { g.strokeStyle = css('--line'); g.lineWidth = 1; g.beginPath(); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); }
+function line(g, arr, w, h, sc, col) { g.strokeStyle = col; g.lineWidth = 2 * (devicePixelRatio || 1); g.beginPath();
+  arr.forEach((v, i) => { const x = i / (N - 1) * w, y = h / 2 - v * sc; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+function draw() {
+  const w1 = $('wave'), g1 = w1.getContext('2d'); fit(w1); g1.clearRect(0, 0, w1.width, w1.height); grid(g1, w1.width, w1.height);
+  const mx = Math.max(200, ...A.map(Math.abs), ...B.map(Math.abs)); const sc = (w1.height / 2 - 8) / mx;
+  line(g1, A, w1.width, w1.height, sc, css('--a')); line(g1, B, w1.width, w1.height, sc, css('--b'));
+  const w2 = $('ang'), g2 = w2.getContext('2d'); fit(w2); g2.clearRect(0, 0, w2.width, w2.height); grid(g2, w2.width, w2.height);
+  const mt = Math.max(160, ...T.map(Math.abs)); line(g2, T, w2.width, w2.height, (w2.height / 2 - 8) / mt, css('--ok'));
+  const w3 = $('xy'), g3 = w3.getContext('2d'); fit(w3); const W = w3.width, H = w3.height; g3.clearRect(0, 0, W, H);
+  g3.strokeStyle = css('--line'); g3.beginPath(); g3.moveTo(W / 2, 0); g3.lineTo(W / 2, H); g3.moveTo(0, H / 2); g3.lineTo(W, H / 2); g3.stroke();
+  const s3 = (Math.min(W, H) / 2 - 8) / mx; g3.fillStyle = css('--a');
+  for (let i = 0; i < A.length; i++) g3.fillRect(W / 2 + A[i] * s3 - 1.5, H / 2 - B[i] * s3 - 1.5, 3, 3);
+  if (last) {
+    $('turn').textContent = last.t.toFixed(1) + '°'; $('va').textContent = last.a.toFixed(0); $('vb').textContent = last.b.toFixed(0); $('vp').textContent = last.p.toFixed(0) + '°';
+    $('ra').textContent = A.length ? (Math.max(...A) - Math.min(...A)).toFixed(0) : '—'; $('rb').textContent = B.length ? (Math.max(...B) - Math.min(...B)).toFixed(0) : '—';
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

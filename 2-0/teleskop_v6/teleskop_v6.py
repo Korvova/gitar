@@ -25,7 +25,7 @@ HALF, S = 25.0, 11.0
 Z_FL, MOT_H = 2.5, 12.23
 Z_M1 = Z_FL + MOT_H
 LG_Y = (12.15, 23.1)                       # ножка моста по Y
-Z_SL = 9.0                                 # высота направляющих стенок ножек
+Z_SL = 8.0                                 # высота направляющих стенок ножек
 YM = 15.5                                  # ось мотора
 DZ = 4.4                                   # v6: всё над мотором выше на толщину платформы с магнитами (4.4: под головкой М2 2 мм — в мотор 1.5)
 L1 = (15.0 + DZ, 18.5 + DZ)                          # шестерня мотора + ползун
@@ -33,7 +33,7 @@ L2 = (18.7 + DZ + 0.3, 21.2 + DZ + 0.3)                          # плаваю�
 Z_P0, Z_P1 = 21.4 + DZ + 0.3, 23.4 + DZ + 0.3                    # ложе
 Y_FIX, Y_CART, Y_SL = -RF, RF, YM - RM
 Y_ROOT = Y_FIX - 1.2 * M
-Y0, Y1 = -8.5, YM + 15.6
+Y0, Y1 = -8.5, YM + 19.6                  # +2.4 сзади: полка рубашки с магнитами r до 17.6
 Y_LEDGE = YM - 14.3                        # край полки
 YB0, YB1 = 12.1, 17.1                      # мост внизу (по стойкам); вверху шире на DT
 YBP = (YB0 + YB1) / 2
@@ -129,7 +129,7 @@ PL_R, MG_R, MG_N = 13.5, 10.0, 8                                                
 plat = CZ(PL_R, Z_M1 + 0.1, Z_M1 + 0.1 + DZ)
 for k in range(MG_N):
     a = 2 * math.pi * k / MG_N
-    plat -= CZ(2.05, Z_M1 + 0.1 + DZ - 2.0, Z_M1 + 0.1 + DZ + 1, MG_R * math.cos(a), MG_R * math.sin(a))   # магнит владельца Ø4 × 1.9
+    pass                                                                        # магнитов на платформе больше нет — они внизу, в рубашке
 mags = Part() + [CZ(2.0, Z_M1 + 0.1 + DZ - 1.9, Z_M1 + 0.1 + DZ, MG_R * math.cos(2 * math.pi * k / MG_N), MG_R * math.sin(2 * math.pi * k / MG_N)) for k in range(MG_N)]
 # крепление к крутящемуся торцу 2204 (владелец 16.11): 4 × М2 на Ø12 между магнитами, головки утоплены на 2 — под головкой 2.0, М2×4 входит в мотор на 1.5;
 # шестерня отдельно (иначе к винтам не подлезть): квадрат 4.9 в гнездо платформы, на клей; в центре Ø3.3 по трубке мотора
@@ -142,7 +142,7 @@ for k in range(4):
 plat -= Pos(0, 0, Z_PT - 1.5) * Box(5.1, 5.1, 3.0, align=(Align.CENTER, Align.CENTER, Align.MIN))
 gear_m = gear(ZM, Z_PT, L1[1], -90) + Pos(0, 0, Z_PT - 1.4) * Box(4.9, 4.9, 1.41, align=(Align.CENTER, Align.CENTER, Align.MIN))
 gear_m -= CZ(R_MB, 0, 40)
-pin_m0 = plat + gear_m                                                            # у оси мотора, x = y = 0
+pin_m0 = gear_m                                                                   # у оси мотора, x = y = 0
 pin_m = Pos(0, YM, 0) * pin_m0
 motor = CZ(13.9, Z_FL, Z_M1, 0, YM) + CZ(1.5, Z_M1 - 0.01, L1[1], 0, YM)
 
@@ -150,7 +150,7 @@ motor = CZ(13.9, Z_FL, Z_M1, 0, YM) + CZ(1.5, Z_M1 - 0.01, L1[1], 0, YM)
 sl = BB(-SLX, SLX, -3.8, Y_SL - 1.2 * M, *L1) + rack(-SLX, SLX, Y_SL, 1, L1[0], L1[1], 0.5)
 sl -= prof_x([(BM_Y[0] - C, Z_BM0 - C), (BM_Y[1] + C, Z_BM0 - C), (BM_Y[3] + C, L1[1] + 1), (BM_Y[2] - C, L1[1] + 1)], -SLX - 1, SLX + 1)   # паз сверху под брусок
 for x in (-A, A):
-    sl += CZ(R_AX, L1[1] - 0.01, Z_ST1, x, 0)
+    sl += CZ(R_AX, L1[1] - 0.01, L2[1], x, 0)                                   # оси вровень с шестернями (планки осей нет, 18.11)
 
 # (5) плавающая шестерня ×2 (у своей оси) и планка осей
 flo0 = gear(ZF, L2[0], L2[1], 90 + 180.0 / ZF) - CZ(R_FB, 0, 40)
@@ -197,29 +197,50 @@ for sx in (-1, 1):
 coins = Part() + [Pos(sx * CXH, CYH, L2[0] - 5.5) * Rot(0, 90, 0) * Cylinder(5.0, 2.7) for sx in (-1, 1)] if VIBRO else Pos(0, 0, -60) * Box(0.1, 0.1, 0.1)
 btns = Part() + [BB(sx * 22.5 - 2.6, sx * 22.5 + 2.6, YBP - 2.6, YBP + 2.6, Z_FL - 1.0, Z_BT) for sx in (-1, 1)]
 # 49E ×2 под мостом над кольцом магнитов, в квадратуре: углы −6° и 196.5° (разница 22.5° по модулю 90° при 8 полюсах)
-H_ANG = (-11.0, 191.5)
+# === 49E СНИЗУ (17.11): рубашка на колоколе, полка снизу с 8 магнитами Ø4×1.9 лицом вниз (N/S через один),
+# два 49E лежат в гнёздах основания лицом вверх, ножки сразу вниз сквозь дно; зазор магнит—датчик 2.5 (импульсы → синус)
+R_J0, R_J1, R_JF = 14.0, 15.0, 19.0                                              # рубашка: внутр./наруж., полка
+MG_RB = 16.4                                                                     # радиус кольца магнитов
+Z_HS = Z_FL + 4.0                                                                # лицо датчиков = верх ободка мотора
+Z_JF0 = Z_HS + 2.5                                                               # низ полки = низ магнитов
+Z_JF1 = Z_JF0 + 2.4
+Z_PB, Z_PTOP = Z_M1 + 0.1, Z_M1 + 0.1 + DZ                                    # платформа ротора (низ/верх)
+jacket = CZ(R_J1, Z_JF0, Z_PB) - CZ(R_J0, 0, Z_PB + 0.01)                        # юбка вокруг колокола
+jacket += CZ(R_J1, Z_PB - 0.01, Z_PTOP) - CZ(PL_R - 0.2, 0, 40)                  # кольцо, сращивает юбку с платформой
+jacket += CZ(R_JF, Z_JF0, Z_JF1) - CZ(R_J0, 0, 40)                               # полка с магнитами
+jacket += (Pos(0, 0, Z_JF1 - 0.01) * Cone(R_JF, R_J1, R_JF - R_J1 + 0.01, align=(Align.CENTER, Align.CENTER, Align.MIN))) - CZ(R_J0, 0, 40)   # скос 45° над полкой — печать вверх ногами без поддержек
+jacket += plat                                                                   # ОДНА деталь: платформа + юбка + полка
+mags = Part()
+for k in range(MG_N):
+    a = 2 * math.pi * k / MG_N
+    jacket -= CZ(2.05, Z_JF0 - 1, Z_JF0 + 2.0, MG_RB * math.cos(a), MG_RB * math.sin(a))
+    mags += CZ(2.0, Z_JF0, Z_JF0 + 1.9, MG_RB * math.cos(a), MG_RB * math.sin(a))
+base -= CZ(R_JF + 0.5, Z_JF0 - 0.4, Z_JF1 + 0.5, 0, YM) + Pos(0, YM, Z_JF1 + 0.49) * Cone(R_JF + 0.5, R_J1 + 0.4, R_JF - R_J1 + 0.1, align=(Align.CENTER, Align.CENTER, Align.MIN)) + CZ(R_J1 + 0.4, Z_JF0 - 0.4, Z_PTOP + 0.2, 0, YM)   # место полке и рубашке
+H_ANG = (-11.25, 191.25)                                                         # по бокам, разница 202.5° ≡ 22.5° (четверть периода 90°)
 hall = Part()
-# 49E владельца 4.1 × 3.0 × 1.5 лежит плашмя лицом вниз в кармане бобышки под мостом; вставляется сбоку, сзади (с +Y), как в паз;
-# ножки торчат назад — провода сразу наружу. Под датчиком пол 0.4, зазор лица до магнитов 1.5
-Z_MG1 = Z_M1 + 0.1 + DZ                                                          # верх магнитов
-Z_SB = Z_MG1 + 1.5                                                               # лицо датчика
 for ang in H_ANG:
-    a = math.radians(ang); hx = MG_R * math.cos(a); hy = max(YM + MG_R * math.sin(a), 14.2)
-    most += BB(hx - 2.6, hx + 2.6, YB0, YB1, Z_SB - 0.4, L2[0] + 0.01)             # бобышка с полом 0.4
-    most -= BB(hx - 2.1, hx + 2.1, hy - 1.6, YB1 + 1, Z_SB, Z_SB + 1.6)            # паз: открыт назад, датчик задвигается до упора
-    hall += BB(hx - 2.05, hx + 2.05, hy - 1.5, hy + 1.5, Z_SB, Z_SB + 1.5)
+    a = math.radians(ang); hx, hy = MG_RB * math.cos(a), YM + MG_RB * math.sin(a)
+    sg = 1 if hx > 0 else -1                                                      # наружу (к стенке) — сторона выводов
+    # гнездо ровно по осям, параллельно стенкам: датчик 3.0 по X × 4.1 по Y, лицом вверх, ножки наружу по X
+    x_in, x_out = hx - sg * 1.6, hx + sg * 2.4                                     # площадка: от ободка до 0.4 за датчиком
+    base += BB(*sorted((x_in, x_out)), hy - 3.1, hy + 3.1, Z_FL - 0.01, Z_HS)
+    rim = BB(*sorted((x_in, x_out)), hy - 3.1, hy + 3.1, Z_HS - 0.01, Z_HS + 0.8) - BB(*sorted((hx - sg * 1.6, x_out + sg)), hy - 2.15, hy + 2.15, Z_HS - 1, Z_HS + 2)
+    base += rim                                                                   # бортики с трёх сторон, наружная сторона открыта — выводы
+    base -= BB(*sorted((hx - sg * 1.6, x_out + sg)), hy - 2.15, hy + 2.15, Z_HS - 1.6, Z_HS + 1)   # гнездо 3.2×4.3, открыто наружу
+    base -= BB(*sorted((x_out, x_out + sg * 0.9)), hy - 1.6, hy + 1.6, -1, Z_HS + 1)            # щель для проводов вниз сквозь дно
+    hall += BB(hx - 1.5, hx + 1.5, hy - 2.05, hy + 2.05, Z_HS - 1.5, Z_HS)
 # подушка из двух половинок, склеить плоскостями (владелец 16.11): у каждой пластинка 0.4 и свой штырёк — печать без поддержек
 _zm = Z_LT + PAD_T / 2
 pad_lo = pads[1] & BB(-40, 40, -40, 60, -10, _zm)                                    # низ: штырёк вниз в ножку
 pad_hi = pads[1] & BB(-40, 40, -40, 60, _zm, 60)                                     # верх: штырёк вверх в мост
-PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1), ("03a_platforma_rotora", plat, 0, 1), ("03b_shest_motora", gear_m, 180, 1), ("04_maket_motora", motor, 0, 1),
-         ("05_polzun", sl, 0, 1), ("06_shest_plav_x2", flo0, 0, 2), ("07_planka_osej", strap, 0, 1), ("08_telezhka", cart, 180, 1),
+PRINT = [("01_osnovanie", base, 0, 1), ("02_most", most, 180, 1),  ("03b_shest_motora", gear_m, 180, 1), ("03a_kolpak_rotora_s_magnitami", jacket, 180, 1), ("04_maket_motora", motor, 0, 1),
+         ("05_polzun", sl, 0, 1), ("06_shest_plav_x2", flo0, 0, 2), ("08_telezhka", cart, 180, 1),
          ("09_bort_x2", Rot(0, 90, 0) * bort, 0, 2), ("10_brusok", beam, 0, 1), ("11_nozhka_mosta_L", legs[0], 0, 1), ("12_nozhka_mosta_P", legs[1], 0, 1), ("13a_podushka_niz_x2", pad_lo, 180, 2), ("13b_podushka_verh_x2", pad_hi, 0, 2)]
 
 
 def pose(s):
     rf = -math.degrees(s / RF)
-    return {"ползун": Pos(s, 0, 0) * sl, "планка": Pos(s, 0, 0) * strap,
+    return {"ползун": Pos(s, 0, 0) * sl, 
             "плав1": Pos(s - A, 0, 0) * Rot(0, 0, rf) * flo0, "плав2": Pos(s + A, 0, 0) * Rot(0, 0, rf) * flo0,
             "шест.мотора": Pos(0, YM, 0) * Rot(0, 0, math.degrees(s / RM)) * pin_m0, "тележка": Pos(2 * s, 0, 0) * cart}
 
@@ -227,14 +248,14 @@ def pose(s):
 if __name__ == "__main__":
     import numpy as np, trimesh
     print("высота %.1f, основание %.0f × %.1f, тележка %.0f" % (Z_P1, 2 * HALF, Y1 - Y0, 2 * CW))
-    stat = {"основание": base, "мост": most, "мотор": motor, "брусок": beam, "ножка Л": legs[0], "ножка П": legs[1], "таблетки": coins, "кнопки": btns, "49E": hall, "подушки": pads[0] + pads[1]}
+    stat = {"рубашка": Pos(0, YM, 0) * jacket, "основание": base, "мост": most, "мотор": motor, "брусок": beam, "ножка Л": legs[0], "ножка П": legs[1], "таблетки": coins, "кнопки": btns, "49E": hall, "подушки": pads[0] + pads[1]}
     bad = 0
     for s in (-S, -8.25, -5.5, -2.75, 0, 2.75, 5.5, 8.25, S):
         al = {**stat, **pose(s)}
         ns = list(al)
         for i, a in enumerate(ns):
             for b in ns[i + 1:]:
-                if (a in stat and b in stat) or {a, b} == {"мотор", "шест.мотора"}:
+                if (a in stat and b in stat) or {a, b} == {"мотор", "шест.мотора"} or {a, b} == {"рубашка", "шест.мотора"}:   # крутятся вместе (квадрат шестерни в колпаке)
                     continue
                 try:
                     v = (al[a] & al[b]).volume
@@ -244,7 +265,7 @@ if __name__ == "__main__":
                     bad += 1
                     print("  ПЕРЕСЕЧЕНИЕ s=%+.2f %s × %s: %.2f мм³" % (s, a, b, v))
     SP = [("ножка Л", "основание"), ("ножка П", "основание"), ("ножка Л", "мотор"), ("ножка П", "мотор"), ("таблетки", "ножка Л"), ("таблетки", "ножка П"), ("таблетки", "мост"), ("таблетки", "основание"), ("таблетки", "мотор"),
-          ("кнопки", "основание"), ("49E", "мост"), ("49E", "основание"), ("ножка Л", "мост"), ("ножка П", "мост"), ("подушки", "основание"), ("подушки", "кнопки"), ("подушки", "ножка Л"), ("подушки", "ножка П")]
+          ("кнопки", "основание"), ("49E", "основание"), ("рубашка", "основание"), ("рубашка", "49E"), ("рубашка", "мотор"), ("рубашка", "ножка Л"), ("рубашка", "ножка П"), ("рубашка", "мост"), ("ножка Л", "мост"), ("ножка П", "мост"), ("подушки", "основание"), ("подушки", "кнопки"), ("подушки", "ножка Л"), ("подушки", "ножка П")]
     for a, b in SP:
         v = (stat[a] & stat[b]); v = 0.0 if v is None else v.volume
         if v > 0.03: bad += 1; print("  СТАТИКА %s × %s %.2f" % (a, b, v))
@@ -252,7 +273,7 @@ if __name__ == "__main__":
     for s_ in (-S, 0, S):
         pz = pose(s_)
         mv = {"мост": dn * most, "таблетки": dn * coins, "тележка": dn * pz["тележка"]}
-        fx = {"ножка Л": legs[0], "ножка П": legs[1], "основание": base, "ползун": pz["ползун"], "планка": pz["планка"], "плав1": pz["плав1"], "плав2": pz["плав2"], "шест.мотора": pz["шест.мотора"], "мотор": motor}
+        fx = {"ножка Л": legs[0], "ножка П": legs[1], "основание": base, "ползун": pz["ползун"], "плав1": pz["плав1"], "плав2": pz["плав2"], "шест.мотора": pz["шест.мотора"], "мотор": motor}
         for a, AA in mv.items():
             for b, Bp in fx.items():
                 r = AA & Bp; v = 0.0 if r is None else r.volume
@@ -284,6 +305,6 @@ if __name__ == "__main__":
         over = (nz < -0.72) & (cz > 0.25)
         ov_area = float(m.area_faces[over].sum())
         print("  %-20s ×%d  %5.1f × %5.1f × %5.1f  герм %s  нависание %.1f мм²" % (n, cnt, bb.size.X, bb.size.Y, bb.size.Z, m.is_watertight, ov_area))
-    for n, p in (("base", base), ("beam", beam), ("most", most), ("motor", motor), ("slider", sl), ("strap", strap), ("cart", cart), ("flo", flo0), ("legs", legs[0] + legs[1]), ("pads", pads[0] + pads[1]), ("coins", coins), ("btns", btns), ("hall", hall), ("mags", mags), ("pin_m", pin_m0)):
+    for n, p in (("base", base), ("beam", beam), ("most", most), ("motor", motor), ("slider", sl), ("cart", cart), ("flo", flo0), ("legs", legs[0] + legs[1]), ("pads", pads[0] + pads[1]), ("coins", coins), ("btns", btns), ("hall", hall), ("mags", mags), ("jacket", jacket), ("pin_m", pin_m0)):
         export_stl(Part() + p, "asm/%s.stl" % n, tolerance=0.02, angular_tolerance=0.2)
     print("asm готово")
