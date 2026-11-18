@@ -1,6 +1,6 @@
 import bpy, os
 s = bpy.context.scene
-keep = ("мотор", "площадка", "шестерня мотора", "платформа")
+keep = ("мотор", "тележка", "шестерня мотора", "платформа")
 for o in s.objects:
     if o.type == 'MESH':
         o.hide_render = not any(o.name.startswith(k) for k in keep)
@@ -8,7 +8,7 @@ for o in s.objects:
     if o.type == 'MESH' and o.name.startswith("мотор"):
         o.active_material = bpy.data.materials.get("motor")
         o.active_material.diffuse_color = (.1, .25, .8, 1)
-    if o.type == 'MESH' and o.name.startswith("площадка"):
+    if o.type == 'MESH' and o.name.startswith("тележка"):
         for m in o.data.materials: m.diffuse_color = (.7, .7, .7, 1)
     if o.type == 'MESH' and o.name.startswith("шестерня"):
         for m in o.data.materials: m.diffuse_color = (0, 0, 0, 1)
