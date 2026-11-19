@@ -23,8 +23,24 @@ Y_BC = (Y_P0 + Y_P1) / 2
 BM_B, BM_T = 3.0, 5.0
 beam = PX([(Y_BC - BM_B / 2, L2[0]), (Y_BC + BM_B / 2, L2[0]), (Y_BC + BM_T / 2, L2[1]), (Y_BC - BM_T / 2, L2[1])], -HALF, HALF)
 base = V.base_o + BB(-HALF, HALF, Y_P0 - 1.0, Y_MOT0 + 0.01 - 1.1, 0, T.Z_FL)     # пол вперёд под балку
+# клик (19.11, владелец): балка + 2 колонны = одна деталь; колонны стоят на круглых кнопках Ø6 в стаканах на полу
+BTN_D, BTN_H, BTN_HP, BTN_DP = 6.0, 3.5, 1.5, 2.6                                # кнопка: корпус Ø6×3.5, шток Ø2.6×1.5 (уточнить)
+XCB, R_P = 20.8, BTN_D / 2 + 0.15                                               # центр стакана; гнездо Ø6.3
+CUP_R = R_P + 1.0
+T_BAR, T_IN = 3.4, 3.0                                                           # перекладина «Т»: высота / сколько сидит в пазах
+CUP_H = BTN_H + BTN_HP + T_IN                                                   # стенки стакана выше штока на 3 — «Т» глубоко в пазах
+Z_BTOP = T.Z_FL + BTN_H + BTN_HP                                                 # верх штока = низ колонны
+cups, btns = Part(), Part()
 for sx in (-1, 1):
-    base += BB(*sorted((sx * 21.0, sx * HALF)), Y_BC - 1.5, Y_BC + 1.5, T.Z_FL - 0.01, L2[0] + 0.01)
+    cup = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, sx * XCB, Y_BC) - CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, sx * XCB, Y_BC)
+    cup -= BB(sx * XCB - 0.6, sx * XCB + 0.6, Y_BC - CUP_R - 1, Y_BC + CUP_R + 1, T.Z_FL, T.Z_FL + CUP_H + 1)    # узкая прорезь под выводы (вперёд/назад)
+    cup -= BB(sx * XCB - 1.65, sx * XCB + 1.65, Y_BC - CUP_R - 1, Y_BC + CUP_R + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # над ней — широкий паз под «Т» (ниже — стенка, кнопку держит)
+    cups += cup
+    btns += CZ(BTN_D / 2, T.Z_FL, T.Z_FL + BTN_H, sx * XCB, Y_BC) + CZ(BTN_DP / 2, T.Z_FL + BTN_H - 0.01, Z_BTOP, sx * XCB, Y_BC)
+    # колонна заодно с балкой; внизу перекладина — перевёрнутая «Т»: лежит в пазу стакана на штоке, паз держит колонну
+    beam += BB(sx * XCB - 1.5, sx * XCB + 1.5, Y_BC - CUP_R, Y_BC + CUP_R, Z_BTOP, Z_BTOP + T_BAR)   # перекладина вдоль прорезей
+    beam += BB(sx * XCB - 2.0, sx * XCB + 2.0, Y_BC - 1.5, Y_BC + 1.5, Z_BTOP + T_BAR - 0.01, L2[0] + 0.01)
+base += cups
 # тележка: рейка у шестерён + плита вперёд + площадка + крючки вокруг балки
 cart = rack(-CW, CW, K.Y_FIX - 0.05, 1, L2[0], L2[1] + 0.16, 0.3)
 Y_RB = K.Y_FIX - 0.05 - DED - 0.3
