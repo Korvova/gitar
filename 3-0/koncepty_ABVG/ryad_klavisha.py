@@ -6,6 +6,7 @@
 Запуск: python ryad_klavisha.py → ../19.65_klavisha_ryad/asm (детали модулей в своих координатах + рама ряда), сцена — blender_ryad_klavisha.py."""
 import os, sys, math
 os.environ["KLAV"] = "1"
+os.environ.setdefault("PITCH", "17.4"); os.environ.setdefault("CM_H", "15.5")      # наклону нужен зазор ~0.4 между соседями
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from build123d import *
 import ryad_V4d as R, datchiki_bok as DB
