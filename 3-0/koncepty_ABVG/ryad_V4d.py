@@ -42,13 +42,10 @@ for sx in (-1, 1):
     base_P -= BB(*sorted((sx * 23.6, sx * (HALF + 1))), V.Y_FO - 0.4, V.YB_R + 0.1, T.Z_FL + 0.01, T.L2[0] + 1)   # старые стойки рейки
 fix_P, btns_P, legs_P, fix_P_body = V.fix_o, Part(), Part(), V.fix_o
 for sx in (-1, 1):
-    cup = CZ(Z.CUP_R, T.Z_FL - 0.01, T.Z_FL + Z.CUP_H, sx * XCP, YCP) - CZ(Z.R_P, T.Z_FL, T.Z_FL + Z.CUP_H + 1, sx * XCP, YCP)
-    cup -= BB(sx * XCP - 0.6, sx * XCP + 0.6, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, T.Z_FL, T.Z_FL + Z.CUP_H + 1)
-    cup -= BB(sx * XCP - 1.65, sx * XCP + 1.65, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, Z.Z_BTOP - 0.4, T.Z_FL + Z.CUP_H + 1)
-    base_P += cup
+    base_P += Z.cup_at(sx * XCP, YCP)
     btns_P += CZ(Z.BTN_D / 2, T.Z_FL, T.Z_FL + Z.BTN_H, sx * XCP, YCP) + CZ(Z.BTN_DP / 2, T.Z_FL + Z.BTN_H - 0.01, Z.Z_BTOP, sx * XCP, YCP)
     fix_P_body += Z.socket_at(sx * XCP, YCP - 1.9, YCP + 1.9, T.L2[0])           # гнездо под колонну (ножка — отдельная деталь, на клей)
-    legs_P += Pos(sx * XCP, YCP, 0) * Z.leg0
+    legs_P += Z.leg_place(sx * XCP, YCP, Z.leg0)
 
 fix_P = fix_P_body + legs_P                                                       # в сборе (для проверок)
 

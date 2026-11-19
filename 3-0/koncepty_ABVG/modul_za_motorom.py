@@ -24,19 +24,26 @@ BM_B, BM_T = 3.0, 5.0
 beam = PX([(Y_BC - BM_B / 2, L2[0]), (Y_BC + BM_B / 2, L2[0]), (Y_BC + BM_T / 2, L2[1]), (Y_BC - BM_T / 2, L2[1])], -HALF, HALF)
 base = V.base_o + BB(-HALF, HALF, Y_P0 - 1.0, Y_MOT0 + 0.01 - 1.1, 0, T.Z_FL)     # пол вперёд под балку
 # клик (19.11, владелец): балка + 2 колонны = одна деталь; колонны стоят на круглых кнопках Ø6 в стаканах на полу
-BTN_D, BTN_H, BTN_HP, BTN_DP = 6.0, 3.5, 1.5, 2.6                                # кнопка: корпус Ø6×3.5, шток Ø2.6×1.5 (уточнить)
-XCB, R_P = 20.8, BTN_D / 2 + 0.15                                               # центр стакана; гнездо Ø6.3
-CUP_R = R_P + 1.0
+BTN_D, BTN_H, BTN_HP, BTN_DP = 6.4, 3.5, 1.5, 2.6                                # кнопка: корпус Ø6.4 (19.11 печать: оказалась толще 6), шток Ø2.6, всего 5
+XCB, R_P = 20.8, BTN_D / 2 + 0.15                                               # центр стакана; гнездо Ø6.7 (+0.4 после печати)
+CUP_R = 4.15                                                                     # наружу не растёт (край основания 25), стенка 0.8
 T_BAR, T_IN = 3.4, 3.0                                                           # перекладина «Т»: высота / сколько сидит в пазах
 CUP_H = BTN_H + BTN_HP + T_IN                                                   # стенки стакана выше штока на 3 — «Т» глубоко в пазах
 Z_BTOP = T.Z_FL + BTN_H + BTN_HP                                                 # верх штока = низ колонны
+TAB = CUP_R - 0.2                                                                # длина бокового выступа «Т плашмя» (к центру модуля)
+def cup_at(x, y):                                                               # стакан: гнездо кнопки, узкая прорезь выводов, паз перекладины (по Y) и паз выступа (по X, к центру)
+    sx = 1 if x > 0 else -1
+    c = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y) - CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, x, y)
+    c -= BB(x - 0.6, x + 0.6, y - CUP_R - 1, y + CUP_R + 1, T.Z_FL, T.Z_FL + CUP_H + 1)
+    c -= BB(x - 1.65, x + 1.65, y - CUP_R - 1, y + CUP_R + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)
+    c -= BB(*sorted((x, x - sx * (CUP_R + 1))), y - 1.65, y + 1.65, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # выступ держит балку от сдвига вбок
+    return c
+def leg_place(x, y, leg):                                                       # выступ ножки смотрит к центру модуля
+    return Pos(x, y, 0) * (Rot(0, 0, 180) if x < 0 else Rot(0, 0, 0)) * leg
 cups, btns = Part(), Part()
 leg_parts = []
 for sx in (-1, 1):
-    cup = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, sx * XCB, Y_BC) - CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, sx * XCB, Y_BC)
-    cup -= BB(sx * XCB - 0.6, sx * XCB + 0.6, Y_BC - CUP_R - 1, Y_BC + CUP_R + 1, T.Z_FL, T.Z_FL + CUP_H + 1)    # узкая прорезь под выводы (вперёд/назад)
-    cup -= BB(sx * XCB - 1.65, sx * XCB + 1.65, Y_BC - CUP_R - 1, Y_BC + CUP_R + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # над ней — широкий паз под «Т» (ниже — стенка, кнопку держит)
-    cups += cup
+    cups += cup_at(sx * XCB, Y_BC)
     btns += CZ(BTN_D / 2, T.Z_FL, T.Z_FL + BTN_H, sx * XCB, Y_BC) + CZ(BTN_DP / 2, T.Z_FL + BTN_H - 0.01, Z_BTOP, sx * XCB, Y_BC)
     # колонна заодно с балкой; внизу перекладина — перевёрнутая «Т»: лежит в пазу стакана на штоке, паз держит колонну
     leg_parts.append((sx * XCB, Y_BC))
@@ -45,6 +52,7 @@ base += cups
 SOCK = 2.0                                                                       # глубина гнезда
 def leg_at(x, y, z_top):                                                        # перекладина «Т» + колонна, верх колонны входит в гнездо на SOCK
     return (BB(x - 1.5, x + 1.5, y - CUP_R, y + CUP_R, Z_BTOP, Z_BTOP + T_BAR) +
+            BB(x - TAB, x + 0.01, y - 1.5, y + 1.5, Z_BTOP, Z_BTOP + T_BAR) +          # «Т плашмя»: выступ к −X в своём пазу стакана
             BB(x - 2.0, x + 2.0, y - 1.5, y + 1.5, Z_BTOP + T_BAR - 0.01, z_top))
 def socket_at(x, y0, y1, z_top):                                                # бобышка под балкой/рейкой с гнездом под верх колонны (зазор 0.15)
     yc = (y0 + y1) / 2                                                           # верх бобышки вровень с низом балки (не задевает крючки тележки), срощена узким шипом
@@ -54,7 +62,7 @@ legs = Part()
 beam_body = beam
 for x, y in leg_parts:
     beam_body += socket_at(x, y - 2.6, y + 2.6, L2[0])
-    legs += Pos(x, y, 0) * leg0
+    legs += leg_place(x, y, leg0)
 beam = beam_body + legs                                                         # для проверок — в сборе
 # тележка: рейка у шестерён + плита вперёд + площадка + крючки вокруг балки
 cart = rack(-CW, CW, K.Y_FIX - 0.05, 1, L2[0], L2[1] + 0.16, 0.3)
