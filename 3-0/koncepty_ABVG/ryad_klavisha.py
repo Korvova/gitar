@@ -5,7 +5,7 @@
 Оси: у П — сзади, ребро под узким хвостом, крючки над кольцом мотора; у З — сзади, на внешнем краю ряда.
 Запуск: python ryad_klavisha.py → ../19.65_klavisha_ryad/asm (детали модулей в своих координатах + рама ряда), сцена — blender_ryad_klavisha.py."""
 import os, sys, math
-os.environ["KLAV"] = "1"
+os.environ["KLAV"] = "2"
 os.environ.setdefault("PITCH", "17.4"); os.environ.setdefault("CM_H", "15.5")      # наклону нужен зазор ~0.4 между соседями
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from build123d import *
@@ -13,7 +13,7 @@ import ryad_V4d as R, datchiki_bok as DB
 Z, V, K, T = R.Z, R.V, R.K, R.T
 BB, CZ, HALF, YM, S, A, RF, RM = T.BB, T.CZ, T.HALF, T.YM, T.S, T.A, T.RF, T.RM
 OUT = os.path.join(os.path.dirname(HERE), "19.65_klavisha_ryad"); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
-GAP, FR, TRAVEL = Z.GAP, 1.2, 0.35
+GAP, FR, TRAVEL = Z.GAP, 1.2, 0.3                                                # SMD-кнопке хватает ~0.25
 X_SPLIT, Y_SPLIT_Z, Y_SPLIT_P = 15.55, -11.75, 19.65                              # граница «пазла» (в своих координатах модуля)
 
 def iv(a, b):
@@ -54,10 +54,9 @@ for typ in ("П", "З"):
             base -= (Lz.inverse() * Lp) * BB(b_.min.X - 0.5, b_.max.X + 0.5, b_.min.Y - 0.5, b_.max.Y + 0.5, -1, T.Z_FL + 0.01)
         rig = {"base": base, "rack": V.fix_o, "beam": Z.beam_body, "legs": Z.legs, "posts": DB.posts_z, "sens": DB.sens_z}
         cart = Z.cart
-    for sx in (-1, 1):
-        rig["base"] = rig["base"] - CZ(Z.R_P, -1, T.Z_FL + 0.1, sx * xb, yb)                     # окно под кнопку
     rig.update({"brusok": K.beam, "motor": K.motor})
-    btns = Part() + [CZ(Z.BTN_D / 2, Z.Z_B0, Z.Z_B0 + Z.BTN_H, sx * xb, yb) + CZ(Z.BTN_DP / 2, Z.Z_B0 + Z.BTN_H - 0.01, Z.Z_BTOP, sx * xb, yb) for sx in (-1, 1)]
+    btns = Part() + [Z.btn_at(sx * xb, yb) for sx in (-1, 1)]
+    pocket = Part() + [BB(sx * xb - 2.75, sx * xb + 2.75, yb - 2.75, yb + 2.75, Z.Z_B0, -GAP + 0.01) for sx in (-1, 1)]   # гнёзда кнопок в раме
     Y1 = rig["base"].bounding_box().max.Y
     y_piv = Y1 - 2.0
     allr = Part() + list(rig.values())
@@ -82,7 +81,7 @@ for typ in ("П", "З"):
             fr += T.prof_x([(y_piv - 1.2, -GAP - 0.01), (y_piv + 1.2, -GAP - 0.01), (y_piv + 0.15, 0), (y_piv - 0.15, 0)], *sorted((sx * x0, sx * x1)))
     ang = math.degrees(TRAVEL / abs(yb - y_piv))
     rec = BB(-HALF - 1, HALF + 1, -80, yb - 4.6, -GAP - 0.4, -GAP + 0.01)           # перед кнопками рама ниже (упор после щелчка)
-    M[typ] = dict(rig=rig, cart=cart, btns=btns, y_piv=y_piv, ang=ang, fr=fr, rec=rec, hx=hx, Y1=Y1, yb=yb)
+    M[typ] = dict(rig=rig, cart=cart, btns=btns, pocket=pocket, y_piv=y_piv, ang=ang, fr=fr, rec=rec, hx=hx, Y1=Y1, yb=yb)
     print("модуль %s: ось y=%.1f, кнопки y=%.1f, наклон %.2f°, крючки %s" % (typ, y_piv, yb, ang, hx))
 
 place = R.place
@@ -98,6 +97,8 @@ for i in range(4):
     frame -= place(i, M[TY[i]]["rec"])
 for i in range(4):
     frame += place(i, M[TY[i]]["fr"])
+for i in range(4):
+    frame -= place(i, M[TY[i]]["pocket"])
 
 def moving(typ, s):
     rf = math.degrees(s / RF)
