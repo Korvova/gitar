@@ -33,6 +33,9 @@ base = motor_mount(base)
 parts[0] = (parts[0][0], base, parts[0][2], parts[0][3]); asm["base"] = base
 if post is None:                                                                  # стойка З: одна из двух (вторая — зеркальная, печатать обе)
     post = DB.posts_z & T.BB(0, 60, -100, 100, -10, 60)                          # правая; вторую печатать такую же и ставить, повернув на 180°
+# макет мотора на печать: корпус Ø27.8×12.23 (в кольцо основания), сверху бортик-опора Ø8×0.3 и ось Ø3 — платформа с шестернёй крутятся на ней рукой
+mock = T.CZ(13.9, T.Z_FL, T.Z_M1) + T.CZ(4.0, T.Z_M1 - 0.01, T.Z_M1 + 0.1) + T.CZ(1.5, T.Z_M1 + 0.09, T.L1[1])
+parts += [("12_maket_motora", mock, 0, 1)]
 parts += [("05_polzun", K.sl, 0, 1), ("06_shest_plav_x2", K.flo0, 0, 2), ("07_brusok", K.beam, 0, 1), ("08_shest_motora", K.gm, 180, 1),
           ("09_platforma_rotora_magnity", DB.plat, 0, 1), (n_post, post, 0, 2)]
 asm.update({"slider": K.sl, "flo": K.flo0, "brusok": K.beam, "gm": K.gm, "plat": DB.plat, "mags": DB.mags, "motor": K.motor})
