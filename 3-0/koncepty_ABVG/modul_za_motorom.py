@@ -30,14 +30,17 @@ CUP_R = 4.15                                                                    
 T_BAR = float(os.environ.get("T_BAR", "11.0"))                                     # перекладина «Т»: высота (19.11: поднять вдоль колонны)
 T_IN = float(os.environ.get("T_IN", "5.0"))                                       # стенки стакана выше штока (19.11: +2, не выше — кнопку удобно класть)
 CUP_H = BTN_H + BTN_HP + T_IN                                                   # стенки стакана выше штока на 3 — «Т» глубоко в пазах
-Z_BTOP = T.Z_FL + BTN_H + BTN_HP                                                 # верх штока = низ колонны
+KLAV = os.environ.get("KLAV", "0") == "1"                                           # 19.11: «модуль-клавиша» — кнопка на раме под полом, «Т» вклеена в стакан
+GAP = 0.5                                                                        # зазор пол модуля — рама (ход клавиши)
+Z_B0 = -GAP if KLAV else T.Z_FL                                                  # низ кнопки: на раме / на полу модуля
+Z_BTOP = Z_B0 + BTN_H + BTN_HP                                                   # верх штока = низ колонны
 TAB, TAB_W = CUP_R - 0.2, 1.4                                                    # боковой выступ «Т плашмя» (к центру модуля): длина / ширина (узкий — стойки стакана толще)
 CUP_RI = float(os.environ.get("CUP_RI", "5.0"))                                  # 19.11 печать: стойки у пазов хрупкие — внутренняя (к центру) половина стакана толще
 def cup_at(x, y):                                                               # стакан: гнездо кнопки, узкая прорезь выводов, паз перекладины (по Y) и паз выступа (по X, к центру)
     sx = 1 if x > 0 else -1
     c = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y)
     c += CZ(CUP_RI, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y) & BB(*sorted((x, x - sx * (CUP_RI + 1))), y - CUP_RI - 1, y + CUP_RI + 1, T.Z_FL - 1, T.Z_FL + CUP_H + 1)
-    c -= CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, x, y)
+    c -= CZ(R_P, T.Z_FL - (3 if KLAV else 0), T.Z_FL + CUP_H + 1, x, y)
     c -= BB(x - 0.6, x + 0.6, y - CUP_RI - 1, y + CUP_RI + 1, T.Z_FL, T.Z_FL + CUP_H + 1)
     c -= BB(x - 1.65, x + 1.65, y - CUP_RI - 1, y + CUP_RI + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)
     c -= BB(*sorted((x, x - sx * (CUP_RI + 1))), y - TAB_W / 2 - 0.15, y + TAB_W / 2 + 0.15, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # выступ держит балку от сдвига вбок
@@ -48,7 +51,7 @@ cups, btns = Part(), Part()
 leg_parts = []
 for sx in (-1, 1):
     cups += cup_at(sx * XCB, Y_BC)
-    btns += CZ(BTN_D / 2, T.Z_FL, T.Z_FL + BTN_H, sx * XCB, Y_BC) + CZ(BTN_DP / 2, T.Z_FL + BTN_H - 0.01, Z_BTOP, sx * XCB, Y_BC)
+    btns += CZ(BTN_D / 2, Z_B0, Z_B0 + BTN_H, sx * XCB, Y_BC) + CZ(BTN_DP / 2, Z_B0 + BTN_H - 0.01, Z_BTOP, sx * XCB, Y_BC)
     # колонна заодно с балкой; внизу перекладина — перевёрнутая «Т»: лежит в пазу стакана на штоке, паз держит колонну
     leg_parts.append((sx * XCB, Y_BC))
 base += cups

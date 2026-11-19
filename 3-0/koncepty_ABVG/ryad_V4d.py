@@ -43,7 +43,7 @@ for sx in (-1, 1):
 fix_P, btns_P, legs_P, fix_P_body = V.fix_o, Part(), Part(), V.fix_o
 for sx in (-1, 1):
     base_P += Z.cup_at(sx * XCP, YCP)
-    btns_P += CZ(Z.BTN_D / 2, T.Z_FL, T.Z_FL + Z.BTN_H, sx * XCP, YCP) + CZ(Z.BTN_DP / 2, T.Z_FL + Z.BTN_H - 0.01, Z.Z_BTOP, sx * XCP, YCP)
+    btns_P += CZ(Z.BTN_D / 2, Z.Z_B0, Z.Z_B0 + Z.BTN_H, sx * XCP, YCP) + CZ(Z.BTN_DP / 2, Z.Z_B0 + Z.BTN_H - 0.01, Z.Z_BTOP, sx * XCP, YCP)
     fix_P_body += Z.socket_at(sx * XCP, YCP - 1.9, YCP + 1.9, T.L2[0])           # гнездо под колонну (ножка — отдельная деталь, на клей)
     legs_P += Z.leg_place(sx * XCP, YCP, Z.leg0)
 
