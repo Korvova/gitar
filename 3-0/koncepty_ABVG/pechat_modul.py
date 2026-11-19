@@ -13,14 +13,14 @@ OUT = os.path.join(os.path.dirname(HERE), "19.63_modul_%s_pechat" % MOD)
 os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
 if MOD == "P":
     base = R.base_P - DB.slots_p[0] - DB.slots_p[1]
-    parts = [("01_osnovanie_P", base, 0, 1), ("02_rejka_s_kolonnami_P", R.fix_P, 180, 1), ("03_telezhka_P", R.cart_H, 180, 1)]
+    parts = [("01_osnovanie_P", base, 0, 1), ("02_rejka_s_gnezdami_P", R.fix_P_body, 180, 1), ("03_telezhka_P", R.cart_H, 180, 1), ("11_nozhka_T_x2", Z.leg0, 0, 2)]
     post, n_post = DB.radial_post()[0], "10_stojka_49E_P_x2"
-    asm = {"base": base, "rack": R.fix_P, "cart": R.cart_H, "btns": R.btns_P, "posts": DB.posts_p, "sens": DB.sens_p}
+    asm = {"base": base, "rack": R.fix_P_body, "legs": R.legs_P, "cart": R.cart_H, "btns": R.btns_P, "posts": DB.posts_p, "sens": DB.sens_p}
 else:
     base = Z.base - DB.slots_z[0] - DB.slots_z[1]
-    parts = [("01_osnovanie_Z", base, 0, 1), ("02_balka_s_kolonnami_Z", Z.beam, 180, 1), ("03_telezhka_Z", Z.cart, 180, 1), ("04_nepodvizhnaja_rejka_Z", V.fix_o, 180, 1)]
+    parts = [("01_osnovanie_Z", base, 0, 1), ("02_balka_s_gnezdami_Z", Z.beam_body, 180, 1), ("11_nozhka_T_x2", Z.leg0, 0, 2), ("03_telezhka_Z", Z.cart, 180, 1), ("04_nepodvizhnaja_rejka_Z", V.fix_o, 180, 1)]
     post, n_post = None, "10_stojka_49E_Z_x2"
-    asm = {"base": base, "rack": V.fix_o, "beam": Z.beam, "cart": Z.cart, "btns": Z.btns, "posts": DB.posts_z, "sens": DB.sens_z}
+    asm = {"base": base, "rack": V.fix_o, "beam": Z.beam_body, "legs": Z.legs, "cart": Z.cart, "btns": Z.btns, "posts": DB.posts_z, "sens": DB.sens_z}
 # крепёж мотора в дне (как в телескопе v3): 4 паза-ряда отверстий под винты на 45°, центр, окно под провода мотора
 def motor_mount(b):
     for ang in (45, 135, 225, 315):

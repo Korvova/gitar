@@ -36,20 +36,21 @@ cart_H = V.cart_o + pad_H
 
 # --- клик модуля «П» (19.11): стойки 49E у П повёрнуты (33.75° / 236.25°), место под концами рейки свободно.
 # Неподвижная рейка (по её спинке едет тележка П) + 2 колонны прямо вниз = одна деталь; перевёрнутая «Т» в стакане на кнопке Ø6.
-XCP, YCP = Z.XCB, (V.Y_FO - 0.3 + V.YB_R) / 2                                    # стакан прямо под концом рейки
+XCP, YCP = Z.XCB, 13.9                                                           # стакан под концом рейки (по центру гнезда, гнездо не заходит под ползун)
 base_P = V.base_o
 for sx in (-1, 1):
     base_P -= BB(*sorted((sx * 23.6, sx * (HALF + 1))), V.Y_FO - 0.4, V.YB_R + 0.1, T.Z_FL + 0.01, T.L2[0] + 1)   # старые стойки рейки
-fix_P, btns_P = V.fix_o, Part()
+fix_P, btns_P, legs_P, fix_P_body = V.fix_o, Part(), Part(), V.fix_o
 for sx in (-1, 1):
     cup = CZ(Z.CUP_R, T.Z_FL - 0.01, T.Z_FL + Z.CUP_H, sx * XCP, YCP) - CZ(Z.R_P, T.Z_FL, T.Z_FL + Z.CUP_H + 1, sx * XCP, YCP)
     cup -= BB(sx * XCP - 0.6, sx * XCP + 0.6, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, T.Z_FL, T.Z_FL + Z.CUP_H + 1)
     cup -= BB(sx * XCP - 1.65, sx * XCP + 1.65, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, Z.Z_BTOP - 0.4, T.Z_FL + Z.CUP_H + 1)
     base_P += cup
     btns_P += CZ(Z.BTN_D / 2, T.Z_FL, T.Z_FL + Z.BTN_H, sx * XCP, YCP) + CZ(Z.BTN_DP / 2, T.Z_FL + Z.BTN_H - 0.01, Z.Z_BTOP, sx * XCP, YCP)
-    fix_P += BB(sx * XCP - 1.5, sx * XCP + 1.5, YCP - Z.CUP_R, YCP + Z.CUP_R, Z.Z_BTOP, Z.Z_BTOP + Z.T_BAR)            # «Т»
-    fix_P += BB(sx * XCP - 2.0, sx * XCP + 2.0, YCP - 1.5, YCP + 1.5, Z.Z_BTOP + Z.T_BAR - 0.01, T.L2[0] + 0.01)    # колонна прямо вниз
+    fix_P_body += Z.socket_at(sx * XCP, YCP - 1.9, YCP + 1.9, T.L2[0])           # гнездо под колонну (ножка — отдельная деталь, на клей)
+    legs_P += Pos(sx * XCP, YCP, 0) * Z.leg0
 
+fix_P = fix_P_body + legs_P                                                       # в сборе (для проверок)
 
 def place(i, p):
     return Pos(0, CM[i], 0) * (Rot(0, 0, 180) if ROT[i] else Rot(0, 0, 0)) * Pos(0, -YM, 0) * p
