@@ -30,13 +30,16 @@ CUP_R = 4.15                                                                    
 T_BAR, T_IN = 3.4, 3.0                                                           # перекладина «Т»: высота / сколько сидит в пазах
 CUP_H = BTN_H + BTN_HP + T_IN                                                   # стенки стакана выше штока на 3 — «Т» глубоко в пазах
 Z_BTOP = T.Z_FL + BTN_H + BTN_HP                                                 # верх штока = низ колонны
-TAB = CUP_R - 0.2                                                                # длина бокового выступа «Т плашмя» (к центру модуля)
+TAB, TAB_W = CUP_R - 0.2, 1.4                                                    # боковой выступ «Т плашмя» (к центру модуля): длина / ширина (узкий — стойки стакана толще)
+CUP_RI = float(os.environ.get("CUP_RI", "5.0"))                                  # 19.11 печать: стойки у пазов хрупкие — внутренняя (к центру) половина стакана толще
 def cup_at(x, y):                                                               # стакан: гнездо кнопки, узкая прорезь выводов, паз перекладины (по Y) и паз выступа (по X, к центру)
     sx = 1 if x > 0 else -1
-    c = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y) - CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, x, y)
-    c -= BB(x - 0.6, x + 0.6, y - CUP_R - 1, y + CUP_R + 1, T.Z_FL, T.Z_FL + CUP_H + 1)
-    c -= BB(x - 1.65, x + 1.65, y - CUP_R - 1, y + CUP_R + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)
-    c -= BB(*sorted((x, x - sx * (CUP_R + 1))), y - 1.65, y + 1.65, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # выступ держит балку от сдвига вбок
+    c = CZ(CUP_R, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y)
+    c += CZ(CUP_RI, T.Z_FL - 0.01, T.Z_FL + CUP_H, x, y) & BB(*sorted((x, x - sx * (CUP_RI + 1))), y - CUP_RI - 1, y + CUP_RI + 1, T.Z_FL - 1, T.Z_FL + CUP_H + 1)
+    c -= CZ(R_P, T.Z_FL, T.Z_FL + CUP_H + 1, x, y)
+    c -= BB(x - 0.6, x + 0.6, y - CUP_RI - 1, y + CUP_RI + 1, T.Z_FL, T.Z_FL + CUP_H + 1)
+    c -= BB(x - 1.65, x + 1.65, y - CUP_RI - 1, y + CUP_RI + 1, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)
+    c -= BB(*sorted((x, x - sx * (CUP_RI + 1))), y - TAB_W / 2 - 0.15, y + TAB_W / 2 + 0.15, Z_BTOP - 0.4, T.Z_FL + CUP_H + 1)   # выступ держит балку от сдвига вбок
     return c
 def leg_place(x, y, leg):                                                       # выступ ножки смотрит к центру модуля
     return Pos(x, y, 0) * (Rot(0, 0, 180) if x < 0 else Rot(0, 0, 0)) * leg
@@ -52,7 +55,7 @@ base += cups
 SOCK = 2.0                                                                       # глубина гнезда
 def leg_at(x, y, z_top):                                                        # перекладина «Т» + колонна, верх колонны входит в гнездо на SOCK
     return (BB(x - 1.5, x + 1.5, y - CUP_R, y + CUP_R, Z_BTOP, Z_BTOP + T_BAR) +
-            BB(x - TAB, x + 0.01, y - 1.5, y + 1.5, Z_BTOP, Z_BTOP + T_BAR) +          # «Т плашмя»: выступ к −X в своём пазу стакана
+            BB(x - TAB, x + 0.01, y - TAB_W / 2, y + TAB_W / 2, Z_BTOP, Z_BTOP + T_BAR) +          # «Т плашмя»: выступ к −X в своём пазу стакана
             BB(x - 2.0, x + 2.0, y - 1.5, y + 1.5, Z_BTOP + T_BAR - 0.01, z_top))
 def socket_at(x, y0, y1, z_top):                                                # бобышка под балкой/рейкой с гнездом под верх колонны (зазор 0.15)
     yc = (y0 + y1) / 2                                                           # верх бобышки вровень с низом балки (не задевает крючки тележки), срощена узким шипом
