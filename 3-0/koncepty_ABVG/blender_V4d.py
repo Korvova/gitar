@@ -7,7 +7,7 @@ ROT = [True, True, False, False]; TYPE = ["З", "П", "П", "З"]
 A, RF, RM, S, FR = 2.5 * math.pi * 0.8, 4.8, 4.4, 11.0, 240
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'; sc.frame_end = FR
-C = {"base_row": (.6, .62, .66, 1), "fix": (.45, .48, .52, 1), "beam_k": (.7, .72, .76, 1), "beam_z": (.35, .37, .4, 1), "motor": (.12, .12, .14, 1),
+C = {"base_row": (.6, .62, .66, 1), "fix": (.45, .48, .52, 1), "fix_p": (.45, .48, .52, 1), "beam_k": (.7, .72, .76, 1), "beam_z": (.35, .37, .4, 1), "motor": (.12, .12, .14, 1),
      "slider": (.2, .6, .3, 1), "flo": (1, .55, .05, 1), "cart_z": (.15, .45, .95, 1), "cart_h": (.1, .35, .85, 1), "gm": (.85, .2, .1, 1), "plat": (.6, .25, .7, 1)}
 mesh = {}
 def get(n):
@@ -21,7 +21,7 @@ obj("base_row", "Основание ряда")
 for i in range(4):
     e = bpy.data.objects.new("Модуль %d (%s)" % (i + 1, TYPE[i]), None); sc.collection.objects.link(e)
     e.location = (0, CM[i], 0); e.rotation_euler.z = math.pi if ROT[i] else 0
-    for n in ("fix", "beam_k", "motor") + (("beam_z",) if TYPE[i] == "З" else ()):
+    for n in (("fix",) if TYPE[i] == "З" else ("fix_p",)) + ("beam_k", "motor") + (("beam_z",) if TYPE[i] == "З" else ()):
         obj(n, "%s %d" % (n, i + 1), e, (0, -YM, 0))
     pl = obj("plat", "платформа %d" % (i + 1), e); g = obj("gm", "шестерня мотора %d" % (i + 1), e)
     sl = obj("slider", "ползун %d" % (i + 1), e, (0, -YM, 0)); f1 = obj("flo", "плав %d.1" % (i + 1), e); f2 = obj("flo", "плав %d.2" % (i + 1), e)

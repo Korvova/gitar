@@ -34,6 +34,23 @@ pad_H = BB(-CW, CW, C_H - W / 2, C_H + W / 2, R.Z_PD0, R.Z_PD1) + BB(-CW, CW, V.
 cart_H = V.cart_o + pad_H
 
 
+# --- клик модуля «П» (19.11): стойки 49E у П повёрнуты (33.75° / 236.25°), место под концами рейки свободно.
+# Неподвижная рейка (по её спинке едет тележка П) + 2 колонны прямо вниз = одна деталь; перевёрнутая «Т» в стакане на кнопке Ø6.
+XCP, YCP = Z.XCB, (V.Y_FO - 0.3 + V.YB_R) / 2                                    # стакан прямо под концом рейки
+base_P = V.base_o
+for sx in (-1, 1):
+    base_P -= BB(*sorted((sx * 23.6, sx * (HALF + 1))), V.Y_FO - 0.4, V.YB_R + 0.1, T.Z_FL + 0.01, T.L2[0] + 1)   # старые стойки рейки
+fix_P, btns_P = V.fix_o, Part()
+for sx in (-1, 1):
+    cup = CZ(Z.CUP_R, T.Z_FL - 0.01, T.Z_FL + Z.CUP_H, sx * XCP, YCP) - CZ(Z.R_P, T.Z_FL, T.Z_FL + Z.CUP_H + 1, sx * XCP, YCP)
+    cup -= BB(sx * XCP - 0.6, sx * XCP + 0.6, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, T.Z_FL, T.Z_FL + Z.CUP_H + 1)
+    cup -= BB(sx * XCP - 1.65, sx * XCP + 1.65, YCP - Z.CUP_R - 1, YCP + Z.CUP_R + 1, Z.Z_BTOP - 0.4, T.Z_FL + Z.CUP_H + 1)
+    base_P += cup
+    btns_P += CZ(Z.BTN_D / 2, T.Z_FL, T.Z_FL + Z.BTN_H, sx * XCP, YCP) + CZ(Z.BTN_DP / 2, T.Z_FL + Z.BTN_H - 0.01, Z.Z_BTOP, sx * XCP, YCP)
+    fix_P += BB(sx * XCP - 1.5, sx * XCP + 1.5, YCP - Z.CUP_R, YCP + Z.CUP_R, Z.Z_BTOP, Z.Z_BTOP + Z.T_BAR)            # «Т»
+    fix_P += BB(sx * XCP - 2.0, sx * XCP + 2.0, YCP - 1.5, YCP + 1.5, Z.Z_BTOP + Z.T_BAR - 0.01, T.L2[0] + 0.01)    # колонна прямо вниз
+
+
 def place(i, p):
     return Pos(0, CM[i], 0) * (Rot(0, 0, 180) if ROT[i] else Rot(0, 0, 0)) * Pos(0, -YM, 0) * p
 
@@ -42,7 +59,7 @@ def stat(i):
     if TYPE[i] == "З":
         d = {"основание": Z.base, "рейка": V.fix_o, "брусок": K.beam, "мотор": K.motor, "балка": Z.beam}
     else:
-        d = {"основание": V.base_o, "рейка": V.fix_o, "брусок": K.beam, "мотор": K.motor}
+        d = {"основание": base_P, "рейка": fix_P, "брусок": K.beam, "мотор": K.motor}
     return {k: place(i, v) for k, v in d.items()}
 
 
@@ -56,6 +73,10 @@ def moving(i, s):
 
 filler = BB(-HALF, HALF, CM[1] + 15.0 - 0.01, CM[2] - 15.0 + 0.01, 0, T.Z_FL)
 base_row = Part() + [stat(i)["основание"] for i in range(4)] + [filler]
+import datchiki_bok as DB                                                         # прорези под стойки 49E — в общем основании ряда
+SLOTS = [place(i, Part() + (DB.slots_p if TYPE[i] == "П" else DB.slots_z)) for i in range(4)]
+for sl_ in SLOTS:
+    base_row -= sl_
 
 if __name__ == "__main__":
     def iv(a, b):
@@ -85,10 +106,33 @@ if __name__ == "__main__":
                     for b, pb in stat(i).items():
                         v = iv(pa, pb)
                         if v > 0.05: bad += 1; print("  модули %d/%d s=%+.0f/%+.0f %s × %s %.2f" % (i + 2, i + 1, s2, s1, a, b, v))
+    for i in range(4):                                                             # стойки 49E своего типа × детали модуля
+        pp = DB.posts_p if TYPE[i] == "П" else DB.posts_z
+        for nm, q in stat(i).items():
+            if nm == "основание": continue
+            v = iv(place(i, pp), q)
+            if v > 0.05: bad += 1; print("  модуль %d: стойки 49E × %s %.2f" % (i + 1, nm, v))
+        for s_ in (-S, 0, S):
+            for nm, q in moving(i, s_).items():
+                v = iv(place(i, pp), q)
+                if v > 0.05: bad += 1; print("  модуль %d s=%+.0f: стойки 49E × %s %.2f" % (i + 1, s_, nm, v))
+    for i in range(3):                                                             # неподвижные соседних модулей + стойки 49E соседей
+        a_, b_ = stat(i), stat(i + 1)
+        a_["стойки"] = place(i, DB.posts_p if TYPE[i] == "П" else DB.posts_z); b_["стойки"] = place(i + 1, DB.posts_p if TYPE[i + 1] == "П" else DB.posts_z)
+        for na, pa in a_.items():
+            for nb, pb in b_.items():
+                if na == "основание" and nb == "основание": continue
+                if na == "основание": pa = pa - SLOTS[i + 1]
+                if nb == "основание": pb = pb - SLOTS[i]
+                v = iv(pa, pb)
+                if v > 0.05: bad += 1; print("  неподв. %d/%d: %s × %s %.2f" % (i + 1, i + 2, na, nb, v))
+    for i in (1, 2):
+        v = iv(Pos(0, 0, -0.3) * place(i, fix_P), place(i, base_P))
+        if v > 0.05: bad += 1; print("  П%d нажато × основание %.2f" % (i + 1, v))
     bb = base_row.bounding_box()
     print("ряд З П | П З: %s; моторы на %s; площадки на %s; длина платформы %.1f; высота до верха площадок %.1f" % (
         "ЧИСТО" if not bad else "%d проблем" % bad, ["%.1f" % c for c in CM], PADC, bb.size.Y, R.Z_PD1))
-    for n, p in (("base_row", base_row), ("fix", V.fix_o), ("beam_k", K.beam), ("beam_z", Z.beam), ("motor", K.motor), ("slider", K.sl), ("flo", K.flo0),
+    for n, p in (("base_row", base_row), ("fix", V.fix_o), ("fix_p", fix_P), ("btns_p", btns_P), ("beam_k", K.beam), ("beam_z", Z.beam), ("motor", K.motor), ("slider", K.sl), ("flo", K.flo0),
                  ("cart_z", Z.cart), ("cart_h", cart_H), ("gm", K.gm), ("plat", K.plat)):
         export_stl(Part() + p, "asm_V4d/%s.stl" % n, tolerance=0.02, angular_tolerance=0.2)
     open("asm_V4d/params.txt", "w").write(" ".join("%f" % v for v in CM + [YM, K.Y_G]))
