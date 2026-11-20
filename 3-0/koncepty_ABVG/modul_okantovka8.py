@@ -64,10 +64,15 @@ BM_H = T.Z_BM1 - T.Z_BM0                                                        
 SL = K.sl + BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C - 0.01, K.BMY1 + K.C + 0.01, T.Z_BM0 - K.C, L1[1])   # заделать старый паз сверху
 SL -= BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C, K.BMY1 + K.C, L1[0] - 1, L1[0] + BM_H + K.C)             # паз снизу
 SL = SL & BB(-K.SLX, K.SLX, -40, 40, -1, 40)
-BRUSOK = BB(-XP, XP, K.BMY0, K.BMY1, L1[0], L1[0] + BM_H)
+X_BR = 24.5 if MOD == "P" else XP                                                 # П: брусок до конца хода ползуна (над окантовкой)
+BRUSOK = BB(-X_BR, X_BR, K.BMY0, K.BMY1, L1[0], L1[0] + BM_H)
 for sx in (-1, 1):                                                                # стойки бруска: под ним, не шире его (стенки паза ползуна проходят мимо)
     base += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - 0.01, L1[0])
 # навесы над кнопками: стенка у края платформы + плечо над штоком
+if MOD == "P":                                                                    # П (владелец): стойка бруска расширена наружу блоком над вазой — его низ давит на кнопку
+    for sx in (-1, 1):
+        base += BB(*sorted((sx * X_C0, sx * X_BR)), YB - 2.2, YB + 2.2, Z_AW, L1[0] - 0.1)
+        base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])
 for sx in (-1, 1):
     base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
     base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
