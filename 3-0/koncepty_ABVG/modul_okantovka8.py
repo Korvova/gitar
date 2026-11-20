@@ -55,7 +55,7 @@ base = motor_mount(base)
 parts = {"rack": V.fix_o}
 if MOD == "Z":                                                                    # балка З на сплошной стенке до пола (тележка низ балки не трогает) — колонн нет
     parts.update({"beam": Z.beam_body - BB(-30, 30, -40, 40, -1, L2[0])})
-    base += BB(-XP, XP, Z.Y_BC - 1.4, Z.Y_BC + 1.4, Z_FL - 0.6, L2[0])
+    base -= BB(-30, 30, -40, YM - 16.1, -1, 40)                                    # 20.11 (владелец): платформа З — в диаметр мотора, хвоста нет
     cart, YB = Z.cart, Z.Y_BC                                                     # кнопки под балкой (владелец)
 else:
     cart, YB = R.cart_H, 3.35
@@ -64,7 +64,7 @@ BM_H = T.Z_BM1 - T.Z_BM0                                                        
 SL = K.sl + BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C - 0.01, K.BMY1 + K.C + 0.01, T.Z_BM0 - K.C, L1[1])   # заделать старый паз сверху
 SL -= BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C, K.BMY1 + K.C, L1[0] - 1, L1[0] + BM_H + K.C)             # паз снизу
 SL = SL & BB(-K.SLX, K.SLX, -40, 40, -1, 40)
-X_BR = 24.5 if MOD == "P" else XP                                                 # П: брусок до конца хода ползуна (над окантовкой)
+X_BR = 24.5                                                                       # брусок до конца хода ползуна (над окантовкой)
 BRUSOK = BB(-X_BR, X_BR, K.BMY0, K.BMY1, L1[0], L1[0] + BM_H)
 for sx in (-1, 1):                                                                # стойки бруска: под ним, не шире его (стенки паза ползуна проходят мимо)
     base += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - 0.01, L1[0])
@@ -73,15 +73,21 @@ if MOD == "P":                                                                  
     for sx in (-1, 1):
         base += BB(*sorted((sx * X_C0, sx * X_BR)), YB - 2.2, YB + 2.2, Z_AW, L1[0] - 0.1)
         base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])
-else:                                                                             # З (владелец): стенка под балкой расширена наружу блоком над вазой до балки (концы балки лежат на нём)
     for sx in (-1, 1):
-        base += BB(*sorted((sx * X_C0, sx * 24.5)), YB - 2.2, YB + 2.2, Z_AW, L2[0] - 0.15)   # под крючками тележки — на 0.15 ниже
-        base += BB(*sorted((sx * X_C0, sx * 24.5)), YB - 1.4, YB + 1.4, Z_AW, L2[0])
-for sx in (-1, 1):
-    base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
-    base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
+        base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
+        base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
+else:                                                                             # З (владелец): балка за платформой — ножки над окантовкой на кнопки + переходник к блоку стойки бруска
+    for sx in (-1, 1):
+        base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])     # блок стойки бруска наружу
+        base += BB(*sorted((sx * X_C0, sx * X_BR)), 1.15, 5.55, Z_AW, L1[0] - 0.1)
+        lx = sorted((sx * (XB - 2.0), sx * (XB + 2.0)))
+        base += BB(*lx, YB - 1.5, YB + 1.5, Z_AW, L2[0])                                       # ножка балки: низ давит на кнопку, на верх кладётся балка
+        base += BB(*lx, YB - 1.5, 5.0, Z_AW, Z_AW + 4.0)                                       # переходник ножка — блок стойки бруска
 base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)                                          # сзади пол длиннее на 3.5: там встают стойки 49E
 Y0p, Y1p = base.bounding_box().min.Y, base.bounding_box().max.Y
+Y0ALL = Y0p                                                                       # самая передняя точка платформы (с ножками З)
+if MOD == "Z":
+    Y0p = YM - 16.1                                                               # край пола
 moving_all = []
 def moving(s):
     rf = math.degrees(s / RF)
@@ -146,13 +152,13 @@ tab_x = (-8.0, 8.0)
 for xc in tab_x:
     base += BB(xc - 2, xc + 2, Y1p - 0.5, Y1p + G + 2.0, 0.8, 2.0)
 Y_PIV, Z_PIV = Y1p + G + 1.0, 1.4
-DROP = TRAVEL * (Y_PIV - Y0p) / (Y_PIV - YB)
+DROP = TRAVEL * (Y_PIV - Y0ALL) / (Y_PIV - YB)
 Z_LIFT = round(DROP + 0.2, 2)
 base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
 platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 
 # ---------- окантовка 8 мм + вазы + кнопки ----------
-rim = BB(-HALF, HALF, Y0p - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
+rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
 for xc in tab_x:
     rim -= BB(xc - 2.3, xc + 2.3, Y1p + G - 0.01, Y1p + G + 2.2, 0.7, 2.1)
 vases, btns = Part(), Part()
