@@ -78,10 +78,18 @@ def moving(s):
             "cart": Pos(2 * s, 0, 0) * cart, "gm": Pos(0, YM, 0) * Rot(0, 0, math.degrees(s / RM)) * K.gm, "plat": Pos(0, YM, 0) * DB.plat}
 MOV = [moving(s) for s in (-S, -S / 2, 0, S / 2, S)]
 # неподвижная рейка — на стенках до пола вдоль края платформы (владелец), стенка длиннее рейки
-RW_T = 1.3
-for sx in (-1, 1):
-    base += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.01, L2[0])
-br_y = "стенки"
+RW_T = XP - 14.5                                                                 # стенка до 0.6 от колокола мотора (кольцо под мотор в этом месте срезано — владелец)
+if MOD == "Z":                                                                    # З (владелец): рейка-«столик» — плита рейки удлинена назад, стенки — заодно с рейкой, низом в паз пола
+    table = V.fix_o + BB(-XP, XP, V.fix_o.bounding_box().max.Y - 0.5, 24.0, L2[0], L2[1])
+    for sx in (-1, 1):
+        table += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.6, L2[0] + 0.01)
+        base -= BB(*sorted((sx * (XP - RW_T - 0.15), sx * (XP + 0.15))), 11.85, 24.15, Z_FL - 0.6, Z_FL + 4.5)   # паз в полу + срез кольца
+    parts["rack"] = table
+    br_y = "столик"
+else:                                                                             # П: по спинке рейки бегает тележка — стенки в платформе под концами рейки
+    for sx in (-1, 1):
+        base += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.01, L2[0])
+    br_y = "стенки"
 stat0 = Part() + [base, K.motor, BRUSOK] + list(parts.values())
 
 # ---------- стойки 49E: уже (5.4) и мельче (3.6), углы перебором ----------
