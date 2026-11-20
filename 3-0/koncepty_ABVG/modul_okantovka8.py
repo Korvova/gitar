@@ -86,10 +86,13 @@ if MOD == "Z":                                                                  
         base -= BB(*sorted((sx * (XP - RW_T - 0.15), sx * (XP + 0.15))), 11.85, 24.15, Z_FL - 0.6, Z_FL + 4.5)   # паз в полу + срез кольца
     parts["rack"] = table
     br_y = "столик"
-else:                                                                             # П: по спинке рейки бегает тележка — стенки в платформе под концами рейки
+else:                                                                             # П (владелец): по спинке рейки бегает тележка — под концом рейки только скос-распорка до пола
+    yr0, yr1 = 12.0, V.fix_o.bounding_box().max.Y - 0.2
     for sx in (-1, 1):
-        base += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.01, L2[0])
-    br_y = "стенки"
+        x0_, x1_ = sorted((sx * (XP - RW_T), sx * XP))
+        brace = Pos(x0_, 0, 0) * Rot(90, 90, 0) * extrude(make_face(Polyline((yr0, L2[0]), (yr1, L2[0]), (yr1, Z_FL - 0.01), (yr1 - 1.5, Z_FL - 0.01), (yr0, L2[0]))), x1_ - x0_, dir=(0, 0, 1))
+        base += brace
+    br_y = "скос"
 stat0 = Part() + [base, K.motor, BRUSOK] + list(parts.values())
 
 # ---------- стойки 49E: уже (5.4) и мельче (3.6), углы перебором ----------
