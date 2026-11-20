@@ -15,6 +15,8 @@ Z, V, K, T = R.Z, R.V, R.K, R.T
 BB, CZ, HALF, YM, S, A, RF, RM, L1, L2, Z_FL = T.BB, T.CZ, T.HALF, T.YM, T.S, T.A, T.RF, T.RM, T.L1, T.L2, T.Z_FL
 MOD = os.environ.get("MOD", "P")
 OUT = os.path.join(os.path.dirname(HERE), "19.67_okantovka8_%s" % MOD); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
+for _f in os.listdir(os.path.join(OUT, "asm")):                                   # старые STL не должны попадать в сцену
+    if _f.endswith(".stl"): os.remove(os.path.join(OUT, "asm", _f))
 RW, G = 8.0, 0.3
 XP = HALF - RW - G                                                                # 16.7
 X_C0 = XP - 4.0                                                                   # столбы у края платформы: x 12.7..16.7
