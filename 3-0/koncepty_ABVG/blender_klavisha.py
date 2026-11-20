@@ -39,5 +39,5 @@ for n, o in list(ob.items()):
 for f in range(1, 241):
     ph = (f - 1) % 40
     k = 1.0 if 8 <= ph < 22 else 0.0                                                # нажатие каждые 40 кадров
-    piv.rotation_euler[0] = math.radians(ANG * 4 * k); piv.keyframe_insert("rotation_euler", index=0, frame=f)
+    piv.rotation_euler[0] = math.radians(ANG * float(os.environ.get("EXAG", "4")) * k); piv.keyframe_insert("rotation_euler", index=0, frame=f)
 sc.frame_set(1); bpy.ops.wm.save_as_mainfile(filepath=os.path.join(D, os.environ.get("BLEND", "klavisha_%s") % MOD + ".blend")); print("saved")

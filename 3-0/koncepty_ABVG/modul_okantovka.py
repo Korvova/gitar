@@ -98,6 +98,12 @@ for xc in tab_x:
     tabs += BB(xc - 2, xc + 2, Y1p - 0.5, Y1p + G + 2.0, 0.8, 2.0)
 platform["base"] = platform["base"] + tabs
 
+# низ пола поднят: при нажатии передний край опускается сильнее, чем у кнопок, — не выходит ниже окантовки (под ней дно грифа)
+Y_PIV, Z_PIV = Y1p + G + 1.0, 1.4
+DROP = TRAVEL * (Y_PIV - Y0p) / (Y_PIV - YB_LIST[0])
+Z_LIFT = round(DROP + 0.2, 2)
+platform["base"] = platform["base"] - BB(-30, 30, -40, 60, -1, Z_LIFT)
+
 # ---------- окантовка + вазы + кнопки ----------
 rim = BB(-HALF, HALF, Y0p - G - RE, Y1p + G + RE, 0, Z_FL)
 opening = BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
@@ -119,7 +125,6 @@ for sx in (-1, 1):
 fixed = {"frame": rim + vases}
 
 # ---------- проверка: покой / нажато (поворот вокруг кромки окантовки под язычками) ----------
-Y_PIV, Z_PIV = Y1p + G + 1.0, 1.4
 ang = math.degrees(TRAVEL / abs(Y_PIV - YB_LIST[0]))
 def pressed(p):
     return Pos(0, Y_PIV, Z_PIV) * Rot(ang, 0, 0) * Pos(0, -Y_PIV, -Z_PIV) * p
@@ -144,6 +149,9 @@ for n in platform:
     if n == "base": continue
     v = iv(platform[n], btns)
     if v > 0.02: bad += 1; print("  %s × кнопки %.3f" % (n, v))
+zmin = pressed(platform["base"]).bounding_box().min.Z
+if zmin < 0.05: bad += 1; print("  платформа ниже окантовки при нажатии: z=%.2f" % zmin)
+print("  низ пола поднят на %.2f (пол %.2f), при нажатии низ платформы z=%.2f" % (Z_LIFT, Z_FL - Z_LIFT, zmin))
 print("модуль %s на платформе в окантовке: %s | платформа ±%.1f, кнопки x=±%.2f y=%s, язычки x=%s, навесы %d, наклон %.2f°, высота +0" % (
     MOD, "ЧИСТО" if not bad else "%d проблем" % bad, XP, XB, YB_LIST, tab_x, len(awn.solids()), ang))
 
