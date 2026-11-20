@@ -100,8 +100,8 @@ RW_T = XP - 14.5                                                                
 if MOD == "Z":                                                                    # З (владелец): рейка-«столик» — плита рейки удлинена назад, стенки — заодно с рейкой, низом в паз пола
     table = V.fix_o + BB(-XP, XP, V.fix_o.bounding_box().max.Y - 0.5, 24.0, L2[0], L2[1])
     for sx in (-1, 1):
-        table += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.6, L2[0] + 0.01)
-        base -= BB(*sorted((sx * (XP - RW_T - 0.15), sx * (XP + 0.15))), 11.85, 24.15, Z_FL - 0.6, Z_FL + 4.5)   # паз в полу + срез кольца
+        table += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 19.0, Z_FL - 0.6, L2[0] + 0.01)          # стенки короче — задние углы свободны под стойки 49E
+        base -= BB(*sorted((sx * (XP - RW_T - 0.15), sx * (XP + 0.15))), 11.85, 19.15, Z_FL - 0.6, Z_FL + 4.5)   # паз в полу + срез кольца
     parts["rack"] = table
     br_y = "столик"
 else:                                                                             # П (владелец): по спинке рейки бегает тележка — под концом рейки только скос-распорка до пола
@@ -134,14 +134,14 @@ for k in range(144):
     if iv(p, Part() + [base - sl, K.motor, BRUSOK] + [v for n, v in parts.items()]) > 0.01: continue
     if any(iv(p, m) > 0.01 for mv in MOV for m in mv.values()): continue
     ok[a] = (p, sl)
-pair = None
+pair, best = None, -1                                                             # пара с квадратурой, разнесённая как можно дальше (по углам, владелец)
 for a1 in sorted(ok):
     for a2 in sorted(ok):
         d = (a2 - a1) % 360
         if a2 <= a1 or abs((d % 45) - 22.5) > 0.01: continue
-        if iv(ok[a1][0], ok[a2][0]) > 0.01: continue
-        pair = (a1, a2); break
-    if pair: break
+        sep = min(d, 360 - d)
+        if sep > best and iv(ok[a1][0], ok[a2][0]) < 0.01:
+            pair, best = (a1, a2), sep
 print("стойки 49E: подходящие углы", sorted(ok), "→ пара", pair)
 if pair:
     parts["posts"] = ok[pair[0]][0] + ok[pair[1]][0]
