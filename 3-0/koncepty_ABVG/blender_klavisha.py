@@ -5,7 +5,7 @@ D = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os
 YM, YG, A, RF, RM = map(float, open(os.path.join(A_, "params.txt")).read().split()); S = 11.0
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'; sc.frame_end = 240
-C = {"frame": (.35, .3, .25, 1), "base": (.6, .62, .66, 1), "rack": (.45, .48, .52, 1), "beam": (.4, .42, .46, 1), "legs": (.55, .57, .6, 1), "cart": (.15, .4, .9, 1), "btns": (.9, .15, .15, 1),
+C = {"frame": (.35, .3, .25, 1), "rack_br": (.5, .45, .4, 1), "base": (.6, .62, .66, 1), "rack": (.45, .48, .52, 1), "beam": (.4, .42, .46, 1), "legs": (.55, .57, .6, 1), "cart": (.15, .4, .9, 1), "btns": (.9, .15, .15, 1),
      "posts": (.78, .78, .72, 1), "sens": (.05, .05, .3, 1), "slider": (.2, .6, .3, 1), "flo": (1, .55, .05, 1), "brusok": (.7, .72, .76, 1),
      "gm": (.85, .2, .1, 1), "plat": (.6, .25, .7, 1), "mags": (.9, .9, .95, 1), "motor": (.12, .12, .14, 1)}
 ob = {}
