@@ -56,7 +56,7 @@ parts = {"rack": V.fix_o}
 if MOD == "Z":                                                                    # балка З на сплошной стенке до пола (тележка низ балки не трогает) — колонн нет
     parts.update({"beam": Z.beam_body - BB(-30, 30, -40, 40, -1, L2[0])})
     base += BB(-XP, XP, Z.Y_BC - 1.4, Z.Y_BC + 1.4, Z_FL - 0.6, L2[0])
-    cart, YB = Z.cart, -10.0
+    cart, YB = Z.cart, Z.Y_BC                                                     # кнопки под балкой (владелец)
 else:
     cart, YB = R.cart_H, 3.35
 # 20.11 (владелец): брусок ПОД ползуном — паз ползуна открыт вниз, ползун лежит на бруске; брусок короткий (±16.7) на простых стойках
@@ -73,6 +73,10 @@ if MOD == "P":                                                                  
     for sx in (-1, 1):
         base += BB(*sorted((sx * X_C0, sx * X_BR)), YB - 2.2, YB + 2.2, Z_AW, L1[0] - 0.1)
         base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])
+else:                                                                             # З (владелец): стенка под балкой расширена наружу блоком над вазой до балки (концы балки лежат на нём)
+    for sx in (-1, 1):
+        base += BB(*sorted((sx * X_C0, sx * 24.5)), YB - 2.2, YB + 2.2, Z_AW, L2[0] - 0.15)   # под крючками тележки — на 0.15 ниже
+        base += BB(*sorted((sx * X_C0, sx * 24.5)), YB - 1.4, YB + 1.4, Z_AW, L2[0])
 for sx in (-1, 1):
     base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
     base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
