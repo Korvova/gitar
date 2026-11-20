@@ -90,10 +90,9 @@ if MOD == "Z":                                                                  
     br_y = "столик"
 else:                                                                             # П (владелец): по спинке рейки бегает тележка — под концом рейки только скос-распорка до пола
     yr0, yr1 = 12.0, V.fix_o.bounding_box().max.Y - 0.2
+    X_HI = 24.5                                                                   # держатель (владелец): вверху широкий — до конца рейки над окантовкой, внизу узкий на краю платформы, снаружи скос
     for sx in (-1, 1):
-        x0_, x1_ = sorted((sx * (XP - RW_T), sx * XP))
-        brace = Pos(x0_, 0, 0) * Rot(90, 90, 0) * extrude(make_face(Polyline((yr0, L2[0]), (yr1, L2[0]), (yr1, Z_FL - 0.01), (yr1 - 1.5, Z_FL - 0.01), (yr0, L2[0]))), x1_ - x0_, dir=(0, 0, 1))
-        base += brace
+        base += prof_y([(sx * (XP - RW_T), Z_FL - 0.01), (sx * XP, Z_FL - 0.01), (sx * X_HI, L2[0]), (sx * (XP - RW_T), L2[0])], yr0, yr1)
     br_y = "скос"
 stat0 = Part() + [base, K.motor, BRUSOK] + list(parts.values())
 
