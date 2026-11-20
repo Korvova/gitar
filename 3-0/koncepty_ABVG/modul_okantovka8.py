@@ -57,44 +57,32 @@ if MOD == "Z":                                                                  
     cart, YB = Z.cart, -10.0
 else:
     cart, YB = R.cart_H, 3.35
-Z_ARM0, Z_ARM1 = L1[0] - 2.1, L1[0] - 0.1
-for sx in (-1, 1):                                                                # стойки бруска «Г»
-    col = BB(*sorted((sx * X_C0, sx * XP)), 0.5, 6.2, Z_FL - 0.01, Z_ARM1)
-    arm = BB(*sorted((sx * X_C0, sx * HALF)), 0.5, 6.2, Z_ARM0, Z_ARM1)
-    top = BB(*sorted((sx * 23.7, sx * HALF)), 0.5, 6.2, Z_ARM1 - 0.01, L2[0])
-    ch = prof_y([(sx * XP, Z_ARM0 - (HALF - XP)), (sx * HALF, Z_ARM0 + 0.01), (sx * XP, Z_ARM0 + 0.01)], 0.5, 6.2)
-    st = col + arm + top + ch
-    st -= BB(*sorted((sx * 23.6, sx * 25.1)), K.BMY0 - 0.1, K.BMY1 + 0.1, T.Z_BM0 - 0.05, L2[0] + 1)
-    base += st
+# 20.11 (владелец): брусок ПОД ползуном — паз ползуна открыт вниз, ползун лежит на бруске; брусок короткий (±16.7) на простых стойках
+BM_H = T.Z_BM1 - T.Z_BM0                                                          # 1.95
+SL = K.sl + BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C - 0.01, K.BMY1 + K.C + 0.01, T.Z_BM0 - K.C, L1[1])   # заделать старый паз сверху
+SL -= BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C, K.BMY1 + K.C, L1[0] - 1, L1[0] + BM_H + K.C)             # паз снизу
+SL = SL & BB(-K.SLX, K.SLX, -40, 40, -1, 40)
+BRUSOK = BB(-XP, XP, K.BMY0, K.BMY1, L1[0], L1[0] + BM_H)
+for sx in (-1, 1):                                                                # стойки бруска: под ним, не шире его (стенки паза ползуна проходят мимо)
+    base += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - 0.01, L1[0])
 # навесы над кнопками: стенка у края платформы + плечо над штоком
 for sx in (-1, 1):
     base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
     base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
 base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)                                          # сзади пол длиннее на 3.5: там встают стойки 49E
 Y0p, Y1p = base.bounding_box().min.Y, base.bounding_box().max.Y
-# опоры рейки — «Г»-кронштейны (отдельные детали, низ в гнездо пола)
 moving_all = []
 def moving(s):
     rf = math.degrees(s / RF)
-    return {"slider": Pos(s, 0, 0) * K.sl, "flo1": Pos(s - A, K.Y_G, 0) * Rot(0, 0, rf) * K.flo0, "flo2": Pos(s + A, K.Y_G, 0) * Rot(0, 0, rf) * K.flo0,
+    return {"slider": Pos(s, 0, 0) * SL, "flo1": Pos(s - A, K.Y_G, 0) * Rot(0, 0, rf) * K.flo0, "flo2": Pos(s + A, K.Y_G, 0) * Rot(0, 0, rf) * K.flo0,
             "cart": Pos(2 * s, 0, 0) * cart, "gm": Pos(0, YM, 0) * Rot(0, 0, math.degrees(s / RM)) * K.gm, "plat": Pos(0, YM, 0) * DB.plat}
 MOV = [moving(s) for s in (-S, -S / 2, 0, S / 2, S)]
-stat0 = Part() + [base, K.motor, K.beam] + list(parts.values())
-def clear(q, extra=Part()):
-    if iv(q, stat0 + extra) > 0.01: return False
-    return all(iv(q, m) < 0.01 for mv in MOV for m in mv.values())
-rack_br, br_y = Part(), None
-for yc in (27.5, 28.5, 26.5, 25.5, 29.0, 24.5):
-    br = Part()
-    for sx in (-1, 1):
-        br += BB(*sorted((sx * X_C0, sx * XP)), yc - 1.5, yc + 1.5, Z_FL - 0.6, L2[0]) + BB(*sorted((sx * X_C0, sx * XP)), 12.0, yc + 1.5, L2[0] - 2.0, L2[0])
-    sock = Part() + [BB(*sorted((sx * (X_C0 - 0.15), sx * (XP + 0.15))), yc - 1.65, yc + 1.65, Z_FL - 0.6, Z_FL + 0.01) for sx in (-1, 1)]
-    base_s = base - sock
-    if iv(br, Part() + [base_s, K.motor, K.beam] + list(parts.values())) < 0.01 and all(iv(br, m) < 0.01 for mv in MOV for m in mv.values()):
-        rack_br, br_y, base = br, yc, base_s; break
-print("кронштейны рейки: y столба", br_y)
-parts["rack_br"] = rack_br
-stat0 = Part() + [base, K.motor, K.beam] + list(parts.values())
+# неподвижная рейка — на стенках до пола вдоль края платформы (владелец), стенка длиннее рейки
+RW_T = 1.3
+for sx in (-1, 1):
+    base += BB(*sorted((sx * (XP - RW_T), sx * XP)), 12.0, 24.0, Z_FL - 0.01, L2[0])
+br_y = "стенки"
+stat0 = Part() + [base, K.motor, BRUSOK] + list(parts.values())
 
 # ---------- стойки 49E: уже (5.4) и мельче (3.6), углы перебором ----------
 PD, PW = 3.6, 5.4
@@ -115,7 +103,7 @@ for k in range(144):
     p, sl = DB.rotm(a, P0), DB.rotm(a, SL0)
     b_ = p.bounding_box()
     if b_.min.X < -XP + 0.05 or b_.max.X > XP - 0.05 or b_.min.Y < Y0p + 0.05 or b_.max.Y > Y1p - 0.05: continue
-    if iv(p, Part() + [base - sl, K.motor, K.beam] + [v for n, v in parts.items()]) > 0.01: continue
+    if iv(p, Part() + [base - sl, K.motor, BRUSOK] + [v for n, v in parts.items()]) > 0.01: continue
     if any(iv(p, m) > 0.01 for mv in MOV for m in mv.values()): continue
     ok[a] = (p, sl)
 pair = None
@@ -140,7 +128,7 @@ Y_PIV, Z_PIV = Y1p + G + 1.0, 1.4
 DROP = TRAVEL * (Y_PIV - Y0p) / (Y_PIV - YB)
 Z_LIFT = round(DROP + 0.2, 2)
 base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
-platform = {"base": base, **parts, "brusok": K.beam, "motor": K.motor}
+platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 
 # ---------- окантовка 8 мм + вазы + кнопки ----------
 rim = BB(-HALF, HALF, Y0p - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
@@ -182,7 +170,7 @@ zmin = pressed(platform["base"]).bounding_box().min.Z
 if zmin < 0.05: bad += 1
 print("модуль %s, окантовка 8: %s | платформа ±%.1f, кнопки x=±%.2f y=%.2f, стойки 49E %s, кронштейны y=%s, низ пола +%.2f, наклон %.2f°" % (
     MOD, "ЧИСТО" if not bad else "%d проблем" % bad, XP, XB, YB, pair, br_y, Z_LIFT, ang))
-asm = {**platform, "frame": fx, "btns": btns, "cart": cart, "slider": K.sl, "flo": K.flo0, "gm": K.gm, "plat": DB.plat, "mags": DB.mags}
+asm = {**platform, "frame": fx, "btns": btns, "cart": cart, "slider": SL, "flo": K.flo0, "gm": K.gm, "plat": DB.plat, "mags": DB.mags}
 for n, p in asm.items():
     export_stl(Part() + p, os.path.join(OUT, "asm", n + ".stl"), tolerance=0.02, angular_tolerance=0.2)
 open(os.path.join(OUT, "asm", "params.txt"), "w").write("%f %f %f %f %f" % (YM, K.Y_G, A, RF, RM))
