@@ -83,7 +83,8 @@ else:                                                                           
         lx = sorted((sx * (XB - 2.0), sx * (XB + 2.0)))
         base += BB(*lx, YB - 1.5, YB + 1.5, Z_AW, L2[0])                                       # ножка балки: низ давит на кнопку, на верх кладётся балка
         base += BB(*lx, YB - 1.5, 5.0, Z_AW, Z_AW + 4.0)                                       # переходник ножка — блок стойки бруска
-base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)                                          # сзади пол длиннее на 3.5: там встают стойки 49E
+if MOD == "Z":                                                                    # З: сзади (внешний край ряда) пол длиннее на 3.5 — там стойки 49E; у П сзади сосед З
+    base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)
 Y0p, Y1p = base.bounding_box().min.Y, base.bounding_box().max.Y
 Y0ALL = Y0p                                                                       # самая передняя точка платформы (с ножками З)
 if MOD == "Z":
@@ -148,10 +149,10 @@ if pair:
     base = base - ok[pair[0]][1] - ok[pair[1]][1]
 
 # ---------- язычки-ось, подъём низа пола ----------
-tab_x = (-8.0, 8.0)
-for xc in tab_x:
-    base += BB(xc - 2, xc + 2, Y1p - 0.5, Y1p + G + 2.0, 0.8, 2.0)
-Y_PIV, Z_PIV = Y1p + G + 1.0, 1.4
+YT = Y1p - 2.0                                                                    # язычки-ось ВБОК в боковую окантовку (в ряду сзади сосед)
+for sx in (-1, 1):
+    base += BB(*sorted((sx * (XP - 0.5), sx * (XP + G + 2.0))), YT - 1.25, YT + 1.25, 0.8, 2.0)
+Y_PIV, Z_PIV = YT, 1.4
 DROP = TRAVEL * (Y_PIV - Y0ALL) / (Y_PIV - YB)
 Z_LIFT = round(DROP + 0.2, 2)
 base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
@@ -159,8 +160,8 @@ platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 
 # ---------- окантовка 8 мм + вазы + кнопки ----------
 rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
-for xc in tab_x:
-    rim -= BB(xc - 2.3, xc + 2.3, Y1p + G - 0.01, Y1p + G + 2.2, 0.7, 2.1)
+for sx in (-1, 1):
+    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.7, 2.1)   # паз под язычок (зазор 0.1)
 vases, btns = Part(), Part()
 for sx in (-1, 1):
     v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
