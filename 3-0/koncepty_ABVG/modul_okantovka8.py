@@ -165,7 +165,7 @@ for sx in (-1, 1):
 vases, btns = Part(), Part()
 for sx in (-1, 1):
     v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
-    v_ -= BB(*sorted((sx * XB, sx * 30)), YB - 0.7, YB + 0.7, Z_FL, Z_FL + 10)                       # щель для проводов (наружу)
+    v_ -= BB(sx * XB - 0.7, sx * XB + 0.7, YB - RH - 1, YB + RH + 1, Z_FL, Z_FL + 10)                 # две щели для выводов — по бокам, вдоль окантовки (владелец)
     vases += v_
     btns += CZ(BTN_D / 2, Z_FL, Z_FL + BTN_H, sx * XB, YB) + CZ(Z.BTN_DP / 2, Z_FL + BTN_H - 0.01, Z_AW, sx * XB, YB)
 fx = rim + vases
