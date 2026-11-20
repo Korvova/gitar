@@ -63,7 +63,7 @@ for mod in ("Z", "P"):
 for mod in ("Z", "P"):                                                            # пазы под боковые язычки-оси
     yt = CY[mod] - M[mod]["ypiv"]
     for sx in (-1, 1):
-        rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), yt - 1.4, yt + 1.4, 0.7, 2.1)
+        rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), yt - 1.4, yt + 1.4, 0.8, T.Z_FL + 1)
 fx_all = rim
 for mod in ("Z", "P"):
     for n, p in M[mod]["platform"].items():

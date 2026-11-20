@@ -161,7 +161,7 @@ platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 # ---------- окантовка 8 мм + вазы + кнопки ----------
 rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
 for sx in (-1, 1):
-    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.7, 2.1)   # паз под язычок (зазор 0.1)
+    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.8, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
 vases, btns = Part(), Part()
 for sx in (-1, 1):
     v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
