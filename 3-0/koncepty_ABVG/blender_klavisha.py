@@ -1,7 +1,7 @@
 # Модуль-клавиша (папка ../19.65_klavisha_*): сборка + ход тележки + наклон модуля на оси (наклон в сцене ×4 для наглядности). Запуск: blender -b -P blender_klavisha.py -- P
 import bpy, os, sys, math
 MOD = sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "P"
-D = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "19.65_klavisha_%s" % MOD); A_ = os.path.join(D, "asm")
+D = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), os.environ.get("DIR", "19.65_klavisha_%s") % MOD if "%s" in os.environ.get("DIR", "19.65_klavisha_%s") else os.environ["DIR"]); A_ = os.path.join(D, "asm")
 YM, YG, A, RF, RM = map(float, open(os.path.join(A_, "params.txt")).read().split()); S = 11.0
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.unit_settings.scale_length = 0.001; sc.unit_settings.length_unit = 'MILLIMETERS'; sc.frame_end = 240
@@ -31,8 +31,8 @@ for f in range(1, 241, 2):
 tg = bpy.data.objects.new("ц", None); sc.collection.objects.link(tg); tg.location = (0, 12, 12)
 cam = bpy.data.objects.new("Камера", bpy.data.cameras.new("Камера")); sc.collection.objects.link(cam); cam.location = (80, -70, 75); cam.data.clip_start = 1
 k = cam.constraints.new('TRACK_TO'); k.target = tg; k.track_axis = 'TRACK_NEGATIVE_Z'; k.up_axis = 'UP_Y'; sc.camera = cam
-Y_PIV, ANG = map(float, open(os.path.join(A_, "klav.txt")).read().split())
-piv = bpy.data.objects.new("ось качания", None); sc.collection.objects.link(piv); piv.location = (0, Y_PIV, 0); piv.empty_display_type = 'ARROWS'; piv.empty_display_size = 30; bpy.context.view_layer.update()
+kv = list(map(float, open(os.path.join(A_, "klav.txt")).read().split())); Y_PIV, ANG = kv[0], kv[1]; Z_PIV = kv[2] if len(kv) > 2 else 0.0
+piv = bpy.data.objects.new("ось качания", None); sc.collection.objects.link(piv); piv.location = (0, Y_PIV, Z_PIV); piv.empty_display_type = 'ARROWS'; piv.empty_display_size = 30; bpy.context.view_layer.update()
 for n, o in list(ob.items()):
     if n in ("frame", "btns"): continue
     o.parent = piv; o.matrix_parent_inverse = piv.matrix_world.inverted()
@@ -40,4 +40,4 @@ for f in range(1, 241):
     ph = (f - 1) % 40
     k = 1.0 if 8 <= ph < 22 else 0.0                                                # нажатие каждые 40 кадров
     piv.rotation_euler[0] = math.radians(ANG * 4 * k); piv.keyframe_insert("rotation_euler", index=0, frame=f)
-sc.frame_set(1); bpy.ops.wm.save_as_mainfile(filepath=os.path.join(D, "klavisha_%s.blend" % MOD)); print("saved")
+sc.frame_set(1); bpy.ops.wm.save_as_mainfile(filepath=os.path.join(D, os.environ.get("BLEND", "klavisha_%s") % MOD + ".blend")); print("saved")
