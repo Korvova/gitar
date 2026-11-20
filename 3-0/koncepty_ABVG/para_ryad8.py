@@ -52,7 +52,7 @@ for pz in (False, True):
 yz0, yz1 = CY["Z"] - M["Z"]["Y1p"], CY["Z"] - M["Z"]["Y0p"]
 yp0, yp1 = CY["P"] - M["P"]["Y1p"], CY["P"] - M["P"]["Y0p"]
 G, RW, XP = 0.3, 8.0, M["P"]["Q"].XP
-y_lo, y_hi = min(yz0, yp0) - G - RW, max(yz1, yp1) + G + RW
+y_lo, y_hi = min(yz0, yp0) - G - RW, max(yz1, yp1) + G                               # у П спереди окантовки нет (там П2)
 rim = BB(-HALF, HALF, y_lo, y_hi, 0, T.Z_FL)
 for a_, b_ in ((yz0, yz1), (yp0, yp1)):
     rim -= BB(-XP - G, XP + G, a_ - G, b_ + G, -1, T.Z_FL + 1)
@@ -63,7 +63,7 @@ for mod in ("Z", "P"):
 for mod in ("Z", "P"):                                                            # пазы под боковые язычки-оси
     yt = CY[mod] - M[mod]["ypiv"]
     for sx in (-1, 1):
-        rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), yt - 1.4, yt + 1.4, 0.8, T.Z_FL + 1)
+        rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), yt - 1.4, yt + 1.4, 0.75, T.Z_FL + 1)
 fx_all = rim
 for mod in ("Z", "P"):
     for n, p in M[mod]["platform"].items():

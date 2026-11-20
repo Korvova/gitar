@@ -8,6 +8,7 @@
 Запуск: MOD=P|Z python modul_okantovka8.py → ../19.67_okantovka8_P|Z/asm; сцена — DIR=19.67_okantovka8_%s BLEND=okantovka8_%s EXAG=1 blender -b -P blender_klavisha.py -- P"""
 import os, sys, math
 os.environ["KLAV"] = "2"; os.environ["OKANT"] = "8"
+os.environ.setdefault("CM_H", "15.5")                                              # моторы П на ±15.5: ползуны П1/П2 не цепляют при наклоне (ряд 4 — проверено)
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from build123d import *
 import ryad_V4d as R, datchiki_bok as DB
@@ -58,7 +59,7 @@ if MOD == "Z":                                                                  
     base -= BB(-30, 30, -40, YM - 16.1, -1, 40)                                    # 20.11 (владелец): платформа З — в диаметр мотора, хвоста нет
     cart, YB = Z.cart, Z.Y_BC                                                     # кнопки под балкой (владелец)
 else:
-    cart, YB = R.cart_H, 3.35
+    cart, YB = R.cart_H, 4.6                                                      # вазы не выходят за край пола спереди — к П2 вплотную (владелец)
 # 20.11 (владелец): брусок ПОД ползуном — паз ползуна открыт вниз, ползун лежит на бруске; брусок короткий (±16.7) на простых стойках
 BM_H = T.Z_BM1 - T.Z_BM0                                                          # 1.95
 SL = K.sl + BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C - 0.01, K.BMY1 + K.C + 0.01, T.Z_BM0 - K.C, L1[1])   # заделать старый паз сверху
@@ -159,9 +160,10 @@ base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
 platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 
 # ---------- окантовка 8 мм + вазы + кнопки ----------
-rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - RW, Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
+# у П спереди окантовки нет (там П2)
+rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - (0 if MOD == "P" else RW), Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
 for sx in (-1, 1):
-    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.8, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
+    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.75, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
 vases, btns = Part(), Part()
 for sx in (-1, 1):
     v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
