@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сборка модуля З</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#f4f1ea; color:#1d1d1f; margin:0; padding:16px; }
+  .wrap { max-width:900px; margin:0 auto; }
+  h1 { font-size:26px; margin:8px 0 6px; }
+  .legend { color:#555; margin-bottom:18px; }
+  .legend b.o { color:#e07a10; }
+  .step { background:#fff; border-radius:12px; padding:16px; margin-bottom:18px; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .step h2 { font-size:20px; margin:0 0 8px; }
+  .step p { margin:0 0 6px; line-height:1.45; }
+  .step ul { margin:4px 0 10px 18px; padding:0; line-height:1.45; }
+  .step img { width:100%; border-radius:8px; margin-top:8px; background:#eee; }
+  .num { display:inline-block; background:#e07a10; color:#fff; border-radius:50%; width:30px; height:30px; text-align:center; line-height:30px; margin-right:8px; }
+  table { border-collapse:collapse; width:100%; font-size:15px; }
+  td, th { border-bottom:1px solid #eee; padding:6px 4px; text-align:left; vertical-align:top; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Сборка модуля З (окантовка 8)</h1>
+  <div class="legend">На картинках: серое — уже собрано, <b class="o">оранжевое</b> — ставим на этом шаге (раздвинуто — двигать к серому).</div>
+
+  <div class="step">
+    <h2>Что понадобится</h2>
+    <table>
+      <tr><th>Деталь</th><th>Шт.</th><th>Что это</th></tr>
+      <tr><td>01_okantovka_Z</td><td>1</td><td>окантовка с вазами под кнопки и ямками под язычки</td></tr>
+      <tr><td>02_platforma_Z</td><td>1</td><td>пол: кольцо мотора, стойки бруска, язычки-ось</td></tr>
+      <tr><td>03a_noga_balki_prav / 03b_noga_balki_lev</td><td>1 + 1</td><td>ножки балки с блоками над кнопками (правая и левая)</td></tr>
+      <tr><td>03c_balka_Z</td><td>1</td><td>балка под тележкой</td></tr>
+      <tr><td>04_rejka_stolik_Z</td><td>1</td><td>неподвижная рейка-«столик» со стенками</td></tr>
+      <tr><td>05_brusok</td><td>1</td><td>брусок под ползуном с упорами хода на концах</td></tr>
+      <tr><td>06_polzun</td><td>1</td><td>ползун</td></tr>
+      <tr><td>07_shest_plav_x2</td><td>2</td><td>плавающие шестерни</td></tr>
+      <tr><td>08_shest_motora</td><td>1</td><td>шестерня мотора</td></tr>
+      <tr><td>09_platforma_rotora</td><td>1</td><td>платформа ротора с гнёздами под 8 магнитов</td></tr>
+      <tr><td>10_stojka_49E_x2</td><td>2</td><td>стойки датчиков 49E</td></tr>
+      <tr><td>11_telezhka_Z</td><td>1</td><td>тележка с площадкой</td></tr>
+      <tr><td>Покупное</td><td></td><td>мотор 2204 (или макет 12_maket_motora), 2 кнопки Ø6.4, 2 × SS49E, 8 магнитов Ø4×1.9, винты М2, клей</td></tr>
+    </table>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">1</span>Окантовка и кнопки</h2>
+    <p>Две кнопки Ø6.4 кладутся сверху в вазы окантовки. Выводы — в щели по бокам вазы.</p>
+    <img src="sborka/1_okantovka_knopki.png" alt="шаг 1">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">2</span>Мотор и стойки датчиков</h2>
+    <ul>
+      <li>Мотор — в кольцо пола (для пробы без мотора — макет <code>12</code>).</li>
+      <li>Стойки <code>10</code> — низом в прорези кольца и пола.</li>
+      <li>Датчик 49E — сверху в гнездо стойки, плоской стороной к мотору.</li>
+    </ul>
+    <img src="sborka/2_motor_stojki_49E.png" alt="шаг 2">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">3</span>Ножки балки — самое важное</h2>
+    <ul>
+      <li>Справа и слева у края пола стоят серые колонны — это <b>стойки бруска</b>.</li>
+      <li>Ножку <b>приклеиваешь снаружи к стойке</b>, плоской стороной к её наружной грани: правую <code>03a</code> — справа, левую <code>03b</code> — слева.</li>
+      <li>Низ ножки — на одном уровне с низом блока: они висят над окантовкой, ровно над кнопками.</li>
+      <li>Высокая часть ножки — спереди: на неё потом ляжет балка.</li>
+    </ul>
+    <img src="sborka/3_nogi_balki.png" alt="шаг 3">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">4</span>Брусок, ползун, шестерни</h2>
+    <ul>
+      <li>Брусок <code>05</code> — на верх стоек, клей. Широкие концы (упоры хода) — снаружи.</li>
+      <li>Ползун <code>06</code> — пазом снизу на брусок.</li>
+      <li>Две шестерни <code>07</code> — на оси ползуна.</li>
+    </ul>
+    <img src="sborka/4_brusok_polzun_shesterni.png" alt="шаг 4">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">5</span>Рейка-«столик» и ротор</h2>
+    <ul>
+      <li>Рейка <code>04</code> — низом стенок в паз пола, зубьями к шестерням.</li>
+      <li>Платформа ротора <code>09</code>: 8 магнитов боком, полюса N/S через один; на торец мотора винтами М2 (в мотор не глубже 1.5 мм).</li>
+      <li>Шестерня мотора <code>08</code> — квадратом в гнездо платформы, клей.</li>
+    </ul>
+    <img src="sborka/5_rejka_rotor.png" alt="шаг 5">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">6</span>Балка и тележка</h2>
+    <ul>
+      <li>Балка <code>03c</code> — на верх ножек, клей.</li>
+      <li>Тележка <code>11</code> — надевается на балку с торца, крючками за хвост балки, рейкой к шестерням.</li>
+    </ul>
+    <img src="sborka/6_balka_telezhka.png" alt="шаг 6">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">7</span>Модуль в окантовку</h2>
+    <p>Весь собранный модуль опускается в окантовку: язычки по бокам пола — в ямки окантовки (это ось качания), низы ножек балки — над кнопками.</p>
+    <img src="sborka/7_v_okantovku.png" alt="шаг 7">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">8</span>Готово</h2>
+    <p>Нажал на тележку — модуль наклоняется на язычках, ножки давят на кнопки: щелчок. Тележка ходит ±22, ползун упирается в упоры бруска.</p>
+    <img src="sborka/8_gotovo.png" alt="шаг 8">
+  </div>
+</div>
+</body>
+</html>
