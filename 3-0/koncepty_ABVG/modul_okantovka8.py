@@ -174,9 +174,10 @@ vases, btns, lids = Part(), Part(), Part()
 if ONE_BTN:
     # справа: стойка на окантовке, наверху ваза с кнопкой (две щели по бокам для выводов + канавка вниз по стойке)
     st = BB(XB - RH, XB + RH, YBB - RH, YBB + RH, Z_FL - 0.01, Z_B0)
-    st -= BB(XB - 0.7, XB + 0.7, YBB - RH - 1, YBB - RH + 1.0, Z_FL, Z_B0 + 1)                      # канавка для проводов вниз по стойке
+    for sy in (-1, 1):                                                            # канавки для проводов вниз по стойке с обеих сторон (шире: 2.2 × 1.5)
+        st -= BB(XB - 1.1, XB + 1.1, *sorted((YBB + sy * (RH + 1), YBB + sy * (RH - 1.5))), Z_FL - 1, Z_B0 + 1)
     v_ = CZ(RH, Z_B0 - 0.01, Z_B0 + BTN_H + 0.5, XB, YBB) - CZ(BTN_D / 2 + 0.15, Z_B0, Z_B0 + 10, XB, YBB)
-    v_ -= BB(XB - 0.7, XB + 0.7, YBB - RH - 1, YBB + RH + 1, Z_B0, Z_B0 + 10)
+    v_ -= BB(XB - 1.1, XB + 1.1, YBB - RH - 1, YBB + RH + 1, Z_B0, Z_B0 + 10)                      # щели для выводов 2.2
     vases += st + v_
     PILLAR_BTN = st + v_                                                          # отдельно — для сцены «двигать руками»
     btns += CZ(BTN_D / 2, Z_B0, Z_B0 + BTN_H, XB, YBB) + CZ(Z.BTN_DP / 2, Z_B0 + BTN_H - 0.01, Z_AWH, XB, YBB)
