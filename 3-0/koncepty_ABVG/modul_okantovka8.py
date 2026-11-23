@@ -181,6 +181,7 @@ if ONE_BTN:
     v_ = CZ(RH, Z_B0 - 0.01, Z_B0 + BTN_H + 0.5, XB, YBB) - CZ(BTN_D / 2 + 0.15, Z_B0, Z_B0 + 10, XB, YBB)
     v_ -= BB(XB - 0.7, XB + 0.7, YBB - RH - 1, YBB + RH + 1, Z_B0, Z_B0 + 10)
     vases += st + v_
+    PILLAR_BTN = st + v_                                                          # отдельно — для сцены «двигать руками»
     btns += CZ(BTN_D / 2, Z_B0, Z_B0 + BTN_H, XB, YBB) + CZ(Z.BTN_DP / 2, Z_B0 + BTN_H - 0.01, Z_AWH, XB, YBB)
     # слева: стойка с вертикальным пазом под язык (ход вниз 2 мм, сверху паз открыт)
     if MOD == "P":
@@ -190,6 +191,7 @@ if ONE_BTN:
         gs = BB(-(XB + RH), -(XP + G + 0.2), YBB - RH, YBB + RH, Z_FL - 0.01, Z_AWH - 0.5)
         gs -= BB(-(XB + 2.5), -(XB - 2.5), YBB - 2.0, YBB + 2.0, 10.0, Z_AWH)                    # зазор 0.5: при наклоне верх языка уходит вбок на ~0.25
     vases += gs
+    PILLAR_GROOVE = gs
     # ось сзади зажата: крышки на ямки язычков (кладутся после платформы, на клей)
     for sx in (-1, 1):
         lids += BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 2.1))), YT - 1.3, YT + 1.3, 2.1, Z_FL) + BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 3.2))), YT - 2.0, YT + 2.0, Z_FL - 0.01, Z_FL + 0.8)   # пробка в ямку + шляпка на окантовку (клей)
