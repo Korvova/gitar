@@ -60,7 +60,7 @@ if MOD == "Z":                                                                  
     cart, YB = Z.cart, Z.Y_BC                                                     # кнопки под балкой (владелец)
 else:
     cart, YB = R.cart_H, 4.6                                                      # вазы не выходят за край пола спереди — к П2 вплотную (владелец)
-YBB = YB if MOD == "P" else YB - 3.1                                         # стойки кнопки/паза на окантовке (у З — на 3 мм к хвосту: иначе в ряду над ямкой оси соседа П)
+YBB = YB                                                                          # стойки кнопки/паза прямо под ножками; у З в ряду стойка стоит над ямкой оси соседа П и клеится после — её дно и есть крышка (владелец 23.11)
 # 20.11 (владелец): брусок ПОД ползуном — паз ползуна открыт вниз, ползун лежит на бруске; брусок короткий (±16.7) на простых стойках
 BM_H = T.Z_BM1 - T.Z_BM0                                                          # 1.95
 SL = K.sl + BB(-K.SLX - 1, K.SLX + 1, K.BMY0 - K.C - 0.01, K.BMY1 + K.C + 0.01, T.Z_BM0 - K.C, L1[1])   # заделать старый паз сверху
@@ -88,11 +88,8 @@ else:                                                                           
         base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])     # блок стойки бруска наружу
         base += BB(*sorted((sx * X_C0, sx * X_BR)), 1.15, 5.55, Z_AW, L1[0] - 0.1)
         lx = sorted((sx * (XB - 2.0), sx * (XB + 2.0)))
-        base += BB(*lx, YB - 1.5, YB + 1.5, Z_AWH, L2[0])                 # ножка балки (23.11): низ на 15 — выше стоек; к стойкам — ступни (ниже)
+        base += BB(*lx, YB - 1.5, YB + 1.5, Z_AWH if sx > 0 else 12.0, L2[0])                 # ножка балки (23.11): справа низ давит на кнопку (15), слева входит в паз стойки (низ 12)
         base += BB(*lx, YB - 1.5, 5.0, Z_AWH, L1[0] - 0.1)                                     # переходник ножка — блок стойки бруска, сплошной (21.11), низ выше стоек окантовки
-        if MOD == "Z":                                                              # ступня ножки до стойки: справа над кнопкой, слева язык в паз
-            base += BB(*lx, YBB - 2.2, YB - 1.4, Z_AWH, Z_AWH + 2.5)
-            if sx < 0: base += BB(*lx, YBB - 1.5, YBB + 1.5, 12.0, Z_AWH + 0.01)
 if MOD == "Z":                                                                    # З: сзади (внешний край ряда) пол длиннее на 3.5 — там стойки 49E; у П сзади сосед З
     base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)
 Y0p, Y1p = base.bounding_box().min.Y, base.bounding_box().max.Y
@@ -192,6 +189,14 @@ if ONE_BTN:
         gs -= BB(-(XB + 2.5), -(XB - 2.5), YBB - 2.0, YBB + 2.0, 10.0, Z_AWH)                    # зазор 0.5: при наклоне верх языка уходит вбок на ~0.25
     vases += gs
     PILLAR_GROOVE = gs
+    if MOD == "Z":                                                                # З: стойки отдельные, на клей — снизу пробка 0.4 в гнездо окантовки (сама встаёт на место; над язычком соседа П остаётся 0.1)
+        for q in (PILLAR_BTN, PILLAR_GROOVE):
+            b_ = q.bounding_box()
+            plug = BB(b_.min.X + 0.15, b_.max.X - 0.15, b_.min.Y + 0.15, b_.max.Y - 0.15, Z_FL - 0.4, Z_FL + 0.01)
+            rim -= BB(b_.min.X + 0.05, b_.max.X - 0.05, b_.min.Y + 0.05, b_.max.Y - 0.05, Z_FL - 0.4, Z_FL + 0.01)
+            vases += plug
+        PILLAR_BTN = PILLAR_BTN + BB(PILLAR_BTN.bounding_box().min.X + 0.15, PILLAR_BTN.bounding_box().max.X - 0.15, PILLAR_BTN.bounding_box().min.Y + 0.15, PILLAR_BTN.bounding_box().max.Y - 0.15, Z_FL - 0.4, Z_FL + 0.01)
+        PILLAR_GROOVE = PILLAR_GROOVE + BB(PILLAR_GROOVE.bounding_box().min.X + 0.15, PILLAR_GROOVE.bounding_box().max.X - 0.15, PILLAR_GROOVE.bounding_box().min.Y + 0.15, PILLAR_GROOVE.bounding_box().max.Y - 0.15, Z_FL - 0.4, Z_FL + 0.01)
     # ось сзади зажата: крышки на ямки язычков (кладутся после платформы, на клей)
     for sx in (-1, 1):
         lids += BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 2.1))), YT - 1.3, YT + 1.3, 2.1, Z_FL) + BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 3.2))), YT - 2.0, YT + 2.0, Z_FL - 0.01, Z_FL + 0.8)   # пробка в ямку + шляпка на окантовку (клей)
