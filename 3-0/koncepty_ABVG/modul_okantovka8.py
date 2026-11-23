@@ -73,13 +73,15 @@ for sx in (-1, 1):                                                              
 for sx in (-1, 1):                                                                # стойки бруска: под ним, не шире его (стенки паза ползуна проходят мимо)
     base += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - 0.01, L1[0])
 # навесы над кнопками: стенка у края платформы + плечо над штоком
-if MOD == "P":                                                                    # П (владелец): стойка бруска расширена наружу блоком над вазой — его низ давит на кнопку
-    for sx in (-1, 1):
-        base += BB(*sorted((sx * X_C0, sx * X_BR)), YB - 2.2, YB + 2.2, Z_AW, L1[0] - 0.1)
-        base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])
-    for sx in (-1, 1):
-        base += BB(*sorted((sx * X_C0, sx * XP)), YB - 1.4, YB + 1.4, Z_FL - 0.01, Z_AW + 1.6)
-        base += BB(*sorted((sx * X_C0, sx * (XB + 2.2))), YB - 2.2, YB + 2.2, Z_AW, Z_AW + 1.6)
+ONE_BTN = (MOD == "P")                                                             # 23.11 (владелец, после пробы): одна кнопка наверху сбоку, с другой стороны — язык в паз; ось сзади зажата
+Z_B0 = 10.0                                                                        # низ кнопки на неподвижной стойке на окантовке (было на окантовке, z 2.5)
+Z_AWH = Z_B0 + BTN_H + BTN_HP                                                     # низ плеча над кнопкой = верх штока (15.0)
+if MOD == "P":
+    # кнопка справа (+x): плечо от стойки бруска наружу, низ на 15.0 над штоком
+    base += BB(X_C0, X_BR, YB - 2.2, YB + 2.2, Z_AWH, L1[0] - 0.1)
+    base += BB(X_C0, X_BR, K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AWH, L1[0])
+    # слева (−x): язык от стойки бруска в вертикальный паз неподвижной стойки
+    base += BB(-(XB + 1.6), -XP + 0.1, YB - 1.0, YB + 1.0, 12.0, L1[0] - 0.1)
 else:                                                                             # З (владелец): балка за платформой — ножки над окантовкой на кнопки + переходник к блоку стойки бруска
     for sx in (-1, 1):
         base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])     # блок стойки бруска наружу
@@ -167,13 +169,29 @@ platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
 rim = BB(-HALF, HALF, min(Y0p, YB - RH) - G - (0 if MOD == "P" else RW), Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
 for sx in (-1, 1):
     rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.75, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
-vases, btns = Part(), Part()
-for sx in (-1, 1):
-    v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
-    v_ -= BB(sx * XB - 0.7, sx * XB + 0.7, YB - RH - 1, YB + RH + 1, Z_FL, Z_FL + 10)                 # две щели для выводов — по бокам, вдоль окантовки (владелец)
-    vases += v_
-    btns += CZ(BTN_D / 2, Z_FL, Z_FL + BTN_H, sx * XB, YB) + CZ(Z.BTN_DP / 2, Z_FL + BTN_H - 0.01, Z_AW, sx * XB, YB)
-fx = rim + vases
+vases, btns, lids = Part(), Part(), Part()
+if ONE_BTN:
+    # справа: стойка на окантовке, наверху ваза с кнопкой (две щели по бокам для выводов + канавка вниз по стойке)
+    st = BB(XB - RH, XB + RH, YB - RH, YB + RH, Z_FL - 0.01, Z_B0)
+    st -= BB(XB - 0.7, XB + 0.7, YB - RH - 1, YB - RH + 1.0, Z_FL, Z_B0 + 1)                      # канавка для проводов вниз по стойке
+    v_ = CZ(RH, Z_B0 - 0.01, Z_B0 + BTN_H + 0.5, XB, YB) - CZ(BTN_D / 2 + 0.15, Z_B0, Z_B0 + 10, XB, YB)
+    v_ -= BB(XB - 0.7, XB + 0.7, YB - RH - 1, YB + RH + 1, Z_B0, Z_B0 + 10)
+    vases += st + v_
+    btns += CZ(BTN_D / 2, Z_B0, Z_B0 + BTN_H, XB, YB) + CZ(Z.BTN_DP / 2, Z_B0 + BTN_H - 0.01, Z_AWH, XB, YB)
+    # слева: стойка с вертикальным пазом под язык (ход вниз 2 мм, сверху паз открыт)
+    gs = BB(-(XB + RH), -(XP + G + 0.2), YB - 3.0, YB + 3.0, Z_FL - 0.01, L1[0] - 0.4)
+    gs -= BB(-(XB + 1.8), -(XP + G + 0.1), YB - 1.5, YB + 1.5, 10.0, L1[0])                    # зазор 0.5: при наклоне верх языка уходит вбок на ~0.25
+    vases += gs
+    # ось сзади зажата: крышки на ямки язычков (кладутся после платформы, на клей)
+    for sx in (-1, 1):
+        lids += BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 2.1))), YT - 1.3, YT + 1.3, 2.1, Z_FL)
+else:
+    for sx in (-1, 1):
+        v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
+        v_ -= BB(sx * XB - 0.7, sx * XB + 0.7, YB - RH - 1, YB + RH + 1, Z_FL, Z_FL + 10)             # две щели для выводов — по бокам, вдоль окантовки (владелец)
+        vases += v_
+        btns += CZ(BTN_D / 2, Z_FL, Z_FL + BTN_H, sx * XB, YB) + CZ(Z.BTN_DP / 2, Z_FL + BTN_H - 0.01, Z_AW, sx * XB, YB)
+fx = rim + vases + lids
 
 # ---------- проверка ----------
 ang = math.degrees(TRAVEL / abs(Y_PIV - YB))
