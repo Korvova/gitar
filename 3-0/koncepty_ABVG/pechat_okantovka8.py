@@ -73,3 +73,21 @@ for i, (n, *_r) in enumerate(parts):
     pl.camera_position = "iso"; pl.reset_camera()
 pl.screenshot(os.path.join(OUT, "detali_%s.png" % MOD))
 print("картинка деталей:", os.path.join(OUT, "detali_%s.png" % MOD))
+# 23.11: те же детали в собранном положении (для сцены «что куда»): ../19.70_.../sborka/*.stl
+SB = os.path.join(OUT, "sborka"); os.makedirs(SB, exist_ok=True)
+for _f in os.listdir(SB):
+    if _f.endswith(".stl"): os.remove(os.path.join(SB, _f))
+pose = {n: p for n, p, *_r in parts}
+mb = K.motor.bounding_box(); kb = mock.bounding_box()
+pose["13_kryshki_osi_x2"] = Q.lids
+pose["07_shest_plav_x2"] = Part() + [Pos(sx * Q.A, K.Y_G, 0) * K.flo0 for sx in (-1, 1)]
+pose["08_shest_motora"] = Pos(0, Q.YM, 0) * K.gm
+pose["09_platforma_rotora"] = Pos(0, Q.YM, 0) * DB.plat
+pose["10_stojka_49E_x2"] = Q.parts["posts"]
+pose["12_maket_motora"] = Pos((mb.min.X + mb.max.X - kb.min.X - kb.max.X) / 2, (mb.min.Y + mb.max.Y - kb.min.Y - kb.max.Y) / 2, 0) * mock
+pose["k1_knopka"] = Q.btns
+pose["k2_magnity"] = Pos(0, Q.YM, 0) * DB.mags
+pose["k3_datchiki_49E"] = Q.parts["sens"]
+for n, p in pose.items():
+    export_stl(Part() + p, os.path.join(SB, n + ".stl"), tolerance=0.02, angular_tolerance=0.2)
+print("сборка (детали на местах):", SB, len(pose))
