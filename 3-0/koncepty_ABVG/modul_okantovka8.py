@@ -15,7 +15,9 @@ import ryad_V4d as R, datchiki_bok as DB
 Z, V, K, T = R.Z, R.V, R.K, R.T
 BB, CZ, HALF, YM, S, A, RF, RM, L1, L2, Z_FL = T.BB, T.CZ, T.HALF, T.YM, T.S, T.A, T.RF, T.RM, T.L1, T.L2, T.Z_FL
 MOD = os.environ.get("MOD", "P")
-OUT = os.path.join(os.path.dirname(HERE), "19.67_okantovka8_%s" % MOD); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
+PV = os.environ.get("PV", "2") if MOD == "P" else ""                              # П: 2 — кнопка под держателем рейки (24.11), 3 — плечи как у З: кнопка спереди справа, слева ножка в паз (24.11, владелец)
+TAG = MOD + ("3" if PV == "3" else "")
+OUT = os.path.join(os.path.dirname(HERE), "19.67_okantovka8_%s" % TAG); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
 for _f in os.listdir(os.path.join(OUT, "asm")):                                   # старые STL не должны попадать в сцену
     if _f.endswith(".stl"): os.remove(os.path.join(OUT, "asm", _f))
 RW, G = 8.0, 0.3
@@ -26,6 +28,9 @@ RH = BTN_D / 2 + 0.15 + 0.7                                                     
 XB = HALF - RH                                                                    # 20.95
 Z_AW = Z_FL + BTN_H + BTN_HP
 TRAVEL = 0.3
+P3 = MOD == "P" and PV == "3"
+FEET = 1.5 if P3 else 0.0                                                         # 24.11 (владелец, после пробы П3): окантовка на 1.5 выше стола — низ пола упирался в стол (запас был 0.5)
+LR = P3 and os.environ.get("LR") == "1"                                                   # 24.11 вечер (владелец, после печати П3): качание СЛЕВА НАПРАВО — ось вдоль Y по левому краю, кнопка справа
 assert abs(Z.XCB - (XP - 2.0)) < 0.01, "OKANT=8 → колонны З на x=14.7"
 
 def iv(a, b):
@@ -59,7 +64,7 @@ if MOD == "Z":                                                                  
     base -= BB(-30, 30, -40, YM - 16.1, -1, 40)                                    # 20.11 (владелец): платформа З — в диаметр мотора, хвоста нет
     cart, YB = Z.cart, Z.Y_BC                                                     # кнопки под балкой (владелец)
 else:
-    cart, YB = R.cart_H, 13.9                                                     # 24.11 (владелец): кнопка П — под держателем рейки (y 12.4..15.5), брусок спереди — просто направляющая
+    cart, YB = R.cart_H, (4.6 if PV == "3" else 13.9)                                                    # 24.11 (владелец): кнопка П — под держателем рейки (y 12.4..15.5), брусок спереди — просто направляющая
 YBB = YB                                                                          # стойки кнопки/паза прямо под ножками; у З в ряду стойка стоит над ямкой оси соседа П и клеится после — её дно и есть крышка (владелец 23.11)
 # 20.11 (владелец): брусок ПОД ползуном — паз ползуна открыт вниз, ползун лежит на бруске; брусок короткий (±16.7) на простых стойках
 BM_H = T.Z_BM1 - T.Z_BM0                                                          # 1.95
@@ -74,19 +79,35 @@ for sx in (-1, 1):                                                              
 BRUSOK -= CZ(DB.plat.bounding_box().max.X + 0.5, L1[0] - 1, L1[0] + 0.6, 0, YM)       # 24.11 (владелец): брусок тёрся о верх ротора (зазор был 0.17) — выемка снизу 0.6 по кругу ротора → 0.77
 DEEP = 0.6                                                                        # 24.11 (владелец, П): брусок со стойками, плечом и языком — ОДНА деталь, ставится сверху, низ стоек в гнёзда пола на клей
 for sx in (-1, 1):                                                                # стойки бруска: под ним, не шире его (стенки паза ползуна проходят мимо)
-    if MOD == "P":
+    if MOD == "P" and PV == "3":
+        pass                                                                      # П3 (владелец): передних стоек нет — брусок висит на «Г»-плечах от держателей рейки
+    elif MOD == "P":
         BRUSOK += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - DEEP, L1[0] + 0.01)
         base -= BB(*sorted((sx * (X_C0 - 0.15), sx * (XP + 0.15))), K.BMY0 - 0.05, K.BMY1 + 0.05, Z_FL - DEEP, Z_FL + 0.01)
     else:
         base += BB(*sorted((sx * X_C0, sx * XP)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_FL - 0.01, L1[0])
 # навесы над кнопками: стенка у края платформы + плечо над штоком
 ONE_BTN = True                                                             # 23.11 (владелец, после пробы): одна кнопка наверху сбоку, с другой стороны — язык в паз; ось сзади зажата
-Z_B0 = 10.0                                                                        # низ кнопки на неподвижной стойке на окантовке (было на окантовке, z 2.5)
-Z_AWH = Z_B0 + BTN_H + BTN_HP                                                     # низ плеча над кнопкой = верх штока (15.0)
+Z_B0 = 11.0 if P3 else 10.0                                                                        # низ кнопки на неподвижной стойке на окантовке (было на окантовке, z 2.5)
+Z_AWH = 10.0 + BTN_H + BTN_HP                                                     # П3: гнездо кнопки на 1 мм выше (на печати подкладывал 1 мм — шток был утоплен), низ плеча прежний
 Z_TNG, Z_SLOT = 12.0, 9.0                                                         # П: низ языка / дно паза — запас вниз 3.0 (ход 0.3), язык никогда не ложится на дно
 if MOD == "P":
     # кнопка справа (+x): плечо от стойки бруска наружу, низ на 15.0 над штоком
-    pass                                                                          # 24.11: плечо и язык перенесены на держатели рейки (см. ниже), брусок — только направляющая на стойках
+    if PV == "3":                                                                 # П3: плечи заодно с бруском — справа над кнопкой, слева с ножкой в паз; сзади стенка-нога в пол + раскос под плечом
+        # 24.11 (владелец): три детали — 2 плеча + брусок; плечо → столб рейки шипом сзади, брусок → плечо шипом сверху (пазы с зазором 0.1)
+        Y_ARM1 = 12.3                                                             # плечо до 0.1 от столба рейки (столб с y 12.4)
+        ARMS, TABS, KEYS = {}, [], []
+        for sx in (-1, 1):
+            a_ = BB(*sorted((sx * 14.5, sx * X_BR)), YB - 2.2, Y_ARM1, Z_AWH, L1[0] - 0.1)
+            a_ += BB(*sorted((sx * 14.5, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AWH, L1[0])                 # под бруском — до его низа (контакт для клея)
+            tb = BB(*sorted((sx * 15.3, sx * 20.9)), Y_ARM1 - 0.01, 13.9, Z_AWH, 19.0); TABS.append(tb)       # шип в столб: 5.6 × 1.6 × 4
+            ky = BB(*sorted((sx * 16.0, sx * 23.0)), 2.9, 4.1, L1[0] - 0.01, L1[0] + 0.8); KEYS.append(ky)    # шип в брусок: 7 × 1.2 × 0.8
+            a_ += tb + ky
+            if sx < 0:
+                a_ -= BB(-(XB + 2.1), -(XP + G + 0.1), YB - 1.5, YB + 1.5, Z_AWH - 0.01, Z_AWH + 3.0)          # паз снизу под шип стойки окантовки
+            ARMS["prav" if sx > 0 else "lev"] = a_
+        for ky in KEYS:
+            b_ = ky.bounding_box(); BRUSOK -= BB(b_.min.X - 0.1, b_.max.X + 0.1, b_.min.Y - 0.1, b_.max.Y + 0.1, L1[0] - 0.1, b_.max.Z + 0.1)
 else:                                                                             # З (владелец): балка за платформой — ножки над окантовкой на кнопки + переходник к блоку стойки бруска
     for sx in (-1, 1):
         base += BB(*sorted((sx * X_C0, sx * X_BR)), K.BMY0 + 0.1, K.BMY1 - 0.1, Z_AW, L1[0])     # блок стойки бруска наружу
@@ -96,6 +117,9 @@ else:                                                                           
         base += BB(*lx, YB - 1.5, 5.0, Z_AWH, L1[0] - 0.1)                                     # переходник ножка — блок стойки бруска, сплошной (21.11), низ выше стоек окантовки
 if MOD == "Z":                                                                    # З: сзади (внешний край ряда) пол длиннее на 3.5 — там стойки 49E; у П сзади сосед З
     base += BB(-XP, XP, 30.0, 34.0, 0, Z_FL)
+D_PIV_Z = (34.0 - 2.0) - Z.Y_BC                                                   # З: от язычка до кнопки 37.9 — у З клик «прям хорошо»
+if P3 and not LR and os.environ.get("LONG") == "1":                                                                 # 24.11 (владелец): П3 — зад платформы длиннее, чтобы язычок—кнопка было как у З
+    base += BB(-XP, XP, base.bounding_box().max.Y - 1.0, YB + D_PIV_Z + 2.0, 0, Z_FL)
 Y0p, Y1p = base.bounding_box().min.Y, base.bounding_box().max.Y
 Y0ALL = Y0p                                                                       # самая передняя точка платформы (с ножками З)
 if MOD == "Z":
@@ -120,12 +144,30 @@ else:                                                                           
     X_HI = 24.5                                                                   # держатель (владелец): вверху широкий — до конца рейки над окантовкой, внизу узкий на краю платформы, снаружи скос
     rk = V.fix_o                                                                  # 24.11 (владелец): рейка и держатели — ОДНА деталь, низ держателей в пазы пола (срез кольца мотора)
     for sx in (-1, 1):
-        rk += prof_y([(sx * (XP - RW_T), Z_FL - DEEP), (sx * XP, Z_FL - DEEP), (sx * XP, Z_AWH), (sx * X_HI, Z_AWH), (sx * X_HI, L2[0]), (sx * (XP - RW_T), L2[0])], yr0, yr1)   # «Г»: стойка в паз пола + плоское плечо, низ плеча 15.0 = верх штока
+        if PV == "3":                                                             # П3: держатель прежний — со скосом снаружи (кнопки под ним нет)
+            rk += prof_y([(sx * (XP - RW_T), Z_FL - DEEP), (sx * XP, Z_FL - DEEP), (sx * XP, Z_FL), (sx * X_HI, L2[0]), (sx * (XP - RW_T), L2[0])], yr0, yr1)
+        else:
+            rk += prof_y([(sx * (XP - RW_T), Z_FL - DEEP), (sx * XP, Z_FL - DEEP), (sx * XP, Z_AWH), (sx * X_HI, Z_AWH), (sx * X_HI, L2[0]), (sx * (XP - RW_T), L2[0])], yr0, yr1)   # «Г»: стойка в паз пола + плоское плечо, низ плеча 15.0 = верх штока
         base -= BB(*sorted((sx * (XP - RW_T - 0.15), sx * (XP + 0.15))), yr0 - 0.15, yr1 + 0.15, Z_FL - DEEP, L2[0])
-    rk += BB(-(XB + 1.6), -(XP + G + 0.6), YB - 1.0, YB + 1.0, Z_TNG, Z_AWH + 0.01)    # слева под плечом — язык в паз стойки (зазор 0.5 по x и y, дно паза на 3 ниже)
+    if PV != "3":
+        rk += BB(-(XB + 1.6), -(XP + G + 0.6), YB - 1.0, YB + 1.0, Z_TNG, Z_AWH + 0.01)    # слева под плечом — язык в паз стойки (зазор 0.5 по x и y, дно паза на 3 ниже)
+    if PV == "3":                                                                 # П3 (владелец): балка отдельно, концы плеч вырезаны по столбам (булева) — клей, сама встаёт на место
+        # 24.11 (владелец): держатели — отдельные детали (печать плашмя на задней грани: паз под шип плеча смотрит вверх),
+        # сверху у держателя шип в паз снизу рейки; рейка печатается верхом на стол
+        rk = V.fix_o; HOLD = {}
+        for sx in (-1, 1):
+            h_ = prof_y([(sx * (XP - RW_T), Z_FL - DEEP), (sx * XP, Z_FL - DEEP), (sx * XP, Z_FL), (sx * X_HI, L2[0]), (sx * (XP - RW_T), L2[0])], yr0, yr1)
+            for tb in TABS:                                                       # паз под шип плеча
+                b_ = tb.bounding_box(); h_ -= BB(b_.min.X - 0.1, b_.max.X + 0.1, 12.0, b_.max.Y + 0.1, b_.min.Z - 0.1, b_.max.Z + 0.1)
+            tt = BB(*sorted((sx * 17.5, sx * 23.0)), 13.4, 14.7, L2[0] - 0.01, L2[0] + 1.0)              # шип в рейку 5.5 × 1.3 × 1 (за y 14.86 под рейкой бегает крюк тележки)
+            h_ += tt; b_ = tt.bounding_box()
+            rk -= BB(b_.min.X - 0.1, b_.max.X + 0.1, b_.min.Y - 0.1, b_.max.Y + 0.1, L2[0] - 0.1, b_.max.Z + 0.1)
+            HOLD["prav" if sx > 0 else "lev"] = h_
+        parts["holders"] = HOLD["prav"] + HOLD["lev"]
+        parts["arms"] = ARMS["prav"] + ARMS["lev"]
     parts["rack"] = rk; print("  рейка+держатели: тел", len(rk.solids()))
     br_y = "скос"
-stat0 = Part() + [base, K.motor, BRUSOK] + list(parts.values())
+stat0 = Part() + [base, K.motor] + ([BRUSOK] if BRUSOK else []) + list(parts.values())
 
 # ---------- стойки 49E: уже (5.4) и мельче (3.6), углы перебором ----------
 PD, PW = 3.6, 5.4
@@ -146,7 +188,7 @@ for k in range(144):
     p, sl = DB.rotm(a, P0), DB.rotm(a, SL0)
     b_ = p.bounding_box()
     if b_.min.X < -XP + 0.05 or b_.max.X > XP - 0.05 or b_.min.Y < Y0p + 0.05 or b_.max.Y > Y1p - 0.05: continue
-    if iv(p, Part() + [base - sl, K.motor, BRUSOK] + [v for n, v in parts.items()]) > 0.01: continue
+    if iv(p, Part() + [base - sl, K.motor] + ([BRUSOK] if BRUSOK else []) + [v for n, v in parts.items()]) > 0.01: continue
     if any(iv(p, m) > 0.01 for mv in MOV for m in mv.values()): continue
     ok[a] = (p, sl)
 pair, best = None, -1                                                             # пара с квадратурой, разнесённая как можно дальше (по углам, владелец)
@@ -165,34 +207,48 @@ if pair:
 
 # ---------- язычки-ось, подъём низа пола ----------
 YT = Y1p - 2.0                                                                    # язычки-ось ВБОК в боковую окантовку (в ряду сзади сосед)
-for sx in (-1, 1):
-    base += BB(*sorted((sx * (XP - 0.5), sx * (XP + G + 2.0))), YT - 1.25, YT + 1.25, 0.8, 2.0)
-Y_PIV, Z_PIV = YT, 1.4
-DROP = TRAVEL * (Y_PIV - Y0ALL) / (Y_PIV - YBB)
+if LR:                                                                            # П3: два язычка ВЛЕВО (спереди и сзади) — ось вдоль Y; справа язычка нет, правый край висит на штоке
+    Y_TABS = (YB + 5.4, YT)                                                       # передний — сразу за стойкой с шипом (она стоит над y YB±3)
+    for yt in Y_TABS:
+        base += BB(-(XP + G + 2.0), -(XP - 0.5), yt - 1.25, yt + 1.25, 0.8, 2.0)
+    X_PIV, Z_PIV = -(XP + G + 1.0), 1.4
+    Y_PIV = YT
+    DROP = TRAVEL * (XP - X_PIV) / (XB - X_PIV)                                    # правый край пола опускается сильнее всего
+else:
+    Y_TABS = (YT,)
+    for sx in (-1, 1):
+        base += BB(*sorted((sx * (XP - 0.5), sx * (XP + G + 2.0))), YT - 1.25, YT + 1.25, 0.8, 2.0)
+    Y_PIV, Z_PIV = YT, 1.4
+    DROP = TRAVEL * (Y_PIV - Y0ALL) / (Y_PIV - YBB)
 Z_LIFT = round(DROP + 0.2, 2)
 base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
-platform = {"base": base, **parts, "brusok": BRUSOK, "motor": K.motor}
+platform = {"base": base, **parts, "motor": K.motor}
+if BRUSOK: platform["brusok"] = BRUSOK
 
 # ---------- окантовка 8 мм + вазы + кнопки ----------
 # у П спереди окантовки нет (там П2)
-rim = BB(-HALF, HALF, min(Y0p, YBB - RH) - G - (0 if MOD == "P" else RW), Y1p + G + RW, 0, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -1, Z_FL + 1)
-for sx in (-1, 1):
-    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), YT - 1.4, YT + 1.4, 0.75, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
+rim = BB(-HALF, HALF, min(Y0p, YBB - RH) - G - (0 if MOD == "P" else RW), Y1p + G + RW, -FEET, Z_FL) - BB(-XP - G, XP + G, Y0p - G, Y1p + G, -FEET - 1, Z_FL + 1)
+for sx, yt in ([(-1, y_) for y_ in Y_TABS] if LR else [(-1, YT), (1, YT)]):
+    rim -= BB(*sorted((sx * (XP + G - 0.01), sx * (XP + G + 2.2))), yt - 1.4, yt + 1.4, 0.75, Z_FL + 1)   # ямка под язычок, открыта сверху — платформа просто кладётся (владелец)
 vases, btns, lids = Part(), Part(), Part()
 if ONE_BTN:
     # справа: стойка на окантовке, наверху ваза с кнопкой (две щели по бокам для выводов + канавка вниз по стойке)
     st = BB(XB - RH, XB + RH, YBB - RH, YBB + RH, Z_FL - 0.01, Z_B0)
     for sy in (-1, 1):                                                            # канавки для проводов вниз по стойке с обеих сторон (шире: 2.2 × 1.5)
         st -= BB(XB - 1.1, XB + 1.1, *sorted((YBB + sy * (RH + 1), YBB + sy * (RH - 1.5))), Z_FL - 1, Z_B0 + 10)   # сквозной проход: щель вазы сразу переходит в канавку по стойке, без перемычки (владелец)
-    v_ = CZ(RH, Z_B0 - 0.01, Z_B0 + BTN_H + 0.5, XB, YBB) - CZ(BTN_D / 2 + 0.15, Z_B0, Z_B0 + 10, XB, YBB)
+    v_ = CZ(RH, Z_B0 - 0.01, min(Z_B0 + BTN_H + 0.5, Z_AWH - (1.5 if P3 else 0.6)), XB, YBB) - CZ(BTN_D / 2 + 0.15, Z_B0, Z_B0 + 10, XB, YBB)   # П3: гнездо выше на 1 — край вазы не выше 0.6 под плечом
     v_ -= BB(XB - 1.1, XB + 1.1, YBB - RH - 1, YBB + RH + 1, Z_B0, Z_B0 + 10)                      # щели для выводов 2.2
     vases += st + v_
     PILLAR_BTN = st + v_                                                          # отдельно — для сцены «двигать руками»
     btns += CZ(BTN_D / 2, Z_B0, Z_B0 + BTN_H, XB, YBB) + CZ(Z.BTN_DP / 2, Z_B0 + BTN_H - 0.01, Z_AWH, XB, YBB)
     # слева: стойка с вертикальным пазом под язык (ход вниз 2 мм, сверху паз открыт)
     if MOD == "P":
-        gs = BB(-(XB + RH), -(XP + G + 0.2), YB - 3.0, YB + 3.0, Z_FL - 0.01, Z_AWH - 0.8)       # верх под плечом держателя (ход 0.3 + запас)
-        gs -= BB(-(XB + 2.1), -(XP + G + 0.1), YB - 1.5, YB + 1.5, Z_SLOT, L1[0])           # паз: по x зазор 0.5 до торца языка, по y 0.5, дно на 3 ниже языка
+        Z_GS = Z_AWH - (1.8 if P3 else 0.8)                                       # П3: верх стойки и шип ниже на 1.0/1.5 — ход упирается только в кнопку
+        gs = BB(-(XB + RH), -(XP + G + 0.2), YB - 3.0, YB + 3.0, Z_FL - 0.01, Z_GS)       # верх под плечом держателя (ход 0.3 + запас)
+        if PV == "3":                                                             # шип вверх в паз левого плеча: зазоры 0.5 по x/y, сверху 0.6 (ход 0.3)
+            gs += BB(-(XB + 1.6), -(XP + G + 0.6), YB - 0.8, YB + 0.4, Z_GS - 0.01, Z_AWH + 0.9)   # тоньше по y: при наклоне задняя стенка паза плеча идёт вперёд
+        else:
+            gs -= BB(-(XB + 2.1), -(XP + G + 0.1), YB - 1.5, YB + 1.5, Z_SLOT, L1[0])           # паз: по x зазор 0.5 до торца языка, по y 0.5, дно на 3 ниже языка
     else:                                                                         # З: в паз входит сама ножка балки (4×3), верх стойки под переходником
         gs = BB(-(XB + RH), -(XP + G + 0.2), YBB - RH, YBB + RH, Z_FL - 0.01, Z_AWH - 0.5)
         gs -= BB(-(XB + 2.5), -(XB - 2.5), YBB - 2.0, YBB + 2.0, 10.0, Z_AWH)                    # зазор 0.5: при наклоне верх языка уходит вбок на ~0.25
@@ -207,8 +263,8 @@ if ONE_BTN:
         PILLAR_BTN = PILLAR_BTN + BB(PILLAR_BTN.bounding_box().min.X + 0.15, PILLAR_BTN.bounding_box().max.X - 0.15, PILLAR_BTN.bounding_box().min.Y + 0.15, PILLAR_BTN.bounding_box().max.Y - 0.15, Z_FL - 0.4, Z_FL + 0.01)
         PILLAR_GROOVE = PILLAR_GROOVE + BB(PILLAR_GROOVE.bounding_box().min.X + 0.15, PILLAR_GROOVE.bounding_box().max.X - 0.15, PILLAR_GROOVE.bounding_box().min.Y + 0.15, PILLAR_GROOVE.bounding_box().max.Y - 0.15, Z_FL - 0.4, Z_FL + 0.01)
     # ось сзади зажата: крышки на ямки язычков (кладутся после платформы, на клей)
-    for sx in (-1, 1):
-        lids += BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 2.1))), YT - 1.3, YT + 1.3, 2.1, Z_FL) + BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 3.2))), YT - 2.0, YT + 2.0, Z_FL - 0.01, Z_FL + 0.8)   # пробка в ямку + шляпка на окантовку (клей)
+    for sx, yt in ([(-1, y_) for y_ in Y_TABS] if LR else [(-1, YT), (1, YT)]):
+        lids += BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 2.1))), yt - 1.3, yt + 1.3, 2.1, Z_FL) + BB(*sorted((sx * (XP + G + 0.1), sx * (XP + G + 3.2))), yt - 2.0, yt + 2.0, Z_FL - 0.01, Z_FL + 0.8)   # пробка в ямку + шляпка на окантовку (клей)
 else:
     for sx in (-1, 1):
         v_ = CZ(RH, Z_FL - 0.01, Z_FL + BTN_H + 0.5, sx * XB, YB) - CZ(BTN_D / 2 + 0.15, Z_FL, Z_FL + 10, sx * XB, YB)
@@ -218,22 +274,27 @@ else:
 fx = rim + vases + lids
 
 # ---------- проверка ----------
-ang = math.degrees(TRAVEL / abs(Y_PIV - YBB))
-def pressed(p):
-    return Pos(0, Y_PIV, Z_PIV) * Rot(ang, 0, 0) * Pos(0, -Y_PIV, -Z_PIV) * p
+if LR:
+    ang = math.degrees(TRAVEL / (XB - X_PIV))
+    def pressed(p):
+        return Pos(X_PIV, 0, Z_PIV) * Rot(0, ang, 0) * Pos(-X_PIV, 0, -Z_PIV) * p
+else:
+    ang = math.degrees(TRAVEL / abs(Y_PIV - YBB))
+    def pressed(p):
+        return Pos(0, Y_PIV, Z_PIV) * Rot(ang, 0, 0) * Pos(0, -Y_PIV, -Z_PIV) * p
 bad = 0
 for nm, pose in (("покой", lambda p: p), ("нажато", pressed)):
     for n, p in platform.items():
         v = iv(pose(p), fx)
         if v > 0.02: bad += 1; print("  %s × окантовка (%s) %.3f" % (n, nm, v))
-        if n not in (("rack",) if MOD == "P" else ("base",)):                   # кто давит на шток: у П — плечо держателя рейки, у З — ножка на платформе
+        if n not in ((("arms",) if PV == "3" else ("rack",)) if MOD == "P" else ("base",)):                   # кто давит на шток: у П — плечо держателя рейки, у З — ножка на платформе
             v = iv(pose(p), btns)
             if v > 0.02: bad += 1; print("  %s × кнопки (%s) %.3f" % (n, nm, v))
     for mv in MOV:
         for n, p in mv.items():
             v = iv(pose(p), fx) + iv(pose(p), btns)
             if v > 0.02: bad += 1; print("  %s × окантовка/кнопки (%s) %.3f" % (n, nm, v))
-    v = iv(pose(platform["base"] + platform["brusok"] + platform["rack"]), btns)
+    v = iv(pose(Part() + [platform[k] for k in ("base", "brusok", "rack", "arms") if k in platform]), btns)
     print("  навесы × штоки (%s): %.2f мм³" % (nm, v))
     if nm == "покой" and v > 0.02: bad += 1
 for n, p in parts.items():                                                       # детали платформы между собой
@@ -242,29 +303,29 @@ for n, p in parts.items():                                                      
             v = iv(p, p2)
             if v > 0.02: bad += 1; print("  %s × %s %.3f" % (n, n2, v))
 if MOD == "P":                                                                    # 24.11: брусок-блок и рейка с держателями — отдельные детали: между собой, с полом и с подвижными
-    trio = {"pol": platform["base"], "brusok": platform["brusok"], "rejka": platform["rack"]}
+    trio = {"pol": platform["base"], "rejka": platform["rack"], **({"derzh": platform["holders"]} if "holders" in platform else {}), **({"brusok": platform["brusok"]} if "brusok" in platform else {}), **({"plechi": platform["arms"]} if "arms" in platform else {})}
     for a_ in trio:
         for b_ in trio:
             if a_ < b_:
                 v = iv(trio[a_], trio[b_])
                 if v > 0.02: bad += 1
                 print("  ПРОВЕРКА %s × %s: %.3f" % (a_, b_, v))
-    vm = sum(iv(p, trio[k]) for mv in MOV for n, p in mv.items() for k in ("brusok", "rejka"))
+    vm = sum(iv(p, trio[k]) for mv in MOV for n, p in mv.items() for k in ("brusok", "rejka", "plechi", "derzh") if k in trio)
     if vm > 0.05: bad += 1
     print("  ПРОВЕРКА подвижные (ползун, шестерни, тележка) × брусок/рейка: %.3f" % vm)
     print("  ротор верх %.2f — брусок низ над ним %.2f → зазор %.2f" % (DB.plat.bounding_box().max.Z, L1[0] + 0.6, L1[0] + 0.6 - DB.plat.bounding_box().max.Z))
-    print("  язык: низ %.1f, дно паза %.1f → запас вниз %.1f; плечо держателя низ %.1f = верх штока %.1f; кнопка y %.1f" % (Z_TNG, Z_SLOT, Z_TNG - Z_SLOT, Z_AWH, Z_AWH, YB))
+    print("  язык/шип: %s; плечо низ %.1f = верх штока %.1f; кнопка y %.1f; балка тел %s" % ("шип вверх до %.1f, паз в плече до %.1f (запас 2.1)" % (Z_AWH + 0.9, Z_AWH + 3.0) if PV == "3" else "низ %.1f, дно паза %.1f" % (Z_TNG, Z_SLOT), Z_AWH, Z_AWH, YB, "%d, плечи %s" % (len(BRUSOK.solids()), [len(a_.solids()) for a_ in ARMS.values()]) if PV == "3" else "-"))
     for s_ in (-S, S):
         for n, p in moving(s_).items():
-            for k in ("brusok", "rejka"):
+            for k in [k_ for k_ in ("brusok", "rejka", "plechi", "derzh") if k_ in trio]:
                 v = iv(p, trio[k])
                 if v > 0.005: print("    касание s=%+.0f %s × %s %.3f" % (s_, n, k, v))
 zmin = pressed(platform["base"]).bounding_box().min.Z
-if zmin < 0.05: bad += 1
+if zmin < -FEET + 0.05: bad += 1
 print("модуль %s, окантовка 8: %s | платформа ±%.1f, кнопки x=±%.2f y=%.2f, стойки 49E %s, кронштейны y=%s, низ пола +%.2f, наклон %.2f°" % (
-    MOD, "ЧИСТО" if not bad else "%d проблем" % bad, XP, XB, YB, pair, br_y, Z_LIFT, ang))
+    MOD, ("ось вдоль Y слева x=%.1f, язычки y=%s, " % (X_PIV, [round(v_, 1) for v_ in Y_TABS]) if LR else "") + ("ЧИСТО" if not bad else "%d проблем" % bad), XP, XB, YB, pair, br_y, Z_LIFT, ang))
 asm = {**platform, "frame": fx, "btns": btns, "cart": cart, "slider": SL, "flo": K.flo0, "gm": K.gm, "plat": DB.plat, "mags": DB.mags}
 for n, p in asm.items():
     export_stl(Part() + p, os.path.join(OUT, "asm", n + ".stl"), tolerance=0.02, angular_tolerance=0.2)
 open(os.path.join(OUT, "asm", "params.txt"), "w").write("%f %f %f %f %f" % (YM, K.Y_G, A, RF, RM))
-open(os.path.join(OUT, "asm", "klav.txt"), "w").write("%f %f %f" % (Y_PIV, ang, Z_PIV))
+open(os.path.join(OUT, "asm", "klav.txt"), "w").write(("X %f %f %f" % (X_PIV, ang, Z_PIV)) if LR else ("%f %f %f" % (Y_PIV, ang, Z_PIV)))

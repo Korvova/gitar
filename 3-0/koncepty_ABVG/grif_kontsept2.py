@@ -6,7 +6,7 @@ x — поперёк (±25), y — вдоль грифа (дека в +y), z = 0
 import os
 from build123d import *
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "19.73_grif_kontsept2", "asm"); os.makedirs(OUT, exist_ok=True)
-W, TH, C = 25.0, 4.5, 0.25
+W, TH, C = 25.0, 2.0, 0.25                # 24.11 (владелец): плита 2 мм — хватит; высоту потом оптимизировать целиком
 WT, WB = 23.0, 21.0                       # плита: вверху шире (23), внизу уже (21) — губы заходят под скос, вагон не поднять
 BL = 73.7                                 # блок ±73.7 по y
 def prof(pts, y0, y1):
