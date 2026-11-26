@@ -55,6 +55,7 @@ TITLES = {
     "t-magnitnyj-krivoshyp": "💤Т. Магнитный + Кривошип",
     "t-motorchik-v-telezhki": "⌛Т. Моторчик в тележке",
     "t-sborka-lazernaja-rezka": "⌛Т. Сборка: лазерная резка",
+    "t-tros-reabilitacija": "Т. Трос реабилитация",
     "hronika": "📜Хроника",
 }
 
