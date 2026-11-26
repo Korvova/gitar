@@ -259,7 +259,7 @@ plates = [
     ("123_remen_TPU", p012_j,             # ремни TPU: профили A (обычный), B (глубокий), C (трапеция), D (прямой) × ширина 2/3/4/5 (3-0/remni/remen_tpu.py) — в слайсере выбрать TPU; сеткой без автоукладки
      grid(["C:/App/gitar/3-0/remni/remen_tpu/remen_%s_%dmm" % (p, w) for p in ("A_obychnyj", "B_glubokij", "C_trapecija", "D_pryamoj") for w in (2, 3, 4, 5)], 4, 45), "grid"),   # ряд = профиль A..D сверху вниз, столбец = ширина 2..5 слева направо
     ("125_remen_TPU_04", p012_j,          # ремни TPU под сопло 0.4: 39 зубьев шагом 2.66, зуб прямой 0.9 × 0.7, спинка 0.9, ушки-пилы под зуб тележки; ширина 2/3/4/5 слева направо (3-0/remni/remen_04.py) — в слайсере выбрать TPU
-     grid(["C:/App/gitar/3-0/remni/remen_04/remen04_%dmm" % w for w in (2, 3, 4, 5)], 4, 45), "grid"),
+     grid(["C:/App/gitar/3-0/remni/remen_04/%s_%dmm" % (k, w) for k in ("remen04", "remen04_bez_ushek") for w in (2, 3, 4, 5)], 4, 45), "grid"),   # верхний ряд — с ушками-пилами, нижний — без
     ("126_roliki_04", p012_j,             # ролики к ремням 0.4: 6 зубьев Ø5, по 2 на ремень; ряд = ширина 2/3/4/5 сверху вниз; + 4 пробные тележки с зубом под ушки-пилы; PLA/PETG, сопло 0.4
      grid(["C:/App/gitar/3-0/remni/remen_04/rolik04_%dmm" % w for w in (2, 3, 4, 5) for _ in range(2)], 2, 14, cx=112) +
      grid(["C:/App/gitar/3-0/remni/remen_04/telezhka04_%dmm" % w for w in (2, 3, 4, 5)], 1, 14, cx=150), "grid"),   # справа столбик пробных тележек с зубом (ширина 2→5 сверху вниз)

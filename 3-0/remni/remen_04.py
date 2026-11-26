@@ -65,11 +65,12 @@ def cart(w):
     return plate + tooth
 
 
-def belt(w):
+def belt(w, ushki=True):
     u, c = WT / 2, 0.1
     tooth = [(-u, -0.05), (-u, H - c), (-u + c, H), (u - c, H), (u, H - c), (u, -0.05)]
     ring = Cylinder(R_ROOT + TB, w, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Pos(0, 0, -1) * Cylinder(R_ROOT, w + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return ring + Part() + ring_teeth(R_ROOT, N, tooth, w) + lugs(w)
+    b = ring + Part() + ring_teeth(R_ROOT, N, tooth, w)
+    return b + lugs(w) if ushki else b
 
 
 def pulley(w):
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     print("ремень: %d зубьев, шаг %.3f (на роликах %.3f), длина %.2f, Ø%.1f; ролик %d зубьев, Ø%.2f; зуб ролика у дна %.2f, стенка от оси %.2f" % (
         N, L / N, LOOP / N, L, 2 * (R_ROOT + TB), NP, 2 * RP, zub_dno, r_dno - BORE))
     for w in (2, 3, 4, 5):
-        for kind, part in (("remen04", belt(w)), ("rolik04", pulley(w)), ("telezhka04", cart(w))):
+        for kind, part in (("remen04", belt(w)), ("remen04_bez_ushek", belt(w, False)), ("rolik04", pulley(w)), ("telezhka04", cart(w))):
             f = os.path.join(OUT, "%s_%dmm.stl" % (kind, w))
             export_stl(part, f, tolerance=0.004, angular_tolerance=0.05)
             m = trimesh.load(f)
