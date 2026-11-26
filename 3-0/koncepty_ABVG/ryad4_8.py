@@ -5,7 +5,7 @@
 import os, sys, math, importlib
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 from build123d import *
-OUT = os.path.join(os.path.dirname(HERE), "19.69_ryad4_okantovka8"); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
+OUT = os.path.join(os.path.dirname(HERE), "19.69_ryad4_okantovka8" + ("_GB" if os.environ.get("GB") == "1" else "")); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
 for _f in os.listdir(os.path.join(OUT, "asm")):
     if _f.endswith(".stl"): os.remove(os.path.join(OUT, "asm", _f))
 M = {}

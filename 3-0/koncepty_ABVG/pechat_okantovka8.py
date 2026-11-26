@@ -44,11 +44,13 @@ parts += ([] if Q.BRUSOK is None else [("05_brusok", Q.BRUSOK, (180, 0, 0) if MO
           ])
 parts += [("06_polzun", Q.SL, (0, 0, 0), 1, "ползун: паз снизу, ложится на брусок"),
           ("07_shest_plav_x2", K.flo0, (0, 0, 0), 2, "плавающие шестерни на оси ползуна"),
-          ("08_shest_motora", K.gm, (180, 0, 0), 1, "шестерня мотора — квадратом в гнездо платформы ротора, клей"),
-          ("09_platforma_rotora", DB.plat, (0, 0, 0), 1, "платформа ротора: 8 магнитов Ø4×1.9 боком, N/S через один"),
-          ("10_stojka_49E_x2", Q.P0, (0, 0, 0), 2, "стойка датчика 49E — низом в прорезь кольца/пола"),
-          ("11_telezhka_%s" % MOD, Q.cart, (180, 0, 0), 1, "тележка с площадкой"),
-          ("12_maket_motora", mock, (0, 0, 0), 1, "макет мотора 2204 для пробы без мотора (ось Ø3)")]
+          ] + ([("08_shest_motora", K.gm, (180, 0, 0), 1, "шестерня мотора GB1806: фланец Ø8 на торец ротора, 4 штыря в отверстия М2 ротора, капля клея"),
+                ("09_chashka_motora", Q.parts["stakan"], (0, 0, 0), 1, "чашка: мотор GB1806 с заводским стаканом (плата AS5600) стоит на дне, винты М2 снизу; губа вклеивается под пол в отверстие; щель стакана — к прорези")] if Q.GB else
+               [("08_shest_motora", K.gm, (180, 0, 0), 1, "шестерня мотора — квадратом в гнездо платформы ротора, клей"),
+                ("09_platforma_rotora", DB.plat, (0, 0, 0), 1, "платформа ротора: 8 магнитов Ø4×1.9 боком, N/S через один"),
+                ("10_stojka_49E_x2", Q.P0, (0, 0, 0), 2, "стойка датчика 49E — низом в прорезь кольца/пола")]) + [
+          ("11_telezhka_%s" % MOD, Q.cart, (180, 0, 0), 1, "тележка с площадкой")] + ([] if Q.GB else [
+          ("12_maket_motora", mock, (0, 0, 0), 1, "макет мотора 2204 для пробы без мотора (ось Ø3)")])
 lines = []
 print("печатный набор модуля %s → %s" % (MOD, OUT))
 for n, p, rot, cnt, note in parts:
@@ -58,7 +60,7 @@ for n, p, rot, cnt, note in parts:
     b = p.bounding_box()
     s = "  %-24s ×%d  %5.1f × %5.1f × %4.1f  герм %s  нависание %.0f мм²  — %s" % (n, cnt, b.size.X, b.size.Y, b.size.Z, m.is_watertight, ov, note)
     print(s); lines.append(s)
-open(os.path.join(OUT, "spisok.txt"), "w", encoding="utf-8").write("\n".join(lines) + "\nКупить на модуль: мотор 2204, 1 кнопка Ø6.4×5 (корпус 3.5 + шток 1.5), 2× SS49E, 8 магнитов Ø4×1.9, винты М2.\n")
+open(os.path.join(OUT, "spisok.txt"), "w", encoding="utf-8").write("\n".join(lines) + ("\nКупить на модуль: мотор GB1806 со стаканом-энкодером (AS5600), 1 кнопка Ø6.4×5, винты М2×8 — 4 шт.\n" if Q.GB else "\nКупить на модуль: мотор 2204, 1 кнопка Ø6.4×5 (корпус 3.5 + шток 1.5), 2× SS49E, 8 магнитов Ø4×1.9, винты М2.\n"))
 # картинка: все детали по отдельности
 import pyvista as pv
 pv.OFF_SCREEN = True
@@ -82,12 +84,16 @@ mb = K.motor.bounding_box(); kb = mock.bounding_box()
 pose["13_kryshki_osi_x2"] = Q.lids
 pose["07_shest_plav_x2"] = Part() + [Pos(sx * Q.A, K.Y_G, 0) * K.flo0 for sx in (-1, 1)]
 pose["08_shest_motora"] = Pos(0, Q.YM, 0) * K.gm
-pose["09_platforma_rotora"] = Pos(0, Q.YM, 0) * DB.plat
-pose["10_stojka_49E_x2"] = Q.parts["posts"]
-pose["12_maket_motora"] = Pos((mb.min.X + mb.max.X - kb.min.X - kb.max.X) / 2, (mb.min.Y + mb.max.Y - kb.min.Y - kb.max.Y) / 2, 0) * mock
 pose["k1_knopka"] = Q.btns
-pose["k2_magnity"] = Pos(0, Q.YM, 0) * DB.mags
-pose["k3_datchiki_49E"] = Q.parts["sens"]
+if Q.GB:
+    pose["09_chashka_motora"] = Q.parts["stakan"]
+    pose["k2_motor_GB1806"] = K.motor
+else:
+    pose["09_platforma_rotora"] = Pos(0, Q.YM, 0) * DB.plat
+    pose["10_stojka_49E_x2"] = Q.parts["posts"]
+    pose["12_maket_motora"] = Pos((mb.min.X + mb.max.X - kb.min.X - kb.max.X) / 2, (mb.min.Y + mb.max.Y - kb.min.Y - kb.max.Y) / 2, 0) * mock
+    pose["k2_magnity"] = Pos(0, Q.YM, 0) * DB.mags
+    pose["k3_datchiki_49E"] = Q.parts["sens"]
 for n, p in pose.items():
     export_stl(Part() + p, os.path.join(SB, n + ".stl"), tolerance=0.02, angular_tolerance=0.2)
 print("сборка (детали на местах):", SB, len(pose))

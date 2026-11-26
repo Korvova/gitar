@@ -14,9 +14,20 @@ from build123d import *
 import ryad_V4d as R, datchiki_bok as DB
 Z, V, K, T = R.Z, R.V, R.K, R.T
 BB, CZ, HALF, YM, S, A, RF, RM, L1, L2, Z_FL = T.BB, T.CZ, T.HALF, T.YM, T.S, T.A, T.RF, T.RM, T.L1, T.L2, T.Z_FL
+if os.environ.get("GB") == "1":
+    Z_RF = 17.83                                                                  # торец ротора GB1806 = низ прежней шестерни → всё над мотором без изменений
+    Z_CAP0 = Z_RF - 20.5                                                          # низ заводского стакана с платой AS5600 (мотор 13 + стакан 7.5)
+    _gm0 = K.gm
+    GB_GEAR = (_gm0 & BB(-20, 20, -20, 20, 19.23, 40)) + CZ(4.0, Z_RF, 19.24)     # шестерня: зубья прежние + фланец Ø8 (не шире зубьев — печать без нависаний) прямо на ротор
+    for _a in (0, 90, 180, 270):                                                  # 4 штыря Ø1.9 в резьбовые М2 ротора (Ø6) — центруют и передают момент, капля клея
+        GB_GEAR += CZ(0.95, Z_RF - 1.5, Z_RF + 0.01, 3 * math.cos(math.radians(_a)), 3 * math.sin(math.radians(_a)))
+    K.gm = GB_GEAR
+    DB.plat = CZ(4.0, Z_RF, 19.24)                                                # «платформы ротора» больше нет — только фланец шестерни
+    K.motor = CZ(11.0, Z_RF - 13.0, Z_RF, 0, YM) + CZ(11.0, Z_CAP0, Z_RF - 12.99, 0, YM)
 MOD = os.environ.get("MOD", "P")
 PV = os.environ.get("PV", "2") if MOD == "P" else ""                              # П: 2 — кнопка под держателем рейки (24.11), 3 — плечи как у З: кнопка спереди справа, слева ножка в паз (24.11, владелец)
-TAG = MOD + ("3" if PV == "3" else "")
+GB = os.environ.get("GB") == "1"                                                # 25.11 (владелец): мотор GB1806 (Ø22, датчик AS5600 в заводском стакане снизу) вместо 2204 + магнитов + 49E
+TAG = MOD + ("3" if PV == "3" else "") + ("GB" if GB else "")
 OUT = os.path.join(os.path.dirname(HERE), "19.67_okantovka8_%s" % TAG); os.makedirs(os.path.join(OUT, "asm"), exist_ok=True)
 for _f in os.listdir(os.path.join(OUT, "asm")):                                   # старые STL не должны попадать в сцену
     if _f.endswith(".stl"): os.remove(os.path.join(OUT, "asm", _f))
@@ -29,7 +40,7 @@ XB = HALF - RH                                                                  
 Z_AW = Z_FL + BTN_H + BTN_HP
 TRAVEL = 0.3
 P3 = MOD == "P" and PV == "3"
-FEET = 1.5 if P3 else 0.0                                                         # 24.11 (владелец, после пробы П3): окантовка на 1.5 выше стола — низ пола упирался в стол (запас был 0.5)
+FEET = 5.6 if GB else (1.5 if P3 else 0.0)                                                         # 24.11 (владелец, после пробы П3): окантовка на 1.5 выше стола — низ пола упирался в стол (запас был 0.5)
 LR = P3 and os.environ.get("LR") == "1"                                                   # 24.11 вечер (владелец, после печати П3): качание СЛЕВА НАПРАВО — ось вдоль Y по левому краю, кнопка справа
 assert abs(Z.XCB - (XP - 2.0)) < 0.01, "OKANT=8 → колонны З на x=14.7"
 
@@ -57,7 +68,7 @@ def motor_mount(b):
 base = Z.base if MOD == "Z" else V.base_o
 for sx in (-1, 1):
     base -= BB(*sorted((sx * XP, sx * 30)), -40, 50, -1, 40)
-base = motor_mount(base)
+base = (base - CZ(12.55, -10, 40, 0, YM)) if GB else motor_mount(base)        # GB: в полу сквозное Ø25.1 — снизу вклеивается чашка со стаканом мотора
 parts = {"rack": V.fix_o}
 if MOD == "Z":                                                                    # балка З на сплошной стенке до пола (тележка низ балки не трогает) — колонн нет
     parts.update({"beam": Z.beam_body - BB(-30, 30, -40, 40, -1, L2[0])})
@@ -183,7 +194,7 @@ def post0():
     return p, sl, se
 P0, SL0, SE0 = post0()
 ok = {}
-for k in range(144):
+for k in range(0 if GB else 144):
     a = 2.5 * k
     p, sl = DB.rotm(a, P0), DB.rotm(a, SL0)
     b_ = p.bounding_box()
@@ -222,6 +233,16 @@ else:
     DROP = TRAVEL * (Y_PIV - Y0ALL) / (Y_PIV - YBB)
 Z_LIFT = round(DROP + 0.2, 2)
 base -= BB(-30, 30, -40, 60, -1, Z_LIFT)
+if GB:                                                                            # чашка: стакан мотора стоит на её дне (винты М2 снизу в потай), губа клеится под пол
+    Z_CUP0 = Z_CAP0 - 1.6
+    CUP = CZ(12.45, Z_CUP0, Z_LIFT, 0, YM) - CZ(11.25, Z_CAP0, Z_LIFT + 1, 0, YM)
+    CUP += Pos(0, YM, Z_LIFT - 1.35) * Cone(12.45, 13.8, 1.35, align=(Align.CENTER, Align.CENTER, Align.MIN)) - CZ(11.25, Z_LIFT - 2, Z_LIFT + 1, 0, YM)
+    for _a in range(0, 360, 60):                                                  # 6 отверстий М2 на Ø18 (у мотора 6, стакан берёт 4 из них) + потай под головку
+        _x, _y = 9 * math.cos(math.radians(_a)), YM + 9 * math.sin(math.radians(_a))
+        CUP -= CZ(1.1, Z_CUP0 - 1, Z_CAP0 + 0.1, _x, _y) + CZ(1.95, Z_CUP0 - 1, Z_CUP0 + 1.0, _x, _y)
+    CUP -= CZ(2.5, Z_CUP0 - 1, Z_CAP0 + 0.1, 0, YM)                                # центр — посмотреть/продуть
+    CUP -= BB(-14, -9, YM - 3.5, YM + 3.5, Z_CAP0 + 2.5, Z_LIFT + 1)                # прорезь в стенке под провода стакана (стакан повернуть щелью сюда)
+    parts["stakan"] = CUP
 platform = {"base": base, **parts, "motor": K.motor}
 if BRUSOK: platform["brusok"] = BRUSOK
 
@@ -324,7 +345,7 @@ zmin = pressed(platform["base"]).bounding_box().min.Z
 if zmin < -FEET + 0.05: bad += 1
 print("модуль %s, окантовка 8: %s | платформа ±%.1f, кнопки x=±%.2f y=%.2f, стойки 49E %s, кронштейны y=%s, низ пола +%.2f, наклон %.2f°" % (
     MOD, ("ось вдоль Y слева x=%.1f, язычки y=%s, " % (X_PIV, [round(v_, 1) for v_ in Y_TABS]) if LR else "") + ("ЧИСТО" if not bad else "%d проблем" % bad), XP, XB, YB, pair, br_y, Z_LIFT, ang))
-asm = {**platform, "frame": fx, "btns": btns, "cart": cart, "slider": SL, "flo": K.flo0, "gm": K.gm, "plat": DB.plat, "mags": DB.mags}
+asm = {**platform, "frame": fx, "btns": btns, "cart": cart, "slider": SL, "flo": K.flo0, "gm": K.gm, **({} if GB else {"plat": DB.plat, "mags": DB.mags})}
 for n, p in asm.items():
     export_stl(Part() + p, os.path.join(OUT, "asm", n + ".stl"), tolerance=0.02, angular_tolerance=0.2)
 open(os.path.join(OUT, "asm", "params.txt"), "w").write("%f %f %f %f %f" % (YM, K.Y_G, A, RF, RM))
