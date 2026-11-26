@@ -4,7 +4,9 @@ r"""Ремни TPU + ролики-шестерёнки к ним для подб
 на роликах — натягивается сам. Печать кольцом плашмя (Ø ~34). Ширина ремня (в модели «высота»): 2, 3, 4, 5 мм.
 Два профиля зуба:
   A «обычный» — как GT2 под сопло 0.4: зуб 0.75, у основания 1.2, спинка 0.65 (толщина 1.4);
-  B «глубокий» — для лучшего зацепа: зуб 1.0, у основания 1.35, спинка 0.9 (толщина 1.9).
+  B «глубокий» — для лучшего зацепа: зуб 1.0, у основания 1.35, спинка 0.9 (толщина 1.9);
+  C «трапеция» (владелец: прямоугольный зуб цепляет лучше) — зуб 0.8, у основания 1.25, вершина 0.85, спинка 0.8.
+  Совсем прямоугольный на ролике Ø5 с 8 зубьями нельзя: на входе в паз упрётся, а пазы у дна сольются.
 К каждому ремню — свой ролик: 8 пазов по профилю зуба (+0.1 зазор), делительный радиус 2.54 (Ø5 как в модели),
 юбки 0.6 с обеих сторон, между юбками ширина ремня + 0.4, ось Ø1.8. Ролики печатать PLA/PETG, лучше соплом 0.2–0.25.
 Запуск: ..\..\2-0\.venv-b123d\Scripts\python remen_tpu.py
@@ -29,14 +31,18 @@ BORE = 0.9                                       # ось Ø1.8
 T_FL = 0.6                                       # юбки
 
 
-def tooth_pts(h, wb):
-    """профиль зуба (t вдоль, n внутрь): основание wb, высота h, вершина скруглена"""
+def tooth_pts(h, wb, wt=None):
+    """профиль зуба (t вдоль, n внутрь): основание wb, высота h; вершина скруглена, а если задана ширина вершины wt — трапеция"""
     w = wb / 2
+    if wt:
+        u = wt / 2
+        return [(-w, -0.05), (-w, 0.0), (-u, h - 0.12), (-u + 0.12, h), (u - 0.12, h), (u, h - 0.12), (w, 0.0), (w, -0.05)]
     return [(-w, -0.05), (-w, 0.0), (-0.73 * w, 0.53 * h), (-0.5 * w, 0.85 * h), (-0.25 * w, 0.97 * h), (0.0, h),
             (0.25 * w, 0.97 * h), (0.5 * w, 0.85 * h), (0.73 * w, 0.53 * h), (w, 0.0), (w, -0.05)]
 
 
-PROF = {"A_obychnyj": dict(h=0.75, wb=1.2, tb=0.65), "B_glubokij": dict(h=1.0, wb=1.35, tb=0.9)}
+PROF = {"A_obychnyj": dict(h=0.75, wb=1.2, tb=0.65), "B_glubokij": dict(h=1.0, wb=1.35, tb=0.9),
+        "C_trapecija": dict(h=0.8, wb=1.25, wt=0.85, tb=0.8)}         # C (владелец): почти прямоугольный зуб — трапеция, стенки ~14°
 
 
 def ring_teeth(r, n, pts, height, z0=0.0):
@@ -51,14 +57,14 @@ def ring_teeth(r, n, pts, height, z0=0.0):
 
 def belt(pr, w):
     ring = Cylinder(R_ROOT + pr["tb"], w, align=(Align.CENTER, Align.CENTER, Align.MIN)) - Pos(0, 0, -1) * Cylinder(R_ROOT, w + 2, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    return ring + Part() + ring_teeth(R_ROOT, N, tooth_pts(pr["h"], pr["wb"]), w)
+    return ring + Part() + ring_teeth(R_ROOT, N, tooth_pts(pr["h"], pr["wb"], pr.get("wt")), w)
 
 
 def pulley(pr, w):
     hub = w + 0.4
     p = Cylinder(RP, hub, align=(Align.CENTER, Align.CENTER, Align.MIN))
     k = 1 + 2 * CLR / pr["wb"]
-    gp = [(t * k, (nn * (pr["h"] + CLR) / pr["h"]) if nn > 0 else nn - 0.3) for t, nn in tooth_pts(pr["h"], pr["wb"])]   # паз открыт наружу
+    gp = [(t * k, (nn * (pr["h"] + CLR) / pr["h"]) if nn > 0 else nn - 0.3) for t, nn in tooth_pts(pr["h"], pr["wb"], pr.get("wt"))]   # паз открыт наружу
     p -= Part() + ring_teeth(RP, NP, gp, hub + 2, -1)
     rf = RP + pr["tb"] + 0.3
     p += Pos(0, 0, -T_FL) * Cylinder(rf, T_FL, align=(Align.CENTER, Align.CENTER, Align.MIN))
