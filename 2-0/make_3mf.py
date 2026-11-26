@@ -132,7 +132,7 @@ def grid(names, cols, step, cx=128.0, cy=128.0):
         x = cx + (c - (cols - 1) / 2) * step
         y = cy + ((rows - 1) / 2 - r) * step
         m.apply_translation([x - m.bounds[:, 0].mean(), y - m.bounds[:, 1].mean(), -m.bounds[0][2]])
-        p = os.path.join(TMP, os.path.basename(name) + "_grid.stl")
+        p = os.path.join(TMP, "%s_grid%d.stl" % (os.path.basename(name), i))
         m.export(p)
         out.append(p)
     return out
@@ -258,6 +258,10 @@ plates = [
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
     ("123_remen_TPU", p012_j,             # ремни TPU: профили A (обычный), B (глубокий), C (трапеция), D (прямой) × ширина 2/3/4/5 (3-0/remni/remen_tpu.py) — в слайсере выбрать TPU; сеткой без автоукладки
      grid(["C:/App/gitar/3-0/remni/remen_tpu/remen_%s_%dmm" % (p, w) for p in ("A_obychnyj", "B_glubokij", "C_trapecija", "D_pryamoj") for w in (2, 3, 4, 5)], 4, 45), "grid"),   # ряд = профиль A..D сверху вниз, столбец = ширина 2..5 слева направо
+    ("125_remen_TPU_04", p012_j,          # ремни TPU под сопло 0.4: 39 зубьев шагом 2.66, зуб прямой 0.9 × 0.7, спинка 0.9; ширина 2/3/4/5 слева направо (3-0/remni/remen_04.py) — в слайсере выбрать TPU
+     grid(["C:/App/gitar/3-0/remni/remen_04/remen04_%dmm" % w for w in (2, 3, 4, 5)], 4, 45), "grid"),
+    ("126_roliki_04", p012_j,             # ролики к ремням 0.4: 6 зубьев Ø5, по 2 на ремень; ряд = ширина 2/3/4/5 сверху вниз; PLA/PETG, сопло 0.4
+     grid(["C:/App/gitar/3-0/remni/remen_04/rolik04_%dmm" % w for w in (2, 3, 4, 5) for _ in range(2)], 2, 14), "grid"),
     ("124_roliki_k_remnyam", p012_j,       # ролики к ремням: по 2 на каждый ремень (A/B/C/D × 2/3/4/5), PLA/PETG, лучше сопло 0.2–0.25
      prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_5mm", copies=2), "cool"),
     ("122_okantovka8_Z", p012_j,          # модуль З в окантовке 8 на пробу клика (3-0/19.70_pechat_okantovka8_Z), с макетом мотора
