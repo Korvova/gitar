@@ -122,6 +122,21 @@ def prep(name, transform=None, copies=1, tag=""):
     m.export(p)
     return [p] * copies
 
+def grid(names, cols, step, cx=128.0, cy=128.0):
+    """Разложить детали сеткой (строка за строкой, первая строка — сверху/дальняя) — стол собирать без автоукладки (флаг "grid")."""
+    rows = (len(names) + cols - 1) // cols
+    out = []
+    for i, name in enumerate(names):
+        r, c = divmod(i, cols)
+        m = trimesh.load(os.path.join(SRC, name + ".stl"))
+        x = cx + (c - (cols - 1) / 2) * step
+        y = cy + ((rows - 1) / 2 - r) * step
+        m.apply_translation([x - m.bounds[:, 0].mean(), y - m.bounds[:, 1].mean(), -m.bounds[0][2]])
+        p = os.path.join(TMP, os.path.basename(name) + "_grid.stl")
+        m.export(p)
+        out.append(p)
+    return out
+
 FLIP = trimesh.transformations.rotation_matrix(math.pi, [1, 0, 0])      # вверх ногами
 ID = np.eye(4)                                          # только положить на стол
 LAY = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])  # лёжа (Y->Z)
@@ -241,8 +256,8 @@ plates = [
     ("87_sterzhen_proba", p012_j,          # опыт «магнитный стержень + бегущая катушка» (диски 4×2): 10 кассет (8 + 2 запас), 2 заглушки,
      prep("sz_sterzhen", ID, copies=2) +                                                                # стержень одной деталью (2: запас), 2 гильзы,
      prep("sz_gilza_trubka", ID) + prep("sz_gilza_nasadka", ID, copies=4) + prep("sz_lozhe", ID) + prep("sz_osnova", ID) + prep("sz_os_namotki", ID)),   # ложе, основа, ось для намотки — без поддержек
-    ("123_remen_TPU", p012_j,             # ремни TPU: профили A (обычный), B (глубокий), C (трапеция), D (прямой) × ширина 2/3/4/5 (3-0/remni/remen_tpu.py) — в слайсере выбрать TPU
-     prep("C:/App/gitar/3-0/remni/remen_tpu/remen_A_obychnyj_2mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_A_obychnyj_3mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_A_obychnyj_4mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_A_obychnyj_5mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_B_glubokij_2mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_B_glubokij_3mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_B_glubokij_4mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_B_glubokij_5mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_C_trapecija_2mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_C_trapecija_3mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_C_trapecija_4mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_C_trapecija_5mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_D_pryamoj_2mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_D_pryamoj_3mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_D_pryamoj_4mm", copies=1) + prep("C:/App/gitar/3-0/remni/remen_tpu/remen_D_pryamoj_5mm", copies=1), "cool"),
+    ("123_remen_TPU", p012_j,             # ремни TPU: профили A (обычный), B (глубокий), C (трапеция), D (прямой) × ширина 2/3/4/5 (3-0/remni/remen_tpu.py) — в слайсере выбрать TPU; сеткой без автоукладки
+     grid(["C:/App/gitar/3-0/remni/remen_tpu/remen_%s_%dmm" % (p, w) for p in ("A_obychnyj", "B_glubokij", "C_trapecija", "D_pryamoj") for w in (2, 3, 4, 5)], 4, 45), "grid"),   # ряд = профиль A..D сверху вниз, столбец = ширина 2..5 слева направо
     ("124_roliki_k_remnyam", p012_j,       # ролики к ремням: по 2 на каждый ремень (A/B/C/D × 2/3/4/5), PLA/PETG, лучше сопло 0.2–0.25
      prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_A_obychnyj_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_B_glubokij_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_C_trapecija_5mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_2mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_3mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_4mm", copies=2) + prep("C:/App/gitar/3-0/remni/remen_tpu/rolik_D_pryamoj_5mm", copies=2), "cool"),
     ("122_okantovka8_Z", p012_j,          # модуль З в окантовке 8 на пробу клика (3-0/19.70_pechat_okantovka8_Z), с макетом мотора
@@ -436,14 +451,14 @@ for plate in plates:
     name, proc_j, stls = plate[0], plate[1], plate[2]
     if ONLY and not any(name.startswith(o) for o in ONLY):
         continue
-    fj = fila_cool_j if (len(plate) > 3 and plate[3] == "cool") else fila_j
+    fj = fila_cool_j if "cool" in plate[3:] else fila_j
     out = os.path.join(OUT, name + ".3mf")
     if os.path.exists(out):
         os.remove(out)
     cmd = [EXE,
            "--load-settings", f"{machine_j};{proc_j}",
            "--load-filaments", fj,
-           "--arrange", "1",
+           "--arrange", "0" if "grid" in plate[3:] else "1",
            "--export-3mf", out] + stls
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     ok = os.path.exists(out)
