@@ -2,6 +2,7 @@
 
 | Дата | Что произошло | Итог |
 |---|---|---|
+| 26.11.2026 | Ремни v13: гриф 53 мм вместо 52 — ремень под сопло 0.4 со спинкой 0.9 иначе тёрся о стенку; ремни и ролики из пробы встают без пересчёта, зазор до стенки 0.3 ![v13](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/remni_v13.png =300x) | ✅ [Т. Трос реабилитация](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-tros-reabilitacija) 21.21 |
 | 26.11.2026 | Ремни и ролики под стандартное сопло 0.4: ролик 6 зубьев Ø5, ремень 39 зубьев шагом 2.66, зуб прямой 0.9 × 0.7 — каждая стенка в 2 линии сопла; столы 125 (ремни TPU) и 126 (ролики) | 🔄 [Т. Трос реабилитация](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-tros-reabilitacija) 21.20 |
 | 26.11.2026 | Запасной вариант ремней на моторах 2204 (v12): шаг лент 17.5, блок 52 × 82.5, высота вместе с плитой грифа 21.9 мм вместо 29.4; датчик — магнит + AS5600 под свободным концевым роликом (идея владельца). Основной пока — v11 на GB1806 ![v12](https://raw.githubusercontent.com/Korvova/gitar/main/wiki/img/remni_v12_2204.png =300x) | 💡 [Т. Трос реабилитация](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-tros-reabilitacija) 21.19 |
 | 26.11.2026 | Ремни TPU на печать: 4 профиля зуба (обычный, глубокий, трапеция, прямой) × ширина 2–5 мм, к каждому свой ролик Ø5 — подбор лучшей пары | 🔄 [Т. Трос реабилитация, 21.18](/homepage/iniciativa.-razrabotka/jepik-ruka-gitara/t-tros-reabilitacija) |
