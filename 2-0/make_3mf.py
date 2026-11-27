@@ -263,6 +263,10 @@ plates = [
     ("126_roliki_04", p012_j,             # ролики к ремням 0.4: 6 зубьев Ø5, по 2 на ремень; ряд = ширина 2/3/4/5 сверху вниз; + 4 пробные тележки с зубом под ушки-пилы; PLA/PETG, сопло 0.4
      grid(["C:/App/gitar/3-0/remni/remen_04/rolik04_%dmm" % w for w in (2, 3, 4, 5) for _ in range(2)], 2, 14, cx=112) +
      grid(["C:/App/gitar/3-0/remni/remen_04/telezhka04_%dmm" % w for w in (2, 3, 4, 5)], 1, 14, cx=150), "grid"),   # справа столбик пробных тележек с зубом (ширина 2→5 сверху вниз)
+    ("129_stend_3mm", p012_j,             # стенд одной ленты целиком под ремень 3 мм — ровно один комплект: основа, палуба, ведущий ролик (штыри 1.6), рельс, тележка, 2 концевых ролика + 4 оси со шляпкой; PLA/PETG, сопло 0.4
+     grid(["C:/App/gitar/3-0/remni/stend/stl/stend_osnova"], 1, 10, cy=175) + grid(["C:/App/gitar/3-0/remni/stend/stl/stend_paluba"], 1, 10, cy=137) + grid(["C:/App/gitar/3-0/remni/stend/stl/relsa_3mm"], 1, 10, cy=106) +
+     grid(["C:/App/gitar/3-0/remni/stend/stl/ved_rolik_3mm", "C:/App/gitar/3-0/remni/stend/stl/telezhka_stend_3mm", "C:/App/gitar/3-0/remni/remen_04/rolik04_3mm", "C:/App/gitar/3-0/remni/remen_04/rolik04_3mm"], 4, 15, cy=86) +
+     grid(["C:/App/gitar/3-0/remni/stend/stl/os_rolika_3mm"] * 4, 4, 10, cy=70), "grid"),   # 4 оси со шляпкой (2 запасные)
     ("128_ved_rolik_shtyri", p012_j,      # подбор штырей ведущего ролика стенда (3-0/remni/stend): столбцы — штыри Ø1.4/1.5/1.6/1.7/1.8 (насечек на проставке 1…5), только под ремень 3 мм (5 деталей, пока тестим посадку на мотор); PLA/PETG
      grid(["C:/App/gitar/3-0/remni/stend/stl/ved_rolik_%dmm_pin%d" % (w, d) for w in (3,) for d in (14, 15, 16, 17, 18)], 5, 14), "grid"),
     ("127_stend_remen", p012_j,           # стенд одной ленты (3-0/remni/stend/stend_remen.py): основа под GB1806, палуба на ножках (оси роликов — филамент 1.75), рельсы, ведущие ролики и тележки стенда под ремни 2/3/4/5 (слева направо); концевые ролики — стол 126; PLA/PETG

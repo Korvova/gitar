@@ -111,6 +111,16 @@ def ved_rolik(w, pin=1.6, marks=0):              # 1.6 — подобрано н
     return p
 
 
+def os_rolika(w, x=0.0):
+    """Ось концевого ролика со шляпкой (вместо кусочка филамента): снизу Ø1.75 на натяг в палубу (как филамент),
+    по ролику Ø1.6 (отверстие ролика Ø1.8 — крутится свободно), сверху шляпка Ø4.5 × 0.8 с зазором 0.2 — ролик не соскочит."""
+    top = Z_D1 + T_FL + w + 0.4 + T_FL                  # верх верхней юбки ролика
+    o = CZ(0.875, Z_D0 + 0.2, Z_D1, x)                  # в палубе (до низа не доходит 0.2)
+    o += CZ(0.8, Z_D1 - 0.01, top + 0.2, x)            # по ролику
+    o += CZ(2.25, top + 0.2, top + 1.0, x)              # шляпка
+    return o
+
+
 def relsa(w):
     top = Z_D1 + T_FL + w + 1.2                      # площадка тележки на 0.2 выше верхних юбок роликов
     r = BB(-27.0, 27.0, RAIL_Y0, RAIL_Y1, Z_D1, top)
@@ -134,6 +144,7 @@ if __name__ == "__main__":
         for i, d in enumerate(PINS):                                        # стол 128: подбор штырей
             parts["ved_rolik_%dmm_pin%d" % (w, round(d * 10))] = (ved_rolik(w, d, i + 1), (180, 0, 0))
         parts["relsa_%dmm" % w] = (relsa(w), (180, 0, 0))
+        parts["os_rolika_%dmm" % w] = (os_rolika(w), (180, 0, 0))           # шляпкой на стол
         parts["telezhka_stend_%dmm" % w] = (telezhka(w), (180, 0, 0))   # площадкой на стол, зуб вверх
     # --- проверка на ширине 3: детали не врезаются; ход тележки — пока зуб не упрётся в юбку концевого ролика ---
     w = 3
@@ -141,6 +152,8 @@ if __name__ == "__main__":
     rol = [Pos(sx * X_C, 0, Z_D1) * pulley(w) for sx in (-1, 1)]
     stat = {"основа": parts["stend_osnova"][0], "палуба": parts["stend_paluba"][0], "рельс": relsa(w), "мотор": mot}
     mov = {"ведущий": ved_rolik(w), "ролик-": rol[0], "ролик+": rol[1]}
+    for sx in (-1, 1):
+        stat["ось%+d" % sx] = os_rolika(w, sx * X_C)
     bad = 0
     for a, pa in list(stat.items()) + list(mov.items()):
         for b, pb in list(stat.items()) + list(mov.items()):
@@ -149,7 +162,7 @@ if __name__ == "__main__":
                     v = (pa & pb).volume
                 except Exception:
                     v = 0
-                if v > 0.02 and {a, b} not in ({"основа", "палуба"}, {"мотор", "ведущий"}, {"основа", "мотор"}):
+                if v > 0.02 and {a, b} not in ({"основа", "палуба"}, {"мотор", "ведущий"}, {"основа", "мотор"}, {"ось-1", "палуба"}, {"ось+1", "палуба"}):
                     bad += 1; print("  %s × %s: %.3f" % (a, b, v))
     xmax = 0.0
     for xc in [k * 0.5 for k in range(0, 51)]:
