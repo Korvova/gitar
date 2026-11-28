@@ -263,6 +263,8 @@ plates = [
     ("126_roliki_04", p012_j,             # ролики к ремням 0.4: 6 зубьев Ø5, по 2 на ремень; ряд = ширина 2/3/4/5 сверху вниз; + 4 пробные тележки с зубом под ушки-пилы; PLA/PETG, сопло 0.4
      grid(["C:/App/gitar/3-0/remni/remen_04/rolik04_%dmm" % w for w in (2, 3, 4, 5) for _ in range(2)], 2, 14, cx=112) +
      grid(["C:/App/gitar/3-0/remni/remen_04/telezhka04_%dmm" % w for w in (2, 3, 4, 5)], 1, 14, cx=150), "grid"),   # справа столбик пробных тележек с зубом (ширина 2→5 сверху вниз)
+    ("130_shesterni_i_osi", p012_j,       # шестерни и оси к ним на все ширины ремня (печать дома): ряд = ширина 2/3/4/5 сверху вниз; в ряду 2 концевых ролика (rolik04), ведущий ролик стенда (штыри Ø1.6), 3 оси со шляпкой (1 запас); PLA/PETG, сопло 0.4
+     grid([n for w in (2, 3, 4, 5) for n in ["C:/App/gitar/3-0/remni/remen_04/rolik04_%dmm" % w] * 2 + ["C:/App/gitar/3-0/remni/stend/stl/ved_rolik_%dmm" % w] + ["C:/App/gitar/3-0/remni/stend/stl/os_rolika_%dmm" % w] * 3], 6, 13), "grid"),
     ("129_stend_3mm", p012_j,             # стенд одной ленты целиком под ремень 3 мм — ровно один комплект: основа, палуба, ведущий ролик (штыри 1.6), рельс, тележка, 2 концевых ролика + 4 оси со шляпкой; PLA/PETG, сопло 0.4
      grid(["C:/App/gitar/3-0/remni/stend/stl/stend_osnova"], 1, 10, cy=175) + grid(["C:/App/gitar/3-0/remni/stend/stl/stend_paluba"], 1, 10, cy=137) + grid(["C:/App/gitar/3-0/remni/stend/stl/relsa_3mm"], 1, 10, cy=106) +
      grid(["C:/App/gitar/3-0/remni/stend/stl/ved_rolik_3mm", "C:/App/gitar/3-0/remni/stend/stl/telezhka_stend_3mm", "C:/App/gitar/3-0/remni/remen_04/rolik04_3mm", "C:/App/gitar/3-0/remni/remen_04/rolik04_3mm"], 4, 15, cy=86) +
