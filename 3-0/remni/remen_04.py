@@ -26,7 +26,8 @@ R_ROOT = L / (2 * math.pi)                       # внутренняя стор
 RP = NP * LOOP / N / (2 * math.pi)               # радиус ролика по растянутому шагу ≈ 2.54
 H, WT, TB = 0.7, 0.9, 0.9                        # зуб ремня: высота, ширина; спинка
 CLR = 0.10                                       # зазор паза (владелец: паз просто прямоугольный, без скосов у входа)
-BORE, T_FL = 0.9, 0.6                            # ось Ø1.8, юбки
+BORE, T_FL = 1.1, 0.6                            # 28.11 (владелец): отверстие Ø2.2 — ролик свободно крутится на болте М2; юбки
+CLR_DNO = 0.02                                   # 28.11: дно паза ближе к зубу (было 0.1) — стенка от отверстия до дна паза 0.72 при Ø2.2
 
 
 def ring_teeth(r, n, pts, height, z0=0.0):
@@ -76,7 +77,7 @@ def belt(w, ushki=True):
 def pulley(w):
     hub = w + 0.4
     p = Cylinder(RP, hub, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    g, d = WT / 2 + CLR, H + CLR                                                   # полуширина паза, глубина
+    g, d = WT / 2 + CLR, H + CLR_DNO                                               # полуширина паза, глубина
     groove = [(-g, -0.3), (-g, d), (g, d), (g, -0.3)]                              # паз прямоугольный, открыт наружу
     p -= Part() + ring_teeth(RP, NP, groove, hub + 2, -1)
     rf = RP + TB + 0.3
@@ -88,7 +89,7 @@ def pulley(w):
 
 if __name__ == "__main__":
     import trimesh
-    r_dno = RP - H - CLR
+    r_dno = RP - H - CLR_DNO
     zub_dno = 2 * math.pi * r_dno / NP - 2 * (WT / 2 + CLR)
     print("ремень: %d зубьев, шаг %.3f (на роликах %.3f), длина %.2f, Ø%.1f; ролик %d зубьев, Ø%.2f; зуб ролика у дна %.2f, стенка от оси %.2f" % (
         N, L / N, LOOP / N, L, 2 * (R_ROOT + TB), NP, 2 * RP, zub_dno, r_dno - BORE))

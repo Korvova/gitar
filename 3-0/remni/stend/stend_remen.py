@@ -23,7 +23,8 @@ LOOP = 2 * (2 * X_C) + 2 * math.pi * R_END
 N, NP = 39, 6
 RP = NP * LOOP / N / (2 * math.pi)
 H, WT, TB = 0.7, 0.9, 0.9
-CLR, BORE, T_FL = 0.10, 0.9, 0.6
+CLR, BORE, T_FL = 0.10, 1.1, 0.6                    # 28.11: отверстие роликов Ø2.2 под болт М2 (крутится свободно)
+CLR_DNO = 0.02                                      # 28.11: дно паза (как в remen_04.py)
 T_W, G_T, LL, HP = 1.5, 0.10, 3.0, 1.5
 
 
@@ -47,7 +48,7 @@ def ring_teeth(r, n, pts, height, z0=0.0):
 def pulley(w, bore=True):
     hub = w + 0.4
     p = Cylinder(RP, hub, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    g, d = WT / 2 + CLR, H + CLR
+    g, d = WT / 2 + CLR, H + CLR_DNO
     p -= Part() + ring_teeth(RP, NP, [(-g, -0.3), (-g, d), (g, d), (g, -0.3)], hub + 2, -1)
     rf = RP + TB + 0.3
     p += Pos(0, 0, -T_FL) * Cylinder(rf, T_FL, align=(Align.CENTER, Align.CENTER, Align.MIN))
@@ -67,7 +68,8 @@ Z_RF = T_B + H_MOT                                  # торец ротора 23
 Z_D0 = Z_RF + 0.2; Z_D1 = Z_D0 + T_D                # палуба 23.2..25.2
 X0, X1, Y0, Y1 = -30.0, 30.0, -14.0, 14.0
 LEGS = [(sx * 27.0, sy * 11.0) for sx in (-1, 1) for sy in (-1, 1)]
-R_FIL = 0.825                                       # отверстие Ø1.65 под филамент 1.75 — на натяг
+R_FIL = 0.85                                        # 28.11 (владелец): отверстие Ø1.7 — оси концевых роликов болты М2, вкручиваются в палубу как саморез
+M2_LEN = {2: 5, 3: 6, 4: 7, 5: 8}                   # длина болта М2 по ширине ремня: в палубе 1.4 резьбы, под палубу не выходит (под правым роликом ротор мотора)
 Y_TOOTH = R_FL + 0.1                                # зуб тележки снаружи юбок роликов (иначе цепляет юбку ведущего посреди хода)
 RAIL_Y0, RAIL_Y1 = Y_TOOTH + 2.6 + 0.4, Y_TOOTH + 2.6 + 0.4 + 3.6
 RAIL_PEGS = [(-18.0, (RAIL_Y0 + RAIL_Y1) / 2), (18.0, (RAIL_Y0 + RAIL_Y1) / 2)]
@@ -88,7 +90,7 @@ def paluba():
     d = BB(X0, X1, Y0, Y1, Z_D0, Z_D1)
     d -= CZ(4.4, Z_D0 - 1, Z_D1 + 1, XM, 0)         # окно под проставку ведущего
     for sx in (-1, 1):
-        d -= CZ(R_FIL, Z_D0 - 1, Z_D1 + 1, sx * X_C, 0)   # оси концевых роликов — филамент 1.75
+        d -= CZ(R_FIL, Z_D0 - 1, Z_D1 + 1, sx * X_C, 0)   # оси концевых роликов — болты М2 (Ø1.7 под саморез)
     for x, y in RAIL_PEGS:
         d -= CZ(1.1, Z_D0 - 1, Z_D1 + 1, x, y)       # гнёзда шипов рельса
     for x, y in LEGS:
@@ -153,7 +155,9 @@ if __name__ == "__main__":
     stat = {"основа": parts["stend_osnova"][0], "палуба": parts["stend_paluba"][0], "рельс": relsa(w), "мотор": mot}
     mov = {"ведущий": ved_rolik(w), "ролик-": rol[0], "ролик+": rol[1]}
     for sx in (-1, 1):
-        stat["ось%+d" % sx] = os_rolika(w, sx * X_C)
+        top = Z_D1 + T_FL + w + 0.4 + T_FL                                     # болт М2: головка на верхней юбке, резьба в палубе
+        stat["ось%+d" % sx] = CZ(1.0, top - M2_LEN[w], top, sx * X_C)
+        if top - M2_LEN[w] < Z_D0: bad_m2 = True; print("  болт М2 выходит под палубу!")
     bad = 0
     for a, pa in list(stat.items()) + list(mov.items()):
         for b, pb in list(stat.items()) + list(mov.items()):
