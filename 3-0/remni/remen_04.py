@@ -26,7 +26,7 @@ R_ROOT = L / (2 * math.pi)                       # внутренняя стор
 RP = NP * LOOP / N / (2 * math.pi)               # радиус ролика по растянутому шагу ≈ 2.54
 H, WT, TB = 0.7, 0.9, 0.9                        # зуб ремня: высота, ширина; спинка
 CLR = 0.10                                       # зазор паза (владелец: паз просто прямоугольный, без скосов у входа)
-BORE, T_FL = 1.1, 0.6                            # 28.11 (владелец): отверстие Ø2.2 — ролик свободно крутится на болте М2; юбки
+BORE, T_FL = 1.1, 0.6                            # 28.11 (владелец): отверстие Ø2.2 — ролик свободно крутится на болте М2 (rolik04); rolik04_m14 — Ø1.8 под очковый винт М1.4; юбки
 CLR_DNO = 0.02                                   # 28.11: дно паза ближе к зубу (было 0.1) — стенка от отверстия до дна паза 0.72 при Ø2.2
 
 
@@ -74,7 +74,7 @@ def belt(w, ushki=True):
     return b + lugs(w) if ushki else b
 
 
-def pulley(w):
+def pulley(w, bore=None):
     hub = w + 0.4
     p = Cylinder(RP, hub, align=(Align.CENTER, Align.CENTER, Align.MIN))
     g, d = WT / 2 + CLR, H + CLR_DNO                                               # полуширина паза, глубина
@@ -83,7 +83,7 @@ def pulley(w):
     rf = RP + TB + 0.3
     p += Pos(0, 0, -T_FL) * Cylinder(rf, T_FL, align=(Align.CENTER, Align.CENTER, Align.MIN))
     p += Pos(0, 0, hub) * Cylinder(rf, T_FL, align=(Align.CENTER, Align.CENTER, Align.MIN))
-    p -= Cylinder(BORE, 100)
+    p -= Cylinder(BORE if bore is None else bore, 100)
     return Pos(0, 0, T_FL) * p
 
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print("ремень: %d зубьев, шаг %.3f (на роликах %.3f), длина %.2f, Ø%.1f; ролик %d зубьев, Ø%.2f; зуб ролика у дна %.2f, стенка от оси %.2f" % (
         N, L / N, LOOP / N, L, 2 * (R_ROOT + TB), NP, 2 * RP, zub_dno, r_dno - BORE))
     for w in (2, 3, 4, 5):
-        for kind, part in (("remen04", belt(w)), ("remen04_bez_ushek", belt(w, False)), ("rolik04", pulley(w)), ("telezhka04", cart(w))):
+        for kind, part in (("remen04", belt(w)), ("remen04_bez_ushek", belt(w, False)), ("rolik04", pulley(w)), ("rolik04_m14", pulley(w, 0.9)), ("telezhka04", cart(w))):
             f = os.path.join(OUT, "%s_%dmm.stl" % (kind, w))
             export_stl(part, f, tolerance=0.004, angular_tolerance=0.05)
             m = trimesh.load(f)
